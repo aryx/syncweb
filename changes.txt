@@ -1,0 +1,63 @@
+-*- org -*-
+
+* 0.3
+
+** Features:
+- md5sum marks can now be generated in an auxillary file instead of
+  the view file. This reduces the clutter in the source files. See
+  the -md5sum_in_auxfile command line option
+- repetitive marks can be avoided. For instance often got things such as
+    (*e: common.mli basic features *)
+    (*s: common.mli basic features *)
+  as often append chunks together. Instead of the 2 preceding marks, we can
+  just generate"
+    (*x: common.mli basic features *)  
+  This again reduces the clutter in the source files.
+  See the -less_marks command line option. See also emacs/fix_noweb.el
+  for tricks to put in a special color those marks.
+- support for multiple files; Your literate document can now be splitted
+  in multiple .nw files and still synced. You can thus sync M original
+  files vs N view files. Have to use some tricks to make it work though.
+- better file position information when something goes wrong in
+  the original document or views.
+
+* 0.2
+
+** Features:
+- show contextual diff of changes instead of just the 2 variations. Helpful
+  when modify big chunks.
+- can now handle multiple languages output, not just ocaml, with the -lang
+  command line option
+- can reorder chunk in orig without causing synchronisation needs.
+- handle what before was stopping the synchronisation of
+  "a chunk has been deleted"
+- better error message, show chunk name
+
+** Internals: 
+- reorganize types 
+
+** Bugfix: 
+- agglomerate chunkname in view_of_orig
+- dont print space for blank_string line, otherwise make sync will not fixpoint
+
+** Documentations:
+- describe limitations
+- add stuff on copy-paste and AOP
+- improved documentation related to emacs
+
+* 0.1
+
+** first public release
+
+** Features:
+- fine grained sync using md5sum
+
+* beta
+
+** Features:
+- sync
+- specific to ocaml
+- make a few assumptions on format of literate document and its markup.
+
+* alpha
+

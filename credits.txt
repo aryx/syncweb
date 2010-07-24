@@ -1,0 +1,9 @@
+Thanks to 
+ - Thorsten.Ohl for noweb-mode.el
+ - Norman Ramsey for noweb obviously
+
+ - Jane Street for ocamlsexp/
+ - Richard Jones for his dumper module, 
+
+Thanks of course also to Stallman, Linus, Leroy, Knuth and their
+acolytes for respectively Emacs, Linux, OCaml, and (La)TeX.

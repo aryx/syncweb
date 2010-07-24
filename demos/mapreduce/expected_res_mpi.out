@@ -1,0 +1,23 @@
+MS:DEBUG: mpi master, number of clients=6
+W1:DEBUG: mpi worker axyr, rank=1
+W3:DEBUG: mpi worker phantom.cs.uiuc.edu, rank=3
+W4:DEBUG: mpi worker phantom.cs.uiuc.edu, rank=4
+W2:map: 35
+W2:DEBUG: mpi worker axyr, rank=2
+W5:DEBUG: mpi worker phantom.cs.uiuc.edu, rank=5
+W6:DEBUG: mpi worker phantom.cs.uiuc.edu, rank=6
+W1:map: 35
+W4:map: 35
+W3:map: 35
+W6:DEBUG: worker exiting
+W5:DEBUG: worker exiting
+MS:reduce: acc=0, e=9227465
+W1:DEBUG: worker exiting
+MS:reduce: acc=9227465, e=9227465
+MS:reduce: acc=18454930, e=9227465
+MS:reduce: acc=27682395, e=9227465
+MS:result = 36909860
+W2:DEBUG: worker exiting
+W4:DEBUG: worker exiting
+W3:DEBUG: worker exiting
+P4 procgroup file is config.pg.

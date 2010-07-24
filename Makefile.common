@@ -1,0 +1,91 @@
+# -*- makefile -*-
+
+##############################################################################
+# Prelude 
+##############################################################################
+
+# This file assumes the caller will have set a few variables and then do a
+# include Makefile.common.
+#  - SRC
+#  - INCLUDEDIRS
+
+##############################################################################
+# Generic variables
+##############################################################################
+
+INCLUDES?=$(INCLUDEDIRS:%=-I %)
+
+OBJS?=    $(SRC:.ml=.cmo)
+OPTOBJS?= $(SRC:.ml=.cmx)
+
+
+##############################################################################
+# Generic ocaml variables
+##############################################################################
+
+#dont use -custom, it makes the bytecode unportable.
+OCAMLCFLAGS?=-g -dtypes # -w A
+
+# This flag is also used in subdirectories so don't change its name here.
+OPTFLAGS?=
+
+
+OCAMLC=ocamlc$(OPTBIN) $(OCAMLCFLAGS)  $(INCLUDES) -thread
+OCAMLOPT=ocamlopt$(OPTBIN) $(OPTFLAGS) $(INCLUDES) -thread
+OCAMLLEX=ocamllex #-ml # -ml for debugging lexer, but slightly slower
+OCAMLYACC=ocamlyacc -v
+OCAMLDEP=ocamldep $(INCLUDES)
+OCAMLMKTOP=ocamlmktop -g -custom $(INCLUDES) -thread
+
+# can also be set via 'make static'
+STATIC= #-ccopt -static
+
+# can also be unset via 'make purebytecode'
+BYTECODE_STATIC=-custom
+
+##############################################################################
+# Top rules
+##############################################################################
+all::
+
+##############################################################################
+# Developer rules
+##############################################################################
+
+
+tags:
+	otags -no-mli-tags -r  .
+
+clean::
+	rm -f TAGS
+
+
+##############################################################################
+# Generic ocaml rules
+##############################################################################
+
+.SUFFIXES: .ml .mli .cmo .cmi .cmx
+
+.ml.cmo:
+	$(OCAMLC)  -c $<
+.mli.cmi:
+	$(OCAMLC)  -c $<
+.ml.cmx:
+	$(OCAMLOPT)  -c $<
+
+.ml.mldepend: 
+	$(OCAMLC) -i $<
+
+clean::
+	rm -f *.cm[ioxa] *.o *.a *.cmxa *.annot
+	rm -f *~ .*~ *.exe gmon.out #*#
+
+distclean::
+	rm -f .depend
+
+beforedepend::
+
+depend:: beforedepend
+	$(OCAMLDEP) *.mli *.ml > .depend
+
+-include .depend

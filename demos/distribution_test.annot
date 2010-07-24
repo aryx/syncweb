@@ -1,0 +1,729 @@
+"distribution_test.ml" 4 79 87 "distribution_test.ml" 4 79 90
+type(
+  int -> int
+)
+"distribution_test.ml" 4 79 91 "distribution_test.ml" 4 79 92
+type(
+  int
+)
+"distribution_test.ml" 5 96 101 "distribution_test.ml" 5 96 102
+type(
+  int
+)
+"distribution_test.ml" 5 96 103 "distribution_test.ml" 5 96 104
+type(
+  int -> int -> bool
+)
+"distribution_test.ml" 5 96 105 "distribution_test.ml" 5 96 106
+type(
+  int
+)
+"distribution_test.ml" 5 96 101 "distribution_test.ml" 5 96 106
+type(
+  bool
+)
+"distribution_test.ml" 5 96 112 "distribution_test.ml" 5 96 113
+type(
+  int
+)
+"distribution_test.ml" 7 122 128 "distribution_test.ml" 7 122 129
+type(
+  int
+)
+"distribution_test.ml" 7 122 130 "distribution_test.ml" 7 122 131
+type(
+  int -> int -> bool
+)
+"distribution_test.ml" 7 122 132 "distribution_test.ml" 7 122 133
+type(
+  int
+)
+"distribution_test.ml" 7 122 128 "distribution_test.ml" 7 122 133
+type(
+  bool
+)
+"distribution_test.ml" 7 122 139 "distribution_test.ml" 7 122 140
+type(
+  int
+)
+"distribution_test.ml" 8 141 150 "distribution_test.ml" 8 141 153
+type(
+  int -> int
+)
+"distribution_test.ml" 8 141 155 "distribution_test.ml" 8 141 156
+type(
+  int
+)
+"distribution_test.ml" 8 141 156 "distribution_test.ml" 8 141 157
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 8 141 157 "distribution_test.ml" 8 141 158
+type(
+  int
+)
+"distribution_test.ml" 8 141 154 "distribution_test.ml" 8 141 159
+type(
+  int
+)
+"distribution_test.ml" 8 141 150 "distribution_test.ml" 8 141 159
+type(
+  int
+)
+"distribution_test.ml" 8 141 160 "distribution_test.ml" 8 141 161
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 8 141 162 "distribution_test.ml" 8 141 165
+type(
+  int -> int
+)
+"distribution_test.ml" 8 141 167 "distribution_test.ml" 8 141 168
+type(
+  int
+)
+"distribution_test.ml" 8 141 168 "distribution_test.ml" 8 141 169
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 8 141 169 "distribution_test.ml" 8 141 170
+type(
+  int
+)
+"distribution_test.ml" 8 141 166 "distribution_test.ml" 8 141 171
+type(
+  int
+)
+"distribution_test.ml" 8 141 162 "distribution_test.ml" 8 141 171
+type(
+  int
+)
+"distribution_test.ml" 8 141 150 "distribution_test.ml" 8 141 171
+type(
+  int
+)
+"distribution_test.ml" 7 122 125 "distribution_test.ml" 8 141 171
+type(
+  int
+)
+"distribution_test.ml" 5 96 98 "distribution_test.ml" 8 141 171
+type(
+  int
+)
+"distribution_test.ml" 11 174 178 "distribution_test.ml" 11 174 184
+type(
+  int -> int
+)
+"distribution_test.ml" 11 174 185 "distribution_test.ml" 11 174 188
+type(
+  int
+)
+"distribution_test.ml" 12 192 194 "distribution_test.ml" 12 192 197
+type(
+  string -> unit
+)
+"distribution_test.ml" 12 192 199 "distribution_test.ml" 12 192 202
+type(
+  (int -> string, unit, string) format -> int -> string
+)
+"distribution_test.ml" 12 192 203 "distribution_test.ml" 12 192 212
+type(
+  (int -> string, unit, string) format
+)
+"distribution_test.ml" 12 192 213 "distribution_test.ml" 12 192 216
+type(
+  int
+)
+"distribution_test.ml" 12 192 198 "distribution_test.ml" 12 192 217
+type(
+  string
+)
+"distribution_test.ml" 12 192 194 "distribution_test.ml" 12 192 217
+type(
+  unit
+)
+"distribution_test.ml" 13 219 221 "distribution_test.ml" 13 219 224
+type(
+  int -> int
+)
+"distribution_test.ml" 13 219 225 "distribution_test.ml" 13 219 228
+type(
+  int
+)
+"distribution_test.ml" 13 219 221 "distribution_test.ml" 13 219 228
+type(
+  int
+)
+"distribution_test.ml" 12 192 194 "distribution_test.ml" 13 219 228
+type(
+  int
+)
+"distribution_test.ml" 15 230 234 "distribution_test.ml" 15 230 243
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 15 230 244 "distribution_test.ml" 15 230 247
+type(
+  int
+)
+"distribution_test.ml" 15 230 248 "distribution_test.ml" 15 230 249
+type(
+  int
+)
+"distribution_test.ml" 16 253 255 "distribution_test.ml" 16 253 258
+type(
+  string -> unit
+)
+"distribution_test.ml" 16 253 260 "distribution_test.ml" 16 253 263
+type(
+  (int -> int -> string, unit, string) format -> int -> int -> string
+)
+"distribution_test.ml" 16 253 264 "distribution_test.ml" 16 253 286
+type(
+  (int -> int -> string, unit, string) format
+)
+"distribution_test.ml" 16 253 287 "distribution_test.ml" 16 253 290
+type(
+  int
+)
+"distribution_test.ml" 16 253 291 "distribution_test.ml" 16 253 292
+type(
+  int
+)
+"distribution_test.ml" 16 253 259 "distribution_test.ml" 16 253 293
+type(
+  string
+)
+"distribution_test.ml" 16 253 255 "distribution_test.ml" 16 253 293
+type(
+  unit
+)
+"distribution_test.ml" 17 295 297 "distribution_test.ml" 17 295 300
+type(
+  int
+)
+"distribution_test.ml" 17 295 301 "distribution_test.ml" 17 295 302
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 17 295 303 "distribution_test.ml" 17 295 304
+type(
+  int
+)
+"distribution_test.ml" 17 295 297 "distribution_test.ml" 17 295 304
+type(
+  int
+)
+"distribution_test.ml" 16 253 255 "distribution_test.ml" 17 295 304
+type(
+  int
+)
+"distribution_test.ml" 20 404 408 "distribution_test.ml" 20 404 424
+type(
+  fmap:('a -> 'b) -> freduce:('c -> 'b -> 'c) -> 'c -> 'a list -> 'c
+)
+"distribution_test.ml" 20 404 426 "distribution_test.ml" 20 404 430
+type(
+  'a -> 'b
+)
+"distribution_test.ml" 20 404 432 "distribution_test.ml" 20 404 439
+type(
+  'c -> 'b -> 'c
+)
+"distribution_test.ml" 20 404 440 "distribution_test.ml" 20 404 443
+type(
+  'c
+)
+"distribution_test.ml" 20 404 444 "distribution_test.ml" 20 404 446
+type(
+  'a list
+)
+"distribution_test.ml" 21 450 452 "distribution_test.ml" 21 450 466
+type(
+  ('c -> 'b -> 'c) -> 'c -> 'b list -> 'c
+)
+"distribution_test.ml" 21 450 467 "distribution_test.ml" 21 450 474
+type(
+  'c -> 'b -> 'c
+)
+"distribution_test.ml" 21 450 475 "distribution_test.ml" 21 450 478
+type(
+  'c
+)
+"distribution_test.ml" 21 450 480 "distribution_test.ml" 21 450 488
+type(
+  ('a -> 'b) -> 'a list -> 'b list
+)
+"distribution_test.ml" 21 450 489 "distribution_test.ml" 21 450 493
+type(
+  'a -> 'b
+)
+"distribution_test.ml" 21 450 494 "distribution_test.ml" 21 450 496
+type(
+  'a list
+)
+"distribution_test.ml" 21 450 479 "distribution_test.ml" 21 450 497
+type(
+  'b list
+)
+"distribution_test.ml" 21 450 452 "distribution_test.ml" 21 450 497
+type(
+  'c
+)
+"distribution_test.ml" 24 597 601 "distribution_test.ml" 24 597 612
+type(
+  unit -> unit
+)
+"distribution_test.ml" 24 597 613 "distribution_test.ml" 24 597 615
+type(
+  unit
+)
+"distribution_test.ml" 25 619 625 "distribution_test.ml" 25 619 628
+type(
+  int
+)
+"distribution_test.ml" 25 619 631 "distribution_test.ml" 25 619 647
+type(
+  fmap:(int -> int) -> freduce:(int -> int -> int) -> int -> int list -> int
+)
+"distribution_test.ml" 25 619 654 "distribution_test.ml" 25 619 660
+type(
+  int -> int
+)
+"distribution_test.ml" 25 619 670 "distribution_test.ml" 25 619 679
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 26 681 685 "distribution_test.ml" 26 681 686
+type(
+  int
+)
+"distribution_test.ml" 26 681 688 "distribution_test.ml" 26 681 689
+type(
+  int
+)
+"distribution_test.ml" 26 681 690 "distribution_test.ml" 26 681 691
+type(
+  int
+)
+"distribution_test.ml" 26 681 692 "distribution_test.ml" 26 681 693
+type(
+  int
+)
+"distribution_test.ml" 26 681 694 "distribution_test.ml" 26 681 696
+type(
+  int
+)
+"distribution_test.ml" 26 681 687 "distribution_test.ml" 26 681 697
+type(
+  int list
+)
+"distribution_test.ml" 25 619 631 "distribution_test.ml" 26 681 697
+type(
+  int
+)
+"distribution_test.ml" 27 701 703 "distribution_test.ml" 27 701 706
+type(
+  string -> unit
+)
+"distribution_test.ml" 27 701 708 "distribution_test.ml" 27 701 711
+type(
+  (int -> string, unit, string) format -> int -> string
+)
+"distribution_test.ml" 27 701 712 "distribution_test.ml" 27 701 725
+type(
+  (int -> string, unit, string) format
+)
+"distribution_test.ml" 27 701 726 "distribution_test.ml" 27 701 729
+type(
+  int
+)
+"distribution_test.ml" 27 701 707 "distribution_test.ml" 27 701 730
+type(
+  string
+)
+"distribution_test.ml" 27 701 703 "distribution_test.ml" 27 701 730
+type(
+  unit
+)
+"distribution_test.ml" 28 732 734 "distribution_test.ml" 28 732 736
+type(
+  unit
+)
+"distribution_test.ml" 27 701 703 "distribution_test.ml" 28 732 736
+type(
+  unit
+)
+"distribution_test.ml" 25 619 621 "distribution_test.ml" 28 732 736
+type(
+  unit
+)
+"distribution_test.ml" 31 836 840 "distribution_test.ml" 31 836 855
+type(
+  unit -> unit
+)
+"distribution_test.ml" 31 836 856 "distribution_test.ml" 31 836 858
+type(
+  unit
+)
+"distribution_test.ml" 32 862 868 "distribution_test.ml" 32 862 871
+type(
+  int
+)
+"distribution_test.ml" 32 862 874 "distribution_test.ml" 32 862 890
+type(
+  fmap:(int -> int) -> freduce:(int -> int -> int) -> int -> int list -> int
+)
+"distribution_test.ml" 32 862 897 "distribution_test.ml" 32 862 900
+type(
+  int -> int
+)
+"distribution_test.ml" 32 862 915 "distribution_test.ml" 32 862 918
+type(
+  int
+)
+"distribution_test.ml" 32 862 919 "distribution_test.ml" 32 862 920
+type(
+  int
+)
+"distribution_test.ml" 32 862 924 "distribution_test.ml" 32 862 927
+type(
+  int
+)
+"distribution_test.ml" 32 862 928 "distribution_test.ml" 32 862 929
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 32 862 930 "distribution_test.ml" 32 862 931
+type(
+  int
+)
+"distribution_test.ml" 32 862 924 "distribution_test.ml" 32 862 931
+type(
+  int
+)
+"distribution_test.ml" 32 862 910 "distribution_test.ml" 32 862 932
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 33 933 937 "distribution_test.ml" 33 933 938
+type(
+  int
+)
+"distribution_test.ml" 33 933 940 "distribution_test.ml" 33 933 941
+type(
+  int
+)
+"distribution_test.ml" 33 933 942 "distribution_test.ml" 33 933 943
+type(
+  int
+)
+"distribution_test.ml" 33 933 944 "distribution_test.ml" 33 933 945
+type(
+  int
+)
+"distribution_test.ml" 33 933 946 "distribution_test.ml" 33 933 948
+type(
+  int
+)
+"distribution_test.ml" 33 933 939 "distribution_test.ml" 33 933 949
+type(
+  int list
+)
+"distribution_test.ml" 32 862 874 "distribution_test.ml" 33 933 949
+type(
+  int
+)
+"distribution_test.ml" 34 953 955 "distribution_test.ml" 34 953 958
+type(
+  string -> unit
+)
+"distribution_test.ml" 34 953 960 "distribution_test.ml" 34 953 963
+type(
+  (int -> string, unit, string) format -> int -> string
+)
+"distribution_test.ml" 34 953 964 "distribution_test.ml" 34 953 977
+type(
+  (int -> string, unit, string) format
+)
+"distribution_test.ml" 34 953 978 "distribution_test.ml" 34 953 981
+type(
+  int
+)
+"distribution_test.ml" 34 953 959 "distribution_test.ml" 34 953 982
+type(
+  string
+)
+"distribution_test.ml" 34 953 955 "distribution_test.ml" 34 953 982
+type(
+  unit
+)
+"distribution_test.ml" 35 984 986 "distribution_test.ml" 35 984 988
+type(
+  unit
+)
+"distribution_test.ml" 34 953 955 "distribution_test.ml" 35 984 988
+type(
+  unit
+)
+"distribution_test.ml" 32 862 864 "distribution_test.ml" 35 984 988
+type(
+  unit
+)
+"distribution_test.ml" 38 1088 1092 "distribution_test.ml" 38 1088 1100
+type(
+  unit -> unit
+)
+"distribution_test.ml" 38 1088 1101 "distribution_test.ml" 38 1088 1103
+type(
+  unit
+)
+"distribution_test.ml" 39 1107 1113 "distribution_test.ml" 39 1107 1116
+type(
+  int
+)
+"distribution_test.ml" 39 1107 1119 "distribution_test.ml" 39 1107 1142
+type(
+  ?debug_mpi:bool ->
+  fmap:(int -> int) -> freduce:(int -> int -> int) -> int -> int list -> int
+)
+"distribution_test.ml" 39 1107 1154 "distribution_test.ml" 39 1107 1158
+type(
+  bool
+)
+"distribution_test.ml" 39 1107 1165 "distribution_test.ml" 39 1107 1171
+type(
+  int -> int
+)
+"distribution_test.ml" 39 1107 1181 "distribution_test.ml" 39 1107 1190
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 40 1192 1196 "distribution_test.ml" 40 1192 1197
+type(
+  int
+)
+"distribution_test.ml" 40 1192 1199 "distribution_test.ml" 40 1192 1200
+type(
+  int
+)
+"distribution_test.ml" 40 1192 1201 "distribution_test.ml" 40 1192 1202
+type(
+  int
+)
+"distribution_test.ml" 40 1192 1203 "distribution_test.ml" 40 1192 1204
+type(
+  int
+)
+"distribution_test.ml" 40 1192 1205 "distribution_test.ml" 40 1192 1207
+type(
+  int
+)
+"distribution_test.ml" 40 1192 1198 "distribution_test.ml" 40 1192 1208
+type(
+  int list
+)
+"distribution_test.ml" 39 1107 1119 "distribution_test.ml" 40 1192 1208
+type(
+  int
+)
+"distribution_test.ml" 41 1212 1214 "distribution_test.ml" 41 1212 1217
+type(
+  string -> unit
+)
+"distribution_test.ml" 41 1212 1219 "distribution_test.ml" 41 1212 1222
+type(
+  (int -> string, unit, string) format -> int -> string
+)
+"distribution_test.ml" 41 1212 1223 "distribution_test.ml" 41 1212 1236
+type(
+  (int -> string, unit, string) format
+)
+"distribution_test.ml" 41 1212 1237 "distribution_test.ml" 41 1212 1240
+type(
+  int
+)
+"distribution_test.ml" 41 1212 1218 "distribution_test.ml" 41 1212 1241
+type(
+  string
+)
+"distribution_test.ml" 41 1212 1214 "distribution_test.ml" 41 1212 1241
+type(
+  unit
+)
+"distribution_test.ml" 42 1243 1245 "distribution_test.ml" 42 1243 1247
+type(
+  unit
+)
+"distribution_test.ml" 41 1212 1214 "distribution_test.ml" 42 1243 1247
+type(
+  unit
+)
+"distribution_test.ml" 39 1107 1109 "distribution_test.ml" 42 1243 1247
+type(
+  unit
+)
+"distribution_test.ml" 44 1249 1253 "distribution_test.ml" 44 1249 1257
+type(
+  unit
+)
+"distribution_test.ml" 45 1261 1263 "distribution_test.ml" 45 1261 1271
+type(
+  unit -> unit
+)
+"distribution_test.ml" 45 1261 1272 "distribution_test.ml" 45 1261 1274
+type(
+  unit
+)
+"distribution_test.ml" 45 1261 1263 "distribution_test.ml" 45 1261 1274
+type(
+  unit
+)
+"distribution_test.ml" 49 1375 1379 "distribution_test.ml" 49 1375 1391
+type(
+  unit ->
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)
+"distribution_test.ml" 49 1375 1392 "distribution_test.ml" 49 1375 1394
+type(
+  unit
+)
+"distribution_test.ml" 50 1397 1403 "distribution_test.ml" 50 1397 1407
+type(
+  Mpi.rank
+)
+"distribution_test.ml" 50 1397 1410 "distribution_test.ml" 50 1397 1423
+type(
+  Mpi.communicator -> Mpi.rank
+)
+"distribution_test.ml" 50 1397 1424 "distribution_test.ml" 50 1397 1438
+type(
+  Mpi.communicator
+)
+"distribution_test.ml" 50 1397 1410 "distribution_test.ml" 50 1397 1438
+type(
+  Mpi.rank
+)
+"distribution_test.ml" 51 1442 1444 "distribution_test.ml" 51 1442 1447
+type(
+  string -> unit
+)
+"distribution_test.ml" 51 1442 1449 "distribution_test.ml" 51 1442 1452
+type(
+  (Mpi.rank -> string, unit, string) format -> Mpi.rank -> string
+)
+"distribution_test.ml" 51 1442 1453 "distribution_test.ml" 51 1442 1463
+type(
+  (Mpi.rank -> string, unit, string) format
+)
+"distribution_test.ml" 51 1442 1464 "distribution_test.ml" 51 1442 1468
+type(
+  Mpi.rank
+)
+"distribution_test.ml" 51 1442 1448 "distribution_test.ml" 51 1442 1469
+type(
+  string
+)
+"distribution_test.ml" 51 1442 1444 "distribution_test.ml" 51 1442 1469
+type(
+  unit
+)
+"distribution_test.ml" 52 1471 1476 "distribution_test.ml" 52 1471 1480
+type(
+  Mpi.rank
+)
+"distribution_test.ml" 52 1471 1481 "distribution_test.ml" 52 1471 1482
+type(
+  Mpi.rank -> Mpi.rank -> bool
+)
+"distribution_test.ml" 52 1471 1483 "distribution_test.ml" 52 1471 1484
+type(
+  Mpi.rank
+)
+"distribution_test.ml" 52 1471 1476 "distribution_test.ml" 52 1471 1484
+type(
+  bool
+)
+"distribution_test.ml" 54 1493 1497 "distribution_test.ml" 54 1493 1516
+type(
+  ?debug_mpi:bool ->
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  (int -> int -> int) -> int list -> int -> int -> int
+)
+"distribution_test.ml" 54 1493 1517 "distribution_test.ml" 54 1493 1526
+type(
+  int -> int -> int
+)
+"distribution_test.ml" 54 1493 1528 "distribution_test.ml" 54 1493 1529
+type(
+  int
+)
+"distribution_test.ml" 54 1493 1530 "distribution_test.ml" 54 1493 1531
+type(
+  int
+)
+"distribution_test.ml" 54 1493 1532 "distribution_test.ml" 54 1493 1533
+type(
+  int
+)
+"distribution_test.ml" 54 1493 1534 "distribution_test.ml" 54 1493 1536
+type(
+  int
+)
+"distribution_test.ml" 54 1493 1527 "distribution_test.ml" 54 1493 1537
+type(
+  int list
+)
+"distribution_test.ml" 54 1493 1497 "distribution_test.ml" 54 1493 1537
+type(
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)
+"distribution_test.ml" 56 1552 1556 "distribution_test.ml" 56 1552 1575
+type(
+  ?debug_mpi:bool -> fmap:(int -> int) -> unit
+)
+"distribution_test.ml" 56 1552 1576 "distribution_test.ml" 56 1552 1582
+type(
+  int -> int
+)
+"distribution_test.ml" 56 1552 1556 "distribution_test.ml" 56 1552 1582
+type(
+  unit
+)
+"distribution_test.ml" 57 1584 1588 "distribution_test.ml" 57 1584 1593
+type(
+  exn ->
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)
+"distribution_test.ml" 57 1584 1594 "distribution_test.ml" 57 1584 1619
+type(
+  exn
+)
+"distribution_test.ml" 57 1584 1588 "distribution_test.ml" 57 1584 1619
+type(
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)
+"distribution_test.ml" 55 1539 1546 "distribution_test.ml" 58 1620 1625
+type(
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)
+"distribution_test.ml" 52 1471 1473 "distribution_test.ml" 58 1620 1625
+type(
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)
+"distribution_test.ml" 51 1442 1444 "distribution_test.ml" 58 1620 1625
+type(
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)
+"distribution_test.ml" 50 1397 1399 "distribution_test.ml" 58 1620 1625
+type(
+  freduce:((int -> int -> int) -> int -> int -> int -> int) ->
+  int -> int -> int
+)

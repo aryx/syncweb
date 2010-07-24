@@ -1,0 +1,92 @@
+"demo.ml" 6 154 158 "demo.ml" 6 154 161
+type(
+  'a -> int
+)
+"demo.ml" 6 154 162 "demo.ml" 6 154 163
+type(
+  'a
+)
+"demo.ml" 6 154 166 "demo.ml" 6 154 167
+type(
+  int
+)
+"demo.ml" 7 168 172 "demo.ml" 7 168 175
+type(
+  'a -> int
+)
+"demo.ml" 7 168 176 "demo.ml" 7 168 177
+type(
+  'a
+)
+"demo.ml" 7 168 180 "demo.ml" 7 168 181
+type(
+  int
+)
+"demo.ml" 10 234 238 "demo.ml" 10 234 242
+type(
+  int
+)
+"demo.ml" 10 234 245 "demo.ml" 10 234 246
+type(
+  int
+)
+"demo.ml" 13 316 320 "demo.ml" 13 316 328
+type(
+  'a -> int
+)
+"demo.ml" 13 316 329 "demo.ml" 13 316 330
+type(
+  'a
+)
+"demo.ml" 13 316 333 "demo.ml" 13 316 334
+type(
+  int
+)
+"demo.ml" 16 404 408 "demo.ml" 16 404 416
+type(
+  'a -> int
+)
+"demo.ml" 16 404 417 "demo.ml" 16 404 418
+type(
+  'a
+)
+"demo.ml" 16 404 421 "demo.ml" 16 404 422
+type(
+  int
+)
+"demo.ml" 17 423 427 "demo.ml" 17 423 435
+type(
+  'a -> int
+)
+"demo.ml" 17 423 436 "demo.ml" 17 423 437
+type(
+  'a
+)
+"demo.ml" 17 423 440 "demo.ml" 17 423 441
+type(
+  int
+)
+"demo.ml" 20 511 515 "demo.ml" 20 511 520
+type(
+  'a -> int
+)
+"demo.ml" 20 511 521 "demo.ml" 20 511 522
+type(
+  'a
+)
+"demo.ml" 20 511 525 "demo.ml" 20 511 526
+type(
+  int
+)
+"demo.ml" 24 597 601 "demo.ml" 24 597 606
+type(
+  'a -> int
+)
+"demo.ml" 24 597 607 "demo.ml" 24 597 608
+type(
+  'a
+)
+"demo.ml" 24 597 611 "demo.ml" 24 597 612
+type(
+  int
+)

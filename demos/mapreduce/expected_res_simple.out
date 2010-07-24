@@ -1,0 +1,9 @@
+map: 35
+map: 35
+map: 35
+map: 35
+reduce: acc=0, e=9227465
+reduce: acc=9227465, e=9227465
+reduce: acc=18454930, e=9227465
+reduce: acc=27682395, e=9227465
+result = 36909860

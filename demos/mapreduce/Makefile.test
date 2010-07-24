@@ -1,0 +1,16 @@
+# nw_s: Makefile.test |b545e8d98f67b814c3298c9233a7979c#
+INCLUDES=-I commons -I ocamlmpi
+OCAMLC=ocamlc
+SYSLIBS=str.cma unix.cma bigarray.cma
+
+distribution_test: distribution.ml distribution.mli
+	$(OCAMLC) $(INCLUDES) -c distribution.mli
+	$(OCAMLC) $(INCLUDES) -c distribution.ml
+	$(OCAMLC) $(INCLUDES) -c distribution_test.ml
+	$(OCAMLC) $(INCLUDES) -custom $(SYSLIBS) commons/commons.cma ocamlmpi/mpi.cma \
+            distribution.cmo distribution_test.cmo -o $@
+# nw_e: Makefile.test #
+# nw_s: Makefile.test |82d327960aac5aed23fbbb8f5dd9c41a#
+copy_binary:
+        scp distribution_test phantom.cs.uiuc.edu:/tmp
+# nw_e: Makefile.test #

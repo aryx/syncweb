@@ -1,0 +1,8 @@
+# nw_s: config.pg |#
+aryx.cs.uiuc.edu 0 /home/pad/c__syncweb/demos/mapreduce/distribution_test
+
+#aryx: 2 processors, local machine
+
+aryx.cs.uiuc.edu 1 /home/pad/c__syncweb/demos/mapreduce/distribution_test
+aryx.cs.uiuc.edu 1 /home/pad/c__syncweb/demos/mapreduce/distribution_test
+

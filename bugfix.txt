@@ -1,0 +1,33 @@
+-*- org -*- 
+
+*
+
+** 
+<<<<<<< orig <<<<<<<<
+<<type>>
+let foo x = 1
+
+let bar y = 2
+
+<<part1>>
+<<part2>>
+====================
+<<type>>
+let foo x = 1
+
+let bar y = 2
+
+<<part1>>
+<<part1>>
+<<part1>>
+<<part2>>
+
+
+
+
+==> pad: must agglomerate
+
+
+** 
+
+==> must be more flexible on the order

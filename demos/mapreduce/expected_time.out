@@ -1,0 +1,4 @@
+---- without MPI, naive_map_reduce ---
+TIME: 9.29s
+---- with MPI  ---
+TIME: 3.39s

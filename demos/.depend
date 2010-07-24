@@ -1,0 +1,6 @@
+demo.cmo: demo.cmi 
+demo.cmx: demo.cmi 
+distribution.cmo: ../commons/common.cmi distribution.cmi 
+distribution.cmx: ../commons/common.cmx distribution.cmi 
+distribution_test.cmo: distribution.cmi ../commons/common.cmi 
+distribution_test.cmx: distribution.cmx ../commons/common.cmx 

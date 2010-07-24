@@ -1,0 +1,66 @@
+% -*- noweb -*- 
+
+%cf http://en.wikipedia.org/wiki/Noweb
+%noweave -filter l2h -index -html hello.noweb | htmltoc > hello.html
+%noweave -index -latex hello.noweb > hello.tex
+%notangle -Rhello.c hello.noweb > hello.c
+%notangle -Rhello.php hello.noweb > hello.php
+
+
+\title{My First Literate Document}
+\author{Yoann Padioleau}
+\maketitle
+
+\section{Overview}
+
+Here is the organization of the code:
+<<*>>=
+<<defX>>
+<<defY>>
+<<defSet>>
+<<defMain>>
+@ 
+\section{Main}
+
+The main code:
+<<defMain>>=
+let main = 
+ Printf.printf ("%d\n" x + y)
+@
+
+\section{Sec1}
+
+First definition.
+
+<<defX>>=
+let x = 1
+@
+
+\section{Sec2}
+
+Second definition
+
+<<defY>>=
+let y = 2
+@
+
+
+
+
+
+\section{Sec3}
+
+Here are a set of definitions.
+
+<<defSet>>=
+let z = 1
+@
+
+<<defSet>>+=
+let z = 2
+@
+
+<<defSet>>+=
+let z = 3
+@
+

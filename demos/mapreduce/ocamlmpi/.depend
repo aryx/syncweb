@@ -1,0 +1,87 @@
+mpi.cmo: mpi.cmi 
+mpi.cmx: mpi.cmi 
+test.cmo: mpi.cmi 
+test.cmx: mpi.cmx 
+test_mandel.cmo: mpi.cmi 
+test_mandel.cmx: mpi.cmx 
+test_pad.cmo: mpi.cmi 
+test_pad.cmx: mpi.cmx 
+collcomm.o: collcomm.c /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpidefs.h \
+  /home/pad/packages/Linux/include/mpio.h \
+  /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpi_errno.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/compatibility.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/config.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/misc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/memory.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/alloc.h \
+  camlmpi.h
+comm.o: comm.c /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpidefs.h \
+  /home/pad/packages/Linux/include/mpio.h \
+  /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpi_errno.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/compatibility.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/config.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/misc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/alloc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/memory.h \
+  camlmpi.h
+groups.o: groups.c /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpidefs.h \
+  /home/pad/packages/Linux/include/mpio.h \
+  /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpi_errno.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/compatibility.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/config.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/misc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/alloc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/memory.h \
+  camlmpi.h
+init.o: init.c /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpidefs.h \
+  /home/pad/packages/Linux/include/mpio.h \
+  /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpi_errno.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/compatibility.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/config.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/misc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/memory.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/alloc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/fail.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/callback.h \
+  camlmpi.h
+msgs.o: msgs.c /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpidefs.h \
+  /home/pad/packages/Linux/include/mpio.h \
+  /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpi_errno.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/compatibility.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/config.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/misc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/alloc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/memory.h \
+  camlmpi.h
+utils.o: utils.c /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpidefs.h \
+  /home/pad/packages/Linux/include/mpio.h \
+  /home/pad/packages/Linux/include/mpi.h \
+  /home/pad/packages/Linux/include/mpi_errno.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/compatibility.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/config.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/misc.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/memory.h \
+  /home/pad/packages/stow/godi-3.10/lib/ocaml/std-lib/caml/mlvalues.h \
+  camlmpi.h
