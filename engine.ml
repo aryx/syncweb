@@ -411,7 +411,7 @@ let regexp_chunkdef = Str.regexp "^<<\\(.*\\)>>=[ \t]*$"
 
 let regexp_chunkdef_end = Str.regexp "^@[ \t]*$"
 
-(* "(.*[^\@]*)<<([^<>@]+)>>(.*)" *)
+(* (.*[^\@]* )<<([^<>@]+)>>(. * ) *)
 (* todo: more flexible ? *)
 let regexp_chunk_ref = Str.regexp 
   "\\([ \t]*\\)<<\\(.*\\)>>[ \t]*$"
@@ -470,7 +470,7 @@ let parse_orig file =
               in
               if (not (body +> List.for_all (fun x -> thd3 x = Regular1)))
               then failwith 
-                (spf "body of chunkdef contains other chunkdef at line %d" line);
+                (spf "line %d: body of chunkdef contains other chunkdef" line);
 
               let body' = List.map fst3 body in
 
@@ -482,7 +482,7 @@ let parse_orig file =
             with Not_found -> failwith "no end mark found"
             )
 
-        | End1 -> failwith (spf "a end mark without a start at line %d" line)
+        | End1 -> failwith (spf "line %d: a end mark without a start" line)
         )
   in
   agglomerate xs'
@@ -520,8 +520,8 @@ let readjust_mark2_remove_indent i body =
   body +> List.map (function
   | Start2 (s, j, md5sum, pinfo) -> 
       if j < i 
-      then failwith ("nested chunk with smaller indentation at " ^ 
-                        s_of_pinfo pinfo);
+      then failwith (s_of_pinfo pinfo ^ 
+                     " nested chunk with smaller indentation at ");
       Start2 (s, j - i, md5sum, pinfo)
   | Regular2 (s, pinfo) -> 
       if Common.is_blank_string s 
@@ -533,8 +533,8 @@ let readjust_mark2_remove_indent i body =
           let j = String.length spaces in 
           if j < i 
           then 
-            failwith ("nested chunk with smaller indentation at " ^ 
-                         s_of_pinfo pinfo);
+            failwith (s_of_pinfo pinfo ^ 
+                     " nested chunk with smaller indentation at ");
           let spaces' = generate_n_spaces (j - i) in
           Regular2 (spaces' ^ rest, pinfo)
         else raise Impossible
@@ -639,7 +639,7 @@ let parse_view ~lang file =
               pretty_print = None;
             }, body', i)::aux rest
         | End2 (s, i, pinfo) -> 
-            failwith ("a end mark without a start at " ^ s_of_pinfo pinfo)
+            failwith (s_of_pinfo pinfo ^ " a end mark without a start at")
         | Regular2 (s, pinfo) -> 
             RegularCode s::aux xs
         )
