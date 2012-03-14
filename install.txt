@@ -3,6 +3,8 @@ You must first install a recent version of
    see http://caml.inria.fr/download.en.html
  - Noweb 
    see http://www.cs.tufts.edu/~nr/noweb/
+ - TeX/LaTeX
+   see http://www.tug.org/texlive/
 
 Then simply type 
   $ ./configure
