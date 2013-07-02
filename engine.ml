@@ -595,7 +595,7 @@ let parse_view ~lang file =
         [End2 (Some key, String.length tabs, mkp file line);
          Start2 (key, String.length tabs, md5, mkp file line);
         ]
-    | None _ ->
+    | None ->
         (match lang.parse_mark_start s with
         | Some (tabs, key,  md5) -> 
             [Start2 (key, String.length tabs, md5, mkp file line)]
@@ -1204,5 +1204,22 @@ let actions () = [
       let tmpfile = "/tmp/xxx" in
       unparse_orig orig' tmpfile;
       Common.command2(spf "diff %s %s" origf tmpfile);
+    );
+  "-unmark", "   <file>", 
+    Common.mk_action_1_arg (fun file -> 
+
+      let xs = Common.cat file in
+      let xs = xs +> Common.exclude (fun s ->
+        s =~ "^[ \t]*(\\*[sex]:"
+      )
+      in
+      let tmpfile = "/tmp/xxx" in
+      let s = Common.unlines xs in
+      Common.write_file tmpfile s;
+      Common.command2(spf "diff -u %s %s" file tmpfile);
+      pr2 "apply modif [y/n]?";
+      if Common.ask_y_or_no ()
+      then Common.write_file file s
+      else failwith "ok, skipping"
     );
 ]
