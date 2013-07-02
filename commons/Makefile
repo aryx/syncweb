@@ -105,7 +105,7 @@ OPTFLAGS=
 # or setenv it to ".opt" in your startup script.
 OPTBIN ?= #.opt
 
-OCAMLCFLAGS ?= -g -dtypes
+OCAMLCFLAGS ?= -g -dtypes -bin-annot
 
 # The OCaml tools.
 OCAMLC =ocamlc$(OPTBIN) $(OCAMLCFLAGS) $(INCLUDES)
