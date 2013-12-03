@@ -87,9 +87,9 @@ my $error = 0;
 #---------------------------------------------------------------------
 $error += 
     check_config("echo \"1;;\\n\" | ocaml |",
-                 "Objective(.*) 3.*",
+                 "OCaml version 4.*",
                  "OCaml (the wonderful language) is present.",
-                 "The program ocaml is missing or is not a good version. We need at least 3.09",
+                 "The program ocaml is missing or is not a good version. We need at least 4.00.1",
                  );
 
 
