@@ -1039,7 +1039,8 @@ let sync ~lang orig views =
                         let md5sum_past = 
                           match md5sum_orig_in_view_opt with
                           | None -> 
-                              failwith "TODO: didnt find the md5sum"
+                              failwith (spf "TODO: didnt find the md5sum in %s"
+                                          (Common.dump elem_view))
                           | Some s -> s
                         in
 
