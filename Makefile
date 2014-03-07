@@ -196,15 +196,12 @@ uninstall:
 version:
 	@echo $(VERSION)
 
-
-
 ##############################################################################
 # Package rules
 ##############################################################################
 
 PACKAGE=syncweb-$(VERSION)
 TMP=/tmp
-
 
 package: 
 	make srctar 
