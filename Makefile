@@ -65,8 +65,7 @@ endif
 
 #------------------------------------------------------------------------------
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
-LIBS= commons/commons.cma \
-      $(BTCMA) \
+LIBS= commons/lib.cma \
       $(REGEXPCMA) \
       commons/commons_features.cma \
       globals/globals.cma
