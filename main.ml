@@ -58,7 +58,7 @@ let main_action xs =
       if not (Sys.file_exists viewf)
       then
         (* we take the basename so that files can be put in any directory *)
-        let view = Engine.view_of_orig ~topkey:(Common.basename viewf) orig in
+        let view = Engine.view_of_orig ~topkey:(Filename.basename viewf) orig in
         Engine.unparse_view 
           ~md5sum_in_auxfile:!md5sum_in_auxfile
           ~less_marks:!less_marks
@@ -72,7 +72,7 @@ let main_action xs =
         let view = Engine.parse_view ~lang viewf in 
         let orig' = Engine.sync ~lang   orig view in
         let view' = Engine.view_of_orig 
-          ~topkey:(Common.basename viewf) 
+          ~topkey:(Filename.basename viewf) 
           orig' 
         in
         (* regenerate orig and view *)
@@ -102,7 +102,7 @@ let main_action xs =
 
       if not (Sys.file_exists viewf)
       then 
-        let view = Engine.view_of_orig ~topkey:(Common.basename viewf) orig in
+        let view = Engine.view_of_orig ~topkey:(Filename.basename viewf) orig in
         Engine.unparse_view 
           ~md5sum_in_auxfile:!md5sum_in_auxfile
           ~less_marks:!less_marks
@@ -114,7 +114,7 @@ let main_action xs =
         let view = Engine.parse_view ~lang viewf in 
         let orig' = Engine.sync ~lang  orig view in
         let view' = Engine.view_of_orig 
-          ~topkey:(Common.basename viewf) 
+          ~topkey:(Filename.basename viewf) 
           orig' 
         in
         (* regenerate orig and view *)
@@ -126,7 +126,7 @@ let main_action xs =
             ~lang view' viewf;
         end;
         let origs' = Engine.unpack_multi_orig orig' in
-        Common.zip origs origs' +> List.iter (fun ((f1, orig), (f2, orig')) ->
+        Common2.zip origs origs' +> List.iter (fun ((f1, orig), (f2, orig')) ->
           if orig <> orig' then begin
             pr2 (spf "orig %s has been updated" f1);
             Engine.unparse_orig orig' f1;
@@ -142,9 +142,9 @@ let main_action xs =
 (*****************************************************************************)
 
 let all_actions () = 
-  console_actions() ++
-  (*Test.actions() ++*)
-  Engine.actions() ++
+  console_actions() @
+  (*Test.actions() @*)
+  Engine.actions() @
   []
 
 let options () = 
@@ -171,9 +171,9 @@ let options () =
       raise (Common.UnixExit 0)
     ), 
     "   guess what";
-  ] ++
-  Common.cmdline_flags_devel () ++
-  Common.options_of_actions action (all_actions()) ++
+  ] @
+  Common2.cmdline_flags_devel () @
+  Common.options_of_actions action (all_actions()) @
   []
 
 (*****************************************************************************)
@@ -187,7 +187,7 @@ let main () =
   *)
 
   let usage_msg = 
-    "Usage: " ^ basename Sys.argv.(0) ^ 
+    "Usage: " ^ Filename.basename Sys.argv.(0) ^ 
       " [options] <orig> <view> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)

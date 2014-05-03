@@ -1,4 +1,5 @@
 open Common
+open Common2
 
 (*****************************************************************************)
 (* Prelude *)
@@ -342,15 +343,15 @@ let lang_table = [
 
 
 let md5sum_auxfile_of_file file = 
-  let (d,b) = Common.db_of_filename file in
-  Common.filename_of_db (d, ".md5sum_" ^ b)
+  let (d,b) = Common2.db_of_filename file in
+  Common2.filename_of_db (d, ".md5sum_" ^ b)
 
 (*****************************************************************************)
 (* Helpers  *)
 (*****************************************************************************)
 
 let generate_n_spaces i =
-  Common.repeat " " i +> Common.join ""
+  Common2.repeat " " i +> Common.join ""
 
 let s_of_chunkdef_body xs = 
   xs +> List.map (function 
@@ -358,12 +359,12 @@ let s_of_chunkdef_body xs =
   | ChunkName (s, i) -> 
       let spaces = generate_n_spaces i in
       spaces ^ (spf "<<%s>>" s)
-  ) +> Common.unlines
+  ) +> Common2.unlines
 
 
 let show_orig_view ?(force_display=false)key s_orig s_view = 
   pr2 ("DIFF for: " ^ key);
-  if (Common.nblines s_orig > 5 || Common.nblines s_view > 5) && 
+  if (Common2.nblines s_orig > 5 || Common2.nblines s_view > 5) && 
      not force_display 
   then 
     ()
@@ -466,7 +467,7 @@ let parse_orig file =
         | Start1 -> 
             (try 
               let (body, endmark, rest) = 
-                Common.split_when (fun x -> thd3 x = End1) xs
+                Common2.split_when (fun x -> thd3 x = End1) xs
               in
               if (not (body +> List.for_all (fun x -> thd3 x = Regular1)))
               then failwith 
@@ -524,7 +525,7 @@ let readjust_mark2_remove_indent i body =
                      " nested chunk with smaller indentation at ");
       Start2 (s, j - i, md5sum, pinfo)
   | Regular2 (s, pinfo) -> 
-      if Common.is_blank_string s 
+      if Common2.is_blank_string s 
       then Regular2 (s, pinfo)
       else 
         if s=~ "\\([ \t]*\\)\\(.*\\)"
@@ -623,7 +624,7 @@ let parse_view ~lang file =
         (match x with
         | Start2 (s, i, md5sum, pinfo) -> 
             let (body, endmark, rest) = 
-              Common.split_when (fun x -> match x with 
+              Common2.split_when (fun x -> match x with 
               | End2 (s2,_, pinfo2) -> 
                   (match s2 with
                   | None -> raise Todo
@@ -665,7 +666,7 @@ let unparse_orig orig filename =
         | Code s -> 
             pr s
         | ChunkName (s, indent) -> 
-            Common.do_n indent (fun () -> pr_no_nl " ");
+            Common2.do_n indent (fun () -> pr_no_nl " ");
             let item = spf "<<%s>>" s in
             pr item;
         );
@@ -705,7 +706,7 @@ let rec adjust_pretty_print_field view =
           in
           
           if List.length same_key' >= 2 then begin
-            let (hd, middle, tl) = Common.head_middle_tail same_key' in
+            let (hd, middle, tl) = Common2.head_middle_tail same_key' in
             hd.pretty_print <- Some First;
             tl.pretty_print <- Some Last;
             middle +> List.iter (fun x -> x.pretty_print <- Some Middle);
@@ -726,14 +727,14 @@ let unparse_view
 
   Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
-    let pr_indent indent = Common.do_n indent (fun () -> pr_no_nl " ") in
+    let pr_indent indent = Common2.do_n indent (fun () -> pr_no_nl " ") in
 
     let rec aux (x, body, i) =
       let key = x.chunk_key in
       let md5sum = 
         if md5sum_in_auxfile 
         then begin 
-          Common.push2 (spf "%s |%s" key (Common.some x.chunk_md5sum))
+          Common.push (spf "%s |%s" key (Common2.some x.chunk_md5sum))
             md5sums;
           None
         end
@@ -750,7 +751,7 @@ let unparse_view
       body +> List.iter (function
       | RegularCode s -> 
           (* bugfix: otherwise make sync will not fixpoint *)
-          if Common.is_blank_string s
+          if Common2.is_blank_string s
           then pr s
           else begin
             pr_indent i;
@@ -817,7 +818,7 @@ let build_chunk_hash_from_orig orig =
     | Tex xs -> ()
     | ChunkDef (def, body) -> 
         let key = def.chunkdef_key in
-        Common.hupdate_default key (fun x -> x @ [body]) (fun()->[]) h;
+        Common2.hupdate_default key (fun x -> x @ [body]) (fun()->[]) h;
     );
   h
 
@@ -836,7 +837,7 @@ let view_of_orig ~topkey orig =
     bodys +> List.map (fun body -> 
 
       let s = s_of_chunkdef_body body in
-      let md5sum = Common.md5sum_of_string s in
+      let md5sum = Common2.md5sum_of_string s in
 
       let body' = 
         body +> List.map (function
@@ -910,7 +911,7 @@ let build_chunk_hash_from_views views =
          *)
         let body'' = uniq_agglomerate_chunkname body' in
 
-        Common.hupdate_default key (fun x -> x @ [md5sum, body'']) 
+        Common2.hupdate_default key (fun x -> x @ [md5sum, body'']) 
           (fun()->[]) h;
         
     | RegularCode s -> 
@@ -965,7 +966,7 @@ let sync ~lang orig views =
     | ChunkDef (def, body_orig) -> 
         let key = def.chunkdef_key in
         
-        (match Common.hfind_option key h_view with
+        (match Common2.hfind_option key h_view with
         | None -> 
             (* Case1: new chunk in orig *)
             ChunkDef (def, body_orig)
@@ -986,8 +987,7 @@ let sync ~lang orig views =
                 pr2 "<<<<<<< orig <<<<<<<<";
                 pr2_no_nl s_orig;
                 pr2 "====================";
-                pr2 "keep the one in orig ? (y/n)";
-                if (ask_y_or_no())
+                if (Common2.y_or_no "keep the one in orig?")
                 then ChunkDef (def, body_orig)
                 else failwith "stopped"
                 
@@ -1006,8 +1006,8 @@ let sync ~lang orig views =
                         body_orig = body_view
                       )
                     in
-                    aref_orig := Common.remove_first body_orig !aref_orig;
-                    aref_view := Common.remove_first elem_view !aref_view;
+                    aref_orig := Common2.remove_first body_orig !aref_orig;
+                    aref_view := Common2.remove_first elem_view !aref_view;
                     ChunkDef (def, body_orig)
                   
                  with Not_found -> 
@@ -1024,15 +1024,15 @@ let sync ~lang orig views =
                     (match candidates with
                     | [] -> 
                         (* Case1bis: new chunk in orig ? *)
-                        aref_orig := Common.remove_first body_orig !aref_orig;
+                        aref_orig := Common2.remove_first body_orig !aref_orig;
                         ChunkDef (def, body_orig)
 
                     | elem_view::_xs -> 
                         (* case4: multiple possible reasons.
                         *)
 
-                        aref_orig := Common.remove_first body_orig !aref_orig;
-                        aref_view := Common.remove_first elem_view !aref_view;
+                        aref_orig := Common2.remove_first body_orig !aref_orig;
+                        aref_view := Common2.remove_first elem_view !aref_view;
                     
                         let (md5sum_orig_in_view_opt, body_view) = elem_view in
 
@@ -1047,8 +1047,8 @@ let sync ~lang orig views =
                         let s_orig = s_of_chunkdef_body body_orig in
                         let s_view = s_of_chunkdef_body body_view in
 
-                        let md5sum_orig = Common.md5sum_of_string s_orig in
-                        let md5sum_view = Common.md5sum_of_string s_view in
+                        let md5sum_orig = Common2.md5sum_of_string s_orig in
+                        let md5sum_view = Common2.md5sum_of_string s_view in
 
                         show_orig_view key s_orig s_view;
 
@@ -1059,15 +1059,15 @@ let sync ~lang orig views =
                           match () with
                           | _ when md5sum_past =$= md5sum_orig -> 
                               show_diff s_orig s_view;
-                              pr2 "        <---- changed ? (y/n) ";
-                              if (ask_y_or_no())
+                              if (Common2.y_or_no 
+                                    "        <---- changed?")
                               then Some body_view
                               else None
                                 
                           | _ when md5sum_past =$= md5sum_view -> 
                               show_diff s_view s_orig;
-                              pr2 "changed  ---->        ? (y/n) ";
-                              if (ask_y_or_no())
+                              if (Common2.y_or_no 
+                                    "changed  ---->        ?")
                               then Some body_orig
                               else None
 
@@ -1147,7 +1147,7 @@ let pack_multi_orig xs =
 
 let rec unpack_multi_orig orig =
   let (pre, groups) = 
-    Common.group_by_pre (fun x ->
+    Common2.group_by_pre (fun x ->
       match x with
       | Tex [s] when s =~ "MULTIFILE:.*" -> true
       | _ -> false
@@ -1215,11 +1215,10 @@ let actions () = [
       )
       in
       let tmpfile = "/tmp/xxx" in
-      let s = Common.unlines xs in
+      let s = Common2.unlines xs in
       Common.write_file tmpfile s;
       Common.command2(spf "diff -u %s %s" file tmpfile);
-      pr2 "apply modif [y/n]?";
-      if Common.ask_y_or_no ()
+      if Common2.y_or_no "apply modif?"
       then Common.write_file file s
       else failwith "ok, skipping"
     );
