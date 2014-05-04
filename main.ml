@@ -4,14 +4,21 @@ open Common
 (* Purpose *)
 (*****************************************************************************)
 
+(* dup: readme.txt
+ * syncweb is a command line tool enabling programmers to use the
+ * literate programming[1] development methodology, using the noweb[2]
+ * tool, while still being able to modify the generated files
+ * from the literate document.
+ * 
+ * [1] http://en.wikipedia.org/wiki/Literate_programming
+ * [2] http://www.cs.tufts.edu/~nr/noweb/
+ * 
+ * todo: could autodetect lang based on view filename
+ *)
+
 (*****************************************************************************)
 (* Flags *)
 (*****************************************************************************)
-
-(* In addition to flags that can be tweaked via -xxx options (cf the
- * full list of options in the "the options" section below), this 
- * program also depends on external files ?
- *)
 
 (* action mode *)
 let action = ref ""
@@ -21,15 +28,16 @@ let md5sum_in_auxfile = ref false
 let less_marks = ref false
 
 (*****************************************************************************)
-(* Some  debugging functions *)
+(* Debugging helpers *)
 (*****************************************************************************)
 
 let with_error file f = 
-  try f ()
+  try
+    pr2 (spf "processing %s" file);
+    f ()
   with e ->
     pr2 (spf "PB while was processing %s" file);
     raise e
-
 
 (*****************************************************************************)
 (* Helpers *)
@@ -41,40 +49,87 @@ let with_error file f =
 
 (* ---------------------------------------------------------------------- *)
 
-let console_actions () = [
+let actions () = [
+  "-parse_orig", "   <file>", 
+    Common.mk_action_1_arg (fun x -> 
+      let tmpfile = "/tmp/xxx" in
+      let orig = Engine.parse_orig x in
+      Engine.unparse_orig orig tmpfile;
+      Common.command2(spf "diff %s %s" x tmpfile);
+    );
+  "-parse_view", "   <file>", 
+    Common.mk_action_1_arg (fun x -> 
+      ignore(Engine.parse_view ~lang:Lang.mark_ocaml_short x);
+    );
+
+  "-view_of_orig", "   <file> <key>", 
+    Common.mk_action_2_arg (fun x key -> 
+      let orig = Engine.parse_orig x in
+      let view = Engine.view_of_orig key orig in
+      let tmpfile = "/tmp/xxx" in
+      Engine.unparse_view ~lang:Lang.mark_ocaml view tmpfile;
+      tmpfile +> Common.cat +> List.iter pr;
+      (*Common.command2(spf "diff %s %s" x tmpfile); *)
+    );
+
+  (* superseded by Main.main_action now *)
+  "-sync", "   <orig> <view>", 
+    Common.mk_action_2_arg (fun origf viewf -> 
+      let orig = Engine.parse_orig origf in
+      let views = Engine.parse_view ~lang:Lang.mark_ocaml viewf in
+
+      let orig' = Engine.sync ~lang:Lang.mark_ocaml     orig views  in
+
+      let tmpfile = "/tmp/xxx" in
+      Engine.unparse_orig orig' tmpfile;
+      Common.command2(spf "diff %s %s" origf tmpfile);
+    );
+  "-unmark", "   <file>", 
+    Common.mk_action_1_arg (fun file -> 
+
+      let xs = Common.cat file in
+      let xs = xs +> Common.exclude (fun s ->
+        s =~ "^[ \t]*(\\*[sex]:"
+      )
+      in
+      let tmpfile = "/tmp/xxx" in
+      let s = Common2.unlines xs in
+      Common.write_file tmpfile s;
+      Common.command2(spf "diff -u %s %s" file tmpfile);
+      if Common2.y_or_no "apply modif?"
+      then Common.write_file file s
+      else failwith "ok, skipping"
+    );
 ]
+
 (*****************************************************************************)
 (* Main action *)
 (*****************************************************************************)
 
 let main_action xs = 
-  let lang = List.assoc !lang (Engine.lang_table) in
+  let lang = List.assoc !lang (Lang.lang_table) in
+  let md5sum_in_auxfile = !md5sum_in_auxfile in
+  let less_marks = !less_marks in
 
   match xs with
+  (* simple case, one tex.nw file, one view *)
   | [origf;viewf] -> 
 
       let orig = Engine.parse_orig origf in
-
+      (* we take the basename so that files can be put in any directory *)
+      let topkey = Filename.basename viewf in
       if not (Sys.file_exists viewf)
       then
-        (* we take the basename so that files can be put in any directory *)
-        let view = Engine.view_of_orig ~topkey:(Filename.basename viewf) orig in
-        Engine.unparse_view 
-          ~md5sum_in_auxfile:!md5sum_in_auxfile
-          ~less_marks:!less_marks
-          ~lang view viewf
+        let view = Engine.view_of_orig ~topkey orig in
+        Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view viewf
       else begin
-        (*
-        let date1 = Common.filemtime origf in
-        let date2 = Common.filemtime viewf in
-        *)
+        (* old: let date1 = Common.filemtime origf in
+         *      let date2 = Common.filemtime viewf in
+         *)
         (* pr2 (spf "syncing %s and %s" origf viewf); *)
         let view = Engine.parse_view ~lang viewf in 
         let orig' = Engine.sync ~lang   orig view in
-        let view' = Engine.view_of_orig 
-          ~topkey:(Filename.basename viewf) 
-          orig' 
-        in
+        let view' = Engine.view_of_orig ~topkey orig' in
         (* regenerate orig and view *)
         if orig <> orig' then begin
           pr2 "orig has been updated";
@@ -82,13 +137,11 @@ let main_action xs =
         end;
         if view <> view' then begin
           pr2 "view has been regenerated";
-          Engine.unparse_view 
-            ~md5sum_in_auxfile:!md5sum_in_auxfile
-            ~less_marks:!less_marks
-            ~lang view' viewf;
+          Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
         end;
       end
 
+  (* many .tex.nw, one view (to be called repeatedely for each view) *)
   | xs when List.length xs > 2 -> 
       let origfs, viewf = 
         match List.rev xs with
@@ -99,31 +152,23 @@ let main_action xs =
         with_error f (fun () -> f, Engine.parse_orig f)
       ) in
       let orig = Engine.pack_multi_orig origs in
+      let topkey = Filename.basename viewf in
 
       if not (Sys.file_exists viewf)
       then 
-        let view = Engine.view_of_orig ~topkey:(Filename.basename viewf) orig in
-        Engine.unparse_view 
-          ~md5sum_in_auxfile:!md5sum_in_auxfile
-          ~less_marks:!less_marks
-          ~lang view viewf
+        let view = Engine.view_of_orig ~topkey orig in
+        Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view viewf
       else begin
         (* pr2 (spf "syncing %s" viewf); *)
 
         with_error viewf (fun () ->
         let view = Engine.parse_view ~lang viewf in 
         let orig' = Engine.sync ~lang  orig view in
-        let view' = Engine.view_of_orig 
-          ~topkey:(Filename.basename viewf) 
-          orig' 
-        in
+        let view' = Engine.view_of_orig  ~topkey orig' in
         (* regenerate orig and view *)
         if view <> view' then begin
           pr2 "view has been regenerated";
-          Engine.unparse_view 
-            ~md5sum_in_auxfile:!md5sum_in_auxfile
-            ~less_marks:!less_marks
-            ~lang view' viewf;
+          Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
         end;
         let origs' = Engine.unpack_multi_orig orig' in
         Common2.zip origs origs' +> List.iter (fun ((f1, orig), (f2, orig')) ->
@@ -142,16 +187,14 @@ let main_action xs =
 (*****************************************************************************)
 
 let all_actions () = 
-  console_actions() @
-  (*Test.actions() @*)
-  Engine.actions() @
+  actions() @
   []
 
 let options () = 
   [
     "-lang", Arg.Set_string lang, 
     (spf " <lang> (default=%s, choices=%s)" !lang 
-        (Common.join "|" (List.map fst Engine.lang_table)));
+        (Common.join "|" (List.map fst Lang.lang_table)));
 
     "-md5sum_in_auxfile", Arg.Set md5sum_in_auxfile, 
     " ";
@@ -164,13 +207,6 @@ let options () =
       exit 0;
     ), 
     "  guess what";
-
-    (* this can not be factorized in Common *)
-    "-date",   Arg.Unit (fun () -> 
-      pr2 "version: $Date: 2008/10/26 00:44:57 $";
-      raise (Common.UnixExit 0)
-    ), 
-    "   guess what";
   ] @
   Common2.cmdline_flags_devel () @
   Common.options_of_actions action (all_actions()) @
@@ -181,10 +217,6 @@ let options () =
 (*****************************************************************************)
 
 let main () = 
-
-  (* Common_extra.set_link(); 
-     let argv = Features.Distribution.mpi_adjust_argv Sys.argv in
-  *)
 
   let usage_msg = 
     "Usage: " ^ Filename.basename Sys.argv.(0) ^ 

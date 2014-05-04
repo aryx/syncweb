@@ -4,7 +4,6 @@ open Common2
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-
 (* 
  * history: started by defining types for orig and view that describes
  * how I want the two formats. Basically a list of stuff (aka chunks in
@@ -67,279 +66,8 @@ type view = codetree list
      (* work with the less_marks flag *)
      and position = First | Middle | Last
 
-
-(*****************************************************************************)
-(* Language specific handling in views  *)
-(*****************************************************************************)
-
-type mark_language = {
-  (* return (space, key, md5sum) *)
-  parse_mark_start: string -> (string * string * string option) option;
-  parse_mark_end: string -> (string * string option) option;
-
-  unparse_mark_start: key:string -> md5:string option -> string;
-  unparse_mark_end: key:string -> string;
-
-  parse_mark_startend: string -> (string * string * string option) option;
-  unparse_mark_startend: key:string -> md5:string option -> string;
-}
-
 let re_md5sum_in_aux_file = Str.regexp
   "\\(.*\\) |\\(.*\\)$"
-
-(* todo: can even factorize as many use the same comment format.
- * Maybe can just even provide the tokens to make a comment ?
- * 
- * todo: withoyt key in endmark ? but need adjust parse_view
- *)
-
-let mark_ocaml_short =
-  {
-    parse_mark_start = (fun s -> 
-      if s =~ "\\([ \t]*\\)(\\*s: \\(.*\\) \\*)$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, b, None)
-      else 
-        None
-    );
-    parse_mark_end = (fun s -> 
-      if s =~ "\\([ \t]*\\)(\\*e: \\(.*\\) \\*)$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, Some b)
-      else None
-    );
-    unparse_mark_start = (fun ~key ~md5 -> 
-      (match md5 with 
-      | None -> spf "(*s: %s *)" key;
-      | Some s -> raise Todo
-      )
-    );
-    unparse_mark_end   = (fun ~key ->
-      spf "(*e: %s *)" key
-    );
-
-
-
-    parse_mark_startend = (fun s -> 
-      if s =~ "\\([ \t]*\\)(\\*x: \\(.*\\) \\*)$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, b, None)
-      else 
-        None
-    );
-    unparse_mark_startend = (fun ~key ~md5 ->
-      (match md5 with
-      | None -> spf "(*x: %s *)" key;
-      | Some s -> raise Todo
-      )
-    );
-  }
-
-let mark_ocaml = 
-  let re_start = Str.regexp 
-  "\\([ \t]*\\)(\\* nw_s: \\(.*\\) |\\(.*\\)\\*)$"
-  in
-  let re_end = Str.regexp 
-    "\\([ \t]*\\)(\\* nw_e: \\(.*\\) \\*)$"
-  in
-  {
- 
-   parse_mark_start = (fun s -> 
-      if s ==~ re_start
-      then 
-        let (a,b,c) = Common.matched3 s in
-        Some (a, b, Some c)
-      else 
-        None
-    );
-
-    parse_mark_end = (fun s -> 
-      if s ==~ re_end
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, Some b)
-      else None
-    );
-
-    unparse_mark_start = (fun ~key ~md5 -> 
-      spf "(* nw_s: %s |%s*)" key (match md5 with None -> "" | Some s -> s));
-    unparse_mark_end   = (fun ~key ->      
-      spf "(* nw_e: %s *)" key);
-
-    parse_mark_startend = (fun s -> None);
-    unparse_mark_startend = (fun ~key ~md5 -> raise Todo);
-  }
-
-let mark_shell = 
-  let re_start = Str.regexp 
-  "\\([ \t]*\\)# nw_s: \\(.*\\) |\\(.*\\)#$"
-  in
-  let re_end = Str.regexp 
-    "\\([ \t]*\\)# nw_e: \\(.*\\) #$"
-  in
-  {
-    parse_mark_start = (fun s -> 
-      if s ==~ re_start
-      then
-        let (a,b,c) = Common.matched3 s in
-        Some (a, b, if c = "" then None else Some c)
-      else None
-    );
-    parse_mark_end = (fun s -> 
-      if s ==~ re_end
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, Some b)
-      else None
-    );
-    unparse_mark_start = (fun ~key ~md5 -> 
-      spf "# nw_s: %s |%s#" key (match md5 with None -> "" | Some s -> s));
-    unparse_mark_end   = (fun ~key ->      
-      spf "# nw_e: %s #" key);
-
-    parse_mark_startend = (fun s -> 
-      None);
-    unparse_mark_startend = (fun ~key ~md5 -> 
-      raise Todo
-    );
-  }
-
-let mark_ocamlyacc_short =
-  {
-    parse_mark_start = (fun s -> 
-      if s =~ "\\([ \t]*\\)/\\*(\\*s: \\(.*\\) \\*)\\*/$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, b, None)
-      else 
-        None
-    );
-    parse_mark_end = (fun s -> 
-      if s =~ "\\([ \t]*\\)/\\*(\\*e: \\(.*\\) \\*)\\*/$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, Some b)
-      else None
-    );
-    unparse_mark_start = (fun ~key ~md5 -> 
-      (match md5 with 
-      | None -> spf "/*(*s: %s *)*/" key;
-      | Some s -> raise Todo
-      )
-    );
-    unparse_mark_end   = (fun ~key ->
-      spf "/*(*e: %s *)*/" key
-    );
-
-
-
-    parse_mark_startend = (fun s -> 
-      if s =~ "\\([ \t]*\\)/\\*(\\*x: \\(.*\\) \\*)\\*/$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, b, None)
-      else 
-        None
-    );
-    unparse_mark_startend = (fun ~key ~md5 ->
-      (match md5 with
-      | None -> spf "/*(*x: %s *)*/" key;
-      | Some s -> raise Todo
-      )
-    );
-  }
-
-
-let mark_C = 
-  let re_start = Str.regexp 
-  "\\([ \t]*\\)/\\* nw_s: \\(.*\\) |\\(.*\\)\\*/$"
-  in
-  let re_end = Str.regexp 
-    "\\([ \t]*\\)/\\* nw_e: \\(.*\\) \\*/$"
-  in
-  {
-    parse_mark_start = (fun s -> 
-      if s ==~ re_start
-      then
-        let (a,b,c) = Common.matched3 s in
-        Some (a, b, if c = "" then None else Some c)
-      else None
-    );
-    parse_mark_end = (fun s -> 
-      if s ==~ re_end
-      then
-        let (a,b) = Common.matched2 s in
-        Some (a, Some b)
-      else None
-    );
-    unparse_mark_start = (fun ~key ~md5 -> 
-      spf "/* nw_s: %s |%s*/" key (match md5 with None -> "" | Some s -> s));
-    unparse_mark_end   = (fun ~key ->      
-      spf "/* nw_e: %s */" key);
-  
-    parse_mark_startend = (fun s -> None);
-    unparse_mark_startend = (fun ~key ~md5 -> raise Todo);
-  }
-
-let mark_C_short =
-  {
-    parse_mark_start = (fun s -> 
-      if s =~ "\\([ \t]*\\)/\\*s: \\(.*\\) \\*/$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, b, None)
-      else 
-        None
-    );
-    parse_mark_end = (fun s -> 
-      if s =~ "\\([ \t]*\\)/\\*e: \\(.*\\) \\*/$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, Some b)
-      else None
-    );
-    unparse_mark_start = (fun ~key ~md5 -> 
-      (match md5 with 
-      | None -> spf "/*s: %s */" key;
-      | Some s -> raise Todo
-      )
-    );
-    unparse_mark_end   = (fun ~key ->
-      spf "/*e: %s */" key
-    );
-
-
-
-    parse_mark_startend = (fun s -> 
-      if s =~ "\\([ \t]*\\)/\\*x: \\(.*\\) \\*/$"
-      then 
-        let (a,b) = Common.matched2 s in
-        Some (a, b, None)
-      else 
-        None
-    );
-    unparse_mark_startend = (fun ~key ~md5 ->
-      (match md5 with
-      | None -> spf "/*x: %s */" key;
-      | Some s -> raise Todo
-      )
-    );
-  }
-
-
-
-
-
-let lang_table = [
-  "ocaml", mark_ocaml_short;
-  "shell", mark_shell;
-  "C",     mark_C_short;
-  "ocamlyacc", mark_ocamlyacc_short;
-  "php", mark_C_short;
-]
 
 
 let md5sum_auxfile_of_file file = 
@@ -591,17 +319,17 @@ let parse_view ~lang file =
   let xs = Common.cat file in 
 
   let xs' = xs +> Common.index_list_1 +> List.map (fun (s, line) -> 
-    match lang.parse_mark_startend s with
+    match lang.Lang.parse_mark_startend s with
     | Some (tabs, key,  md5) -> 
         [End2 (Some key, String.length tabs, mkp file line);
          Start2 (key, String.length tabs, md5, mkp file line);
         ]
     | None ->
-        (match lang.parse_mark_start s with
+        (match lang.Lang.parse_mark_start s with
         | Some (tabs, key,  md5) -> 
             [Start2 (key, String.length tabs, md5, mkp file line)]
         | None -> 
-            (match lang.parse_mark_end s with
+            (match lang.Lang.parse_mark_end s with
             | Some (tabs, key) -> 
                 [End2 (key, String.length tabs, mkp file line)]
             | None -> 
@@ -744,9 +472,9 @@ let unparse_view
       pr_indent (i);
       (match x.pretty_print with
       | None | Some First ->
-          pr (lang.unparse_mark_start key md5sum);
+          pr (lang.Lang.unparse_mark_start key md5sum);
       | (Some (Middle|Last)) -> 
-          pr (lang.unparse_mark_startend key md5sum);
+          pr (lang.Lang.unparse_mark_startend key md5sum);
       );
       body +> List.iter (function
       | RegularCode s -> 
@@ -773,7 +501,7 @@ let unparse_view
       | None | Some Last ->
           (* bugfix: the pr_indent call must be here, not outside *)
           pr_indent (i);
-          pr (lang.unparse_mark_end key);
+          pr (lang.Lang.unparse_mark_end key);
       | Some (First | Middle) ->
           ()
       )
@@ -1163,63 +891,3 @@ let rec unpack_multi_orig orig =
     | _ -> raise Impossible
   )
 
-(*****************************************************************************)
-(* Tests  *)
-(*****************************************************************************)
-
-(*****************************************************************************)
-(* Actions  *)
-(*****************************************************************************)
-
-let actions () = [
-  "-parse_orig", "   <file>", 
-    Common.mk_action_1_arg (fun x -> 
-      let tmpfile = "/tmp/xxx" in
-      let orig = parse_orig x in
-      unparse_orig orig tmpfile;
-      Common.command2(spf "diff %s %s" x tmpfile);
-    );
-  "-parse_view", "   <file>", 
-    Common.mk_action_1_arg (fun x -> 
-      ignore(parse_view ~lang:mark_ocaml_short x);
-    );
-
-  "-view_of_orig", "   <file> <key>", 
-    Common.mk_action_2_arg (fun x key -> 
-      let orig = parse_orig x in
-      let view = view_of_orig key orig in
-      let tmpfile = "/tmp/xxx" in
-      unparse_view ~lang:mark_ocaml view tmpfile;
-      tmpfile +> Common.cat +> List.iter pr;
-      (*Common.command2(spf "diff %s %s" x tmpfile); *)
-    );
-
-  (* superseded by Main.main_action now *)
-  "-sync", "   <orig> <view>", 
-    Common.mk_action_2_arg (fun origf viewf -> 
-      let orig = parse_orig origf in
-      let views = parse_view ~lang:mark_ocaml viewf in
-
-      let orig' = sync ~lang:mark_ocaml     orig views  in
-
-      let tmpfile = "/tmp/xxx" in
-      unparse_orig orig' tmpfile;
-      Common.command2(spf "diff %s %s" origf tmpfile);
-    );
-  "-unmark", "   <file>", 
-    Common.mk_action_1_arg (fun file -> 
-
-      let xs = Common.cat file in
-      let xs = xs +> Common.exclude (fun s ->
-        s =~ "^[ \t]*(\\*[sex]:"
-      )
-      in
-      let tmpfile = "/tmp/xxx" in
-      let s = Common2.unlines xs in
-      Common.write_file tmpfile s;
-      Common.command2(spf "diff -u %s %s" file tmpfile);
-      if Common2.y_or_no "apply modif?"
-      then Common.write_file file s
-      else failwith "ok, skipping"
-    );
-]
