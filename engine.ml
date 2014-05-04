@@ -216,9 +216,6 @@ let parse_orig file =
   in
   agglomerate xs'
 
-
-                           
-
 (* ------------------------------------------------------------ *)
 (* view *)
 (* ------------------------------------------------------------ *)
@@ -647,8 +644,6 @@ let build_chunk_hash_from_views views =
   in
   views +> List.iter aux;
   h
-  
-
 
 (*****************************************************************************)
 (* Merger  *)
@@ -668,8 +663,6 @@ let build_chunk_hash_from_views views =
  *)
 let candidates_against_orig body_orig view_elems orig_elems =
   view_elems
-
-
 
 
 (* Pierce with his lenses takes also the original view, but we instead use the
