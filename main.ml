@@ -47,9 +47,52 @@ let with_error file f =
 (* Actions *)
 (*****************************************************************************)
 
-(* ---------------------------------------------------------------------- *)
+(* help to create a first draft, to LPize a big set of files *)
+let lpize file =
+  let files = Common.cat file in
+  (* sanity check *)
+  let group_by_basename =
+    files +> List.map (fun file -> Filename.basename file, file)
+      +> Common.group_assoc_bykey_eff
+  in
+  group_by_basename +> List.iter (fun (base, xs) ->
+    if List.length xs > 1
+    then failwith (spf "multiple files with same name: %s" 
+                     (xs +> Common.join "\n"))
+  );
 
+  let current_topdir = ref "" in
+  files +> List.iter (fun file ->
+    let xs = Common.split "/" file in
+    let hd = List.hd xs in
+    if hd <> !current_topdir
+    then begin
+      pr (spf "\\section{[[%s/]]}" hd);
+      pr "";
+      current_topdir := hd;
+    end;
+
+      pr (spf "\\subsection*{[[%s]]}" file);
+      pr "";
+    
+    let base = Filename.basename file in
+    pr (spf "<<%s>>=" base);
+    Common.cat file +> List.iter pr;
+    pr "@";
+    pr "";
+    pr "";
+
+    (* for the initial 'make sync' to work *)
+    (* Sys.command (spf "rm -f %s" file) +> ignore; *)
+  )
+
+(* syncweb does not files with TABs *)
+let untabify _file =
+  raise Todo
+
+(* ---------------------------------------------------------------------- *)
 let actions () = [
+
   "-parse_orig", "   <file>", 
     Common.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
@@ -100,6 +143,10 @@ let actions () = [
       then Common.write_file file s
       else failwith "ok, skipping"
     );
+  "-lpize", " <file>",
+  Common.mk_action_1_arg lpize;
+  "-untabify", " <file>",
+  Common.mk_action_1_arg untabify;
 ]
 
 (*****************************************************************************)
