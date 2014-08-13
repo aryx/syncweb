@@ -13,7 +13,12 @@ open Common
  * [1] http://en.wikipedia.org/wiki/Literate_programming
  * [2] http://www.cs.tufts.edu/~nr/noweb/
  * 
- * todo: could autodetect lang based on view filename
+ * todo: 
+ *  - detect recursive chunks that leads to weird thing when do 'make sync'
+ *  - could autodetect lang based on view filename
+ * 
+ * related work:
+ *  - todo: http://leoeditor.com/
  *)
 
 (*****************************************************************************)

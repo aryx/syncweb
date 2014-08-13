@@ -241,6 +241,8 @@ website:
 
 visual:
 	~/pfff/codemap -no_legend -profile -ss 2 -filter pfff .
+graph:
+	~/pfff/codegraph -lang cmt -derived_data -build .
 
 ##############################################################################
 # Pad specific rules
