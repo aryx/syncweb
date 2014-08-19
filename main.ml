@@ -19,6 +19,9 @@ open Common
  * 
  * related work:
  *  - todo: http://leoeditor.com/
+ *  - org-babel and its detangle function
+ *    http://comments.gmane.org/gmane.emacs.orgmode/32814 but syncweb
+ *    workflow is better, it automatically syncs in the right direction.
  *)
 
 (*****************************************************************************)
