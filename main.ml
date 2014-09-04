@@ -51,11 +51,43 @@ let with_error file f =
 (* Helpers *)
 (*****************************************************************************)
 
+open Engine
+let find_topkey_corresponding_to_file orig viewf =
+  (* old: Filename.basename viewf *)
+  let base = Filename.basename viewf in
+  let defs = orig +> Common.map_filter (function
+    | Tex _ -> None
+    | ChunkDef (def, _xs) -> 
+      let s = def.chunkdef_key in
+      if Filename.basename s =*= base
+      then Some s
+      else None 
+  )
+  in
+  (match defs with
+  | [] -> failwith (spf "could not find topkey for %s" viewf)
+  | [x] -> x
+  | x::y::ys ->
+    failwith (spf "too many matching topkeys for %s (%s)" viewf
+                 ((x::y::ys) +> Common.join ", "))
+  )
+
 (*****************************************************************************)
 (* Actions *)
 (*****************************************************************************)
 
-(* help to create a first draft, to LPize a big set of files *)
+(* syncweb does not like tabs *)
+let untabify s =
+  Str.global_substitute (Str.regexp "^\\([\t]+\\)") (fun _wholestr ->
+    let substr = Str.matched_string s in
+    let n = String.length substr in
+    Common2.n_space (4 * n)
+  ) s
+
+(* help to create a first draft, to LPize a big set of files 
+ * see also pfff -lpize which support fine grained split of entities
+ * (and also untabification)
+ *)
 let lpize file =
   let files = Common.cat file in
   (* sanity check *)
@@ -85,7 +117,9 @@ let lpize file =
     
     let base = Filename.basename file in
     pr (spf "<<%s>>=" base);
-    Common.cat file +> List.iter pr;
+    Common.cat file +> List.iter (fun s ->
+      pr (untabify s);
+    );
     pr "@";
     pr "";
     pr "";
@@ -93,10 +127,6 @@ let lpize file =
     (* for the initial 'make sync' to work *)
     (* Sys.command (spf "rm -f %s" file) +> ignore; *)
   )
-
-(* syncweb does not files with TABs *)
-let untabify _file =
-  raise Todo
 
 (* ---------------------------------------------------------------------- *)
 let actions () = [
@@ -153,8 +183,6 @@ let actions () = [
     );
   "-lpize", " <file>",
   Common.mk_action_1_arg lpize;
-  "-untabify", " <file>",
-  Common.mk_action_1_arg untabify;
 ]
 
 (*****************************************************************************)
@@ -172,7 +200,7 @@ let main_action xs =
 
       let orig = Engine.parse_orig origf in
       (* we take the basename so that files can be put in any directory *)
-      let topkey = Filename.basename viewf in
+      let topkey = find_topkey_corresponding_to_file orig viewf in
       if not (Sys.file_exists viewf)
       then
         let view = Engine.view_of_orig ~topkey orig in
@@ -207,7 +235,7 @@ let main_action xs =
         with_error f (fun () -> f, Engine.parse_orig f)
       ) in
       let orig = Engine.pack_multi_orig origs in
-      let topkey = Filename.basename viewf in
+      let topkey = find_topkey_corresponding_to_file orig viewf in
 
       if not (Sys.file_exists viewf)
       then 
