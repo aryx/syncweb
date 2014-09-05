@@ -68,8 +68,36 @@ let find_topkey_corresponding_to_file orig viewf =
   | [] -> failwith (spf "could not find topkey for %s" viewf)
   | [x] -> x
   | x::y::ys ->
-    failwith (spf "too many matching topkeys for %s (%s)" viewf
-                 ((x::y::ys) +> Common.join ", "))
+    (* same basenames, need to use the directory as a discriminator *)
+    let revdir = Filename.dirname viewf +> Common.split "/" +> List.rev in
+    let candidates = 
+      (x::y::ys) +> List.map (fun file ->
+        Filename.dirname file +> Common.split "/" +> List.rev,
+        file
+       )
+    in
+    let err () = 
+      failwith (spf "too many matching topkeys for %s (%s)" viewf
+                  ((x::y::ys) +> Common.join ", "))
+    in
+    let rec aux revdir candidates =
+      match revdir with
+      | [] -> err ()
+      | x::xs ->
+        let same_top_revdir_candidates =
+          candidates +> Common.map_filter (fun (revdir, fullfile) ->
+            match revdir with
+            | [] -> None
+            | y::ys -> if y = x then Some (ys, fullfile) else None
+          )
+        in
+        (match same_top_revdir_candidates with
+        | [] -> err ()
+        | [_, fullfile] -> fullfile
+        | _ -> aux xs same_top_revdir_candidates
+        )
+    in
+    aux revdir candidates
   )
 
 (*****************************************************************************)
