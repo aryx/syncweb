@@ -14,14 +14,18 @@ open Common
  * [2] http://www.cs.tufts.edu/~nr/noweb/
  * 
  * todo: 
+ *  - optimize make sync when have many files, cache in a .marshall
+ *    the parsing of the .tex.nw? or use hashtbl instead of list for faster
+ *    lookup
  *  - detect recursive chunks that leads to weird thing when do 'make sync'
- *  - could autodetect lang based on view filename
+ *  - could autodetect language based on view filenames?
  * 
  * related work:
  *  - todo: http://leoeditor.com/
  *  - org-babel and its detangle function
  *    http://comments.gmane.org/gmane.emacs.orgmode/32814 but syncweb
  *    workflow is better, it automatically syncs in the right direction.
+ *  - http://www.t3x.org/s9fes/edoc.html?
  *)
 
 (*****************************************************************************)
@@ -52,6 +56,7 @@ let with_error file f =
 (*****************************************************************************)
 
 open Engine
+(* allows to have multiple filenames with the same name but different dir *)
 let find_topkey_corresponding_to_file orig viewf =
   (* old: Filename.basename viewf *)
   let base = Filename.basename viewf in
@@ -112,9 +117,9 @@ let untabify s =
     Common2.n_space (4 * n)
   ) s
 
-(* help to create a first draft, to LPize a big set of files 
- * see also pfff -lpize which support fine grained split of entities
- * (and also untabification)
+(* Help to create a first draft, to LPize a big set of files.
+ * See now pfff -lpize which supports fine grained split of entities
+ * (and also untabification) by actually parsing the source code files.
  *)
 let lpize file =
   let files = Common.cat file in
