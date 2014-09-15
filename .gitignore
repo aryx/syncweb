@@ -1,3 +1,13 @@
+*.cm*
+*.annot
+
 /Makefile.config
 /globals/config.ml
 /syncweb
+/.depend
+/commons/.depend
+/globals/.depend
+/PFFF_DB.marshall
+/graph_code.marshall
+/graph_code.marshall.opti
+/syncweb.opt

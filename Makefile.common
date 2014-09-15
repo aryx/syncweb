@@ -24,7 +24,7 @@ OPTOBJS?= $(SRC:.ml=.cmx)
 ##############################################################################
 
 #dont use -custom, it makes the bytecode unportable.
-OCAMLCFLAGS?=-g -dtypes # -w A
+OCAMLCFLAGS?=-g -dtypes -bin-annot # -w A
 
 # This flag is also used in subdirectories so don't change its name here.
 OPTFLAGS?=
@@ -77,7 +77,7 @@ clean::
 	$(OCAMLC) -i $<
 
 clean::
-	rm -f *.cm[ioxa] *.o *.a *.cmxa *.annot
+	rm -f *.cm[ioxa] *.o *.a *.cmxa *.annot *.cmt *.cmti
 	rm -f *~ .*~ *.exe gmon.out #*#
 
 distclean::

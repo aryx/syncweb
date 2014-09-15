@@ -16,7 +16,7 @@ sub process_file {
     my $input = IO::File->new("< $file") or die "$! $file";
 
     while(defined($line = $input->getline())) {
-        if($line =~ /^#include \"(.*)\"/) {
+        if($line =~ /^#include \"(.*.tex.nw)\"/) {
             process_file($1);
         } else {
             if($line =~ "<<.*>>") {
@@ -32,6 +32,9 @@ sub process_file {
     $line =~ s/^[ \t]*\\t (.*)$/\\SaveVerb{Verb}+$1+\\todo{\\UseVerb{Verb}}/;
     $line =~ s/^[ \t]*\\n (.*)$/\\SaveVerb{Verb}+$1+\\note{\\UseVerb{Verb}}/;
     $line =~ s/^[ \t]*\\l (.*)$/\\SaveVerb{Verb}+$1+\\less{\\UseVerb{Verb}}/;
+    # can have code in comments that contains special symbol like <<
+    # so simpler to just filter such code
+    $line =~ s/^%.*/%/;
 
             print OUTFILE $line;
         }

@@ -11,7 +11,7 @@ VERSION=$(shell cat globals/config.ml.in |grep version |perl -p -e 's/.*"(.*)".*
 ##############################################################################
 TOP=$(shell pwd)
 
-SRC=engine.ml test.ml main.ml 
+SRC=lang.ml engine.ml test.ml main.ml 
 
 TARGET=syncweb
 PROGS=syncweb
@@ -65,8 +65,7 @@ endif
 
 #------------------------------------------------------------------------------
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
-LIBS= commons/commons.cma \
-      $(BTCMA) \
+LIBS= commons/lib.cma \
       $(REGEXPCMA) \
       commons/commons_features.cma \
       globals/globals.cma
@@ -196,15 +195,12 @@ uninstall:
 version:
 	@echo $(VERSION)
 
-
-
 ##############################################################################
 # Package rules
 ##############################################################################
 
 PACKAGE=syncweb-$(VERSION)
 TMP=/tmp
-
 
 package: 
 	make srctar 
@@ -242,6 +238,11 @@ website:
 #VCS related
 
 #test related
+
+visual:
+	~/pfff/codemap -no_legend -profile -ss 2 -filter pfff .
+graph:
+	~/pfff/codegraph -lang cmt -derived_data -build .
 
 ##############################################################################
 # Pad specific rules

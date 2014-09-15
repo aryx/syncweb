@@ -18,7 +18,7 @@ doxygen, or ocamlweb. Noweb, and syncweb, do not provide the same kind
 of services. Literate programming allows programmers to explain their
 code in the order they think the code will be better understood, and
 allows among other things to explain code piece by piece with the
-possiblity to present a high-level view first of the code. Moreover,
+possibility to present a high-level view first of the code. Moreover,
 because noweb is essentially a macro-processing language, one can also
 "program" at the noweb level, which can sometimes overcome some of the
 limitations or the language of the documented program. For instance,
