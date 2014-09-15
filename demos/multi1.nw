@@ -1,0 +1,12 @@
+\section{Section1}
+
+
+<<multi_main.mli>>=
+val t1: int
+
+@
+
+<<multi_main.ml>>=
+let t1 = 3
+
+@

@@ -1,0 +1,26 @@
+<<hello.c>>=
+<<includes>>
+
+int main(int argc, char** argv) 
+{
+    <<say hello>>
+    return 0;
+}
+@
+
+<<say hello>>=
+printf("Hello World!\n");
+@
+
+
+<<includes>>=
+#include <stdio.h> /* for printf */
+@
+
+<<say hello>>=
+printf("Hello World2!\n");
+@
+
+<<includes>>=
+#include <stdio.h> /* 2 for printf */
+@

@@ -1,0 +1,12 @@
+\documentclass{article}
+
+\usepackage{noweb}
+%\pagestyle{noweb}
+\noweboptions{}
+
+\begin{document}
+
+#include "multi1.nw"
+#include "multi2.nw"
+
+\end{document}

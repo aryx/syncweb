@@ -1,0 +1,2129 @@
+\documentclass{article}
+
+%******************************************************************************
+% Prelude
+%******************************************************************************
+
+\newif\iffinal
+\newif\ifverbose
+
+\finaltrue\verbosefalse
+%\finalfalse\verbosetrue
+
+%------------------------------------------------------------------------------
+% Packages
+%------------------------------------------------------------------------------
+\usepackage{noweb}
+\noweboptions{}
+%note: allow chunk to be on different pages, so less white space at bottom of pages
+\def\nwendcode{\endtrivlist \endgroup}
+\let\nwdocspar=\par
+
+\usepackage{xspace}
+
+\usepackage{verbatim}
+%note: required by noweblatexpad for the \t \l \n in this file
+\usepackage{fancyvrb}
+
+\usepackage{url}
+\iffinal
+\usepackage{hyperref}
+\hypersetup{colorlinks=true}
+\fi
+
+\usepackage{graphics}
+%pre: require to have installed also the dot2tex in your PATH
+%     and call with --shell-escape pdflatex
+%src: http://www.fauskes.net/nb/introducing-dot2texi/
+\usepackage{latex/dot2texi}
+\usepackage{tikz}
+\usetikzlibrary{automata,shapes,arrows}
+
+%------------------------------------------------------------------------------
+% Shortcuts
+%------------------------------------------------------------------------------
+\newcommand{\co}[1]{{\em #1}}
+\newcommand{\f}[1]{{\tt #1}}
+
+%note: also work with noweblatex pad so that \t \n \l are alias
+\iffinal
+\newcommand{\todo}[1]{}
+\newcommand{\note}[1]{}
+\newcommand{\less}[1]{}
+\else
+\newcommand{\todo}[1]{\footnote{TODO: {\tt #1}}}
+ \ifverbose
+ \newcommand{\note}[1]{\footnote{NOTE: {\tt #1}}}
+ \newcommand{\less}[1]{\footnote{LESS: {\tt #1}}}
+ \else
+ \newcommand{\note}[1]{}
+ \newcommand{\less}[1]{}
+ \fi
+\fi
+%\newcommand{\todo}[1]{\marginpar{#1}}
+
+
+
+%------------------------------------------------------------------------------
+% Globals
+%------------------------------------------------------------------------------
+\newcommand{\ocamlmpi}{OCamlMPI\xspace}
+
+
+%------------------------------------------------------------------------------
+% CONFIG:
+%------------------------------------------------------------------------------
+\newif\ifimplem
+\implemtrue 
+
+\newif\ifdebugcode
+\debugcodetrue 
+
+
+
+\newif\ifadvanceduse
+\advancedusefalse
+
+\newif\ifadvancedexplain
+\advancedexplainfalse
+
+\newif\ifallcode
+\allcodefalse
+
+%ifmpich ??
+%mpich, C-s mpich:
+
+%******************************************************************************
+% Title
+%******************************************************************************
+\begin{document}
+
+\title{A poor's man MapReduce for OCaml}
+\author{
+Yoann Padioleau\\
+\texttt{yoann.padioleau@gmail.com}
+}
+% version ??
+
+\maketitle 
+
+\iffinal
+\begingroup
+\hypersetup{colorlinks=true, linkcolor=blue}
+\tableofcontents
+\endgroup
+\else
+\tableofcontents
+\fi
+
+%******************************************************************************
+% Body
+%******************************************************************************
+
+\section{Introduction}
+\label{sec:introduction}
+\n convention: use we/you, but try to limit their use
+\l do an abstract ?
+
+The goal of the \f{distribution.ml} 
+\l a better name ? put Distribution ? or distribution.mli ?
+module documented here is to provide a simple API
+{\em a la} MapReduce~\cite{mapreduce} for OCaml programs. 
+
+MapReduce takes his name and core ideas from the functional 
+programming community where the higher order functions
+[[map]] and [[reduce]] (called [[fold]] in OCaml) are commonly
+used. Those 2 functions serve as the basis for a
+very simple parallel programming model where
+many computationally intensive functions can be programmed
+by combining a [[map]] function and its argument (usually
+in OCaml an anonymous function) with a [[reduce]] function and 
+its argument, and by applying this combination in a clever way 
+on a huge dataset.
+In the case of Google's MapReduce, the arguments
+of the [[map]] and [[reduce]] are written in C++. 
+\l and dataset = ?
+The trick is that internally the 2 functions [[map]] 
+and [[reduce]] themselves can be implemented
+in such a way to distribute {\em automatically} 
+under the hood the computation to different machines. The programmer does
+not have to handle all the tedious work that usually comes with writing
+distributed applications. 
+
+Even if OCaml gives access to a good library for distributing
+computation, MPI~\cite{mpi}, via the \ocamlmpi OCaml
+binding~\cite{ocamlmpi}, and even if MPI is already
+very good at hiding some of the complexity that usually
+comes with writing distributed applications\footnote{ 
+MPI (and \ocamlmpi) can also be used to leverage the multiple processors
+on a single machine, which in the case of OCaml programs is
+useful in its own right as OCaml threads can not leverage
+such processors.
+}, MPI (and \ocamlmpi) as it is still requires a little
+plumbing to make it work like the MapReduce programming model.
+The modest goal of \f{distribution.ml} is thus to provide
+this little boilerplate code via some higher-order polymorphic functions that
+further hide some complexity. Moreover, even if you don't use
+[[distribution.ml]], this document can still serve as an MPI tutorial
+for OCaml programmers.
+
+
+In the following section we explain how to install
+the dependencies required to compile \f{distribution.ml}.
+We then present in Section~\ref{sec:example} a simple example using
+the API provided by \f{distribution.ml}. Section~\ref{sec:interface}
+gives the complete reference of the API. 
+\ifimplem
+Then, for those interested, Section~\ref{sec:implementation}
+gives more details about the implementation.
+\fi %implem
+\ifadvanceduse
+Section~\ref{sec:advanced} describes more advanced examples.
+\fi %advanceduse
+Section~\ref{sec:limitations} discusses limitations 
+and alternatives. Finally Section~\ref{sec:conclusion}
+concludes and describes how to get \f{distribution.ml}.
+\l repeat too much the filename
+
+%note: dont know why but if put that earlier, I have some newpage generated
+%      when work with -filter dpp
+@ %keyword let fun function   if then else   match with   while for to do done   open val exception raise try 
+
+\section{Requirements}
+\label{sec:installing}
+
+To compile \f{distribution.ml} and the examples in this document
+\l put compile in em ? to make paralell with the to execute that comes later?
+you first need to install MPI on your machine
+as well as the \ocamlmpi~\cite{ocamlmpi} binding from Xavier Leroy's homepage
+and the utility library Commons~\cite{commons-pad} used internally by \f{distribution.ml}. 
+Here is a short script to automate all of this:
+
+<<get_dependencies.sh>>=
+#!/bin/sh
+
+<<get and install MPI>>
+
+wget http://caml.inria.fr/distrib/bazar-ocaml/ocamlmpi.tar.gz
+wget http://aryx.kicks-ass.org/~pad/ocaml/commons-latest.tgz
+
+tar xvfz ocamlmpi.tar.gz
+mv ocamlmpi-1.01 ocamlmpi
+cd ocamlmpi/
+<<adjust MPI path in OCamlMPI Makefile>>
+make depend
+make
+
+cd ..
+tar xvfz commons-latest.tgz
+mv commons-latest commons
+cd commons/
+make depend
+make
+cd ..
+@ 
+\l wget http://aryx.kicks-ass.org/~pad/ocaml/mapreduce-latest.tgz
+
+
+MPI is a standard and there are multiple implementations
+of this standard such as
+MPICH~\cite{mpich} or OpenMPI~\cite{openmpi} (formerly known
+as LAM/MPI).
+\n mpich: make special font for stuff specific to mpich ? ou un cadre ?
+In the following we focus on MPICH, a popular and 
+free implementation of MPI for network of Unix workstations,
+but any implementation should work. 
+You can install MPICH from its source but it is usually easier
+to install it from your Linux distribution, for instance on Debian or Ubuntu
+with:
+
+<<get and install MPI>>=
+sudo apt-get install libmpich1.0-dev # for mpi.h
+sudo apt-get install mpich-bin       # for mpirun
+@ 
+\n ask for rsh-server, but I think configured by default with ssh
+
+Note that to {\em execute} programs using \f{distribution.ml} you will 
+also need to install MPI on all the machines that will participate
+in the computation and have the [[mpirun]] program accessible
+in your PATH. You will also need [[rsh]] (or [[ssh]]) correctly
+configured in order for the [[mpirun]] MPI utility to be able to execute 
+the necessary remote commands on all 
+those machines. Section~\ref{sec:mpi-ssh} gives more information about those
+issues.
+%mpich-bin
+\l forward ref to mpirun and ssh is good ?
+\t if archi different, then also need compile programs in different manners
+
+Adjusting the Makefile of \ocamlmpi is quite simple:
+
+\n mpich:
+<<adjust MPI path in OCamlMPI Makefile>>=
+sed -i -e 's+MPIINCDIR=.*+MPIINCDIR=/usr/include/mpi+'   Makefile
+sed -i -e 's+MPILIBDIR=.*+MPILIBDIR=/usr/lib/mpich/lib+' Makefile
+@ 
+
+%pad: in my case I have it in package/stow/mpich-1.2.7 but I dont
+% remember why I decided to compile it myself. Maybe because
+% I configure it with ssh support as default ? but apparently
+% can use ssh by setting the variable RSHCOMMAND=ssh so 
+% do I really needed to compile mpich myself ? (hmm maybe 
+% I did it for met205)
+
+
+\section{Example of use}
+\label{sec:example}
+
+The following subsections show how to use \f{distribution.ml}
+to distribute a toplevel computation executed usually
+just after the [[main]] entry of your program\footnote{
+To distribute deeply nested code of your
+application requires more 
+\ifadvanceduse
+code and its explanations will be deferred until Section~\ref{sec:simd}.
+\else
+code.
+\fi %advanceduse
+The main reason for the added complexity is 
+the SPMD (Single Program Multiple Data) model 
+assumed by MPI.
+}.
+
+\subsection{A simple map and reduce}
+
+The following excerpt describes a naive (well, dumb is more accurate)
+mapping function [[map_ex]] and reduce function [[reduce_ex]].
+The goal is to compute the sum of a 
+%possibly huge 
+list where each element in this list is the result of applying the
+Fibonacci function to the original element of another list. In practice
+Fibonacci would have been replaced by a really heavy and useful computation 
+which would have forced the programmer to distribute it.
+
+<<distribution_test.ml>>=
+open Common
+
+let rec fib n = 
+  if n = 0 then 0
+  else 
+   if n = 1 then 1
+    else fib (n-1) + fib (n-2)
+
+
+let map_ex arg = 
+  pr (spf "map: %d" arg);
+  fib arg
+
+let reduce_ex acc e = 
+  pr (spf "reduce: acc=%d, e=%d" acc e);
+  acc + e
+
+@ 
+
+The code excerpt uses the module [[Common]]~\cite{commons-pad}, briefly
+mentioned in Section~\ref{sec:installing}, 
+which provides
+convenient utility functions or short aliases of utility functions
+not provided by default in the OCaml standard library. 
+[[pr]] is for printing on stdout, [[spf]] is an alias
+for [[Printf.sprintf]], etc. 
+%It can be downloaded from
+%the same website than \f{distribution.ml}; see also 
+%Section~\ref{sec:availability}.
+
+
+%spirit: put fake main and so later can show that by changing one 
+% line you got a distrib :)
+%todo?: but repeat naive_map_reduce in equation later :( so maybe not
+% good flow
+
+
+Just for explanation purposes, here is how a naive [[map_reduce]]
+could be written:
+
+\label{sec:naive}
+<<distribution_test.ml>>=
+let naive_map_reduce ~fmap ~freduce acc xs = 
+  List.fold_left freduce acc (List.map fmap xs)
+@ 
+
+\noindent and here is some code using this [[naive_map_reduce]], which of
+course does not leverage MPI and so does not distribute any computation:
+
+<<distribution_test.ml>>=
+let test_no_mpi () = 
+  let res = naive_map_reduce ~fmap:map_ex ~freduce:reduce_ex 
+    0 [1;2;3;10] in
+  pr (spf "result = %d" res);
+  ()
+@ 
+
+One can also simplify the code by inlining some definitions
+and by leveraging OCaml anonymous functions with:
+
+<<distribution_test.ml>>=
+let test_no_mpi_bis () = 
+  let res = naive_map_reduce ~fmap:fib ~freduce:(fun acc e -> acc + e)
+    0 [1;2;3;10] in
+  pr (spf "result = %d" res);
+  ()
+@ 
+
+\l if run on single machine => get ?
+
+\subsection{Using the [[distribution.mli]] API}
+
+Now we are ready to use the [[Distribution]] module
+to distribute the computation. Here is the code:
+
+%??
+%(* even shorter form that can also work without mpi by defaulting to 
+% * a traditional List.map *)
+
+\label{sec:test-mpi-ex}
+<<distribution_test.ml>>=
+let test_mpi () = 
+  let res = Distribution.map_reduce ~fmap:map_ex ~freduce:reduce_ex 
+    0 [35;35;35;35] in
+  pr (spf "result = %d" res);
+  ()
+
+let main = 
+  <<set debug mpi flag if necessary>>
+  test_mpi ()
+
+@ 
+\l something better than [35;...] but useful for bench
+
+%You just use one function and have distributed app :)
+
+Et voila! You got a distributed application by just changing one line, 
+i.e. by replacing [[naive_map_reduce]] by [[Distribution.map_reduce]].
+[[map_reduce]] is a higher-order function taking the mapping
+and reduce functions as arguments, the initial accumulator (as
+for a classic fold), and a list, 
+and conceptually has the following specification:
+\begin{equation}
+\texttt{map\_reduce}~\textit{fmap}~\textit{freduce}~\textit{acc}~\textit{xs} 
+\equiv
+\texttt{List.fold}~\textit{freduce}~\textit{acc}~
+  (\texttt{List.map}~\textit{fmap}~\textit{xs})
+\end{equation}
+\l todo2 in fact fold_left. same for below
+\l todo2 note: in fact not exactly spec, because order may be different
+
+\noindent but internally distributes
+%data with marshalling and computations
+computations instead of using the [[List.fold]] and [[List.map]] functions from
+the OCaml standard library.
+\l of course force you to have written your program in such a way that map and reduce, but many are.
+
+%old:
+% hmmm in fact as said later not really true ... dont need Fold
+% as the reduce argument is actually the reduce function itself
+
+%old: wrong in fact; cos not a fold; but directly reduce.
+% In fact reduce must return unit, and mpi_main return unit
+% because ocamlmpi model is SPMD so client execute 
+% same program, and so both will execute mpi_main but
+% only one machine, we call {\em master}, will execute
+% the reduce function, the other, we call {\em worker} will
+% execute the map.
+% or slave
+%update: now do fold, and use exn for client
+
+\subsection{Compiling}
+
+
+Here is a simple [[Makefile]] to test our example\footnote{
+In practice you should write rules to
+%avoid unnecessary recompilations, 
+factorize things, to automatically compute
+the dependencies, etc, but the goal
+here is not to teach you how to use [[make]].
+}.
+We assume the [[commons/]] and [[ocamlmpi/]] directories mentioned
+in Section~\ref{sec:installing} are present in the current
+directory.
+
+<<Makefile.test>>=
+INCLUDES=-I commons -I ocamlmpi
+OCAMLC=ocamlc
+COMMONSYSLIBS=str.cma unix.cma bigarray.cma
+
+distribution_test: distribution.cmo distribution_test.cmo
+	$(OCAMLC) $(INCLUDES) -custom $(COMMONSYSLIBS) commons/commons.cma \
+            ocamlmpi/mpi.cma $^ -o $@
+
+# the test program
+distribution_test.cmo: distribution_test.ml
+	$(OCAMLC) $(INCLUDES) -c distribution_test.ml
+
+# the library
+distribution.cmo: distribution.ml distribution.mli
+	$(OCAMLC) $(INCLUDES) -c distribution.mli
+	$(OCAMLC) $(INCLUDES) -c distribution.ml
+@ 
+
+\l bigarray.cma ... for commons
+\n don't forget the INCLUDES on the linking command, otherwise ocamlc can not find mpi_stubs.
+
+To compile our test example then simply do:
+\begin{verbatim}
+   $ make -f Makefile.test
+\end{verbatim}
+
+
+\subsection{Running on a single machine}
+\l and on a single processor
+
+For debugging purpose, one can run programs using \f{distribution.ml}
+on a single machine in which case [[Distribution.map_reduce]]
+behaves internally as the [[naive_map_reduce]] mentioned 
+in Section~\ref{sec:naive}.
+\t how know ? how magic ? know with argv, cf under_mpirun
+%see [[under_mpirun]] Section~\ref{}
+%note that can run on single node!! distribute handle that,
+% so no change of code :)
+%also good to verify correctness, if get different results running
+% on single machine, then weird
+To test on a single machine simply do:
+
+\begin{verbatim}
+   $ ./distribution_test
+\end{verbatim}
+
+\label{sec:output-naive}
+The output should be: 
+\verbatiminput{expected_res_simple.out}
+
+%normally something like:
+%map: 1
+%map: 2
+%map: 3
+%map: 10
+%reduce: acc=0, e=1
+%reduce: acc=1, e=1
+%reduce: acc=2, e=2
+%reduce: acc=4, e=55
+%result = 59
+
+
+%why e=1 at second line ? because see the result of map_ex on 2 which
+% is 1
+
+
+\subsection{Configuring multiple machines, or what is the MPI model}
+\l or multiple processors
+
+Up until now, we have not leveraged multiple machines nor the multiple
+processors on a single machine to distribute the computation. 
+Before doing so, some explanations about MPI, its programming
+model, tools, configuration files and runtime support are required.
+\l bof
+
+To use different machines or different processors, one must first describe 
+somewhere those machines and processors so that the MPI runtime can find them 
+and instantiate some processes on them. 
+There are different ways to configure a MPI \co{cluster} depending
+on the MPI implementation you use. You can sometimes define a {\em machine file},
+containing a simple list of machines, you can also configure some MPI
+{\em daemons}, you can give information directly on the command line, etc. 
+\l mpich:
+In this document we will focus on the {\em ch\_p4} method
+provided by MPICH, arguably the simplest one, and its 
+{\em P4 ProcGroup} configuration file\cite{mpich-p4}.
+This file usually ends with a [[.pg]] suffix (for process group).
+The syntax of this configuration file is a list of lines having
+the following format:
+\begin{verbatim}
+<hostname> <#procs> <progname>
+\end{verbatim}
+\l so can give different path ? so not forced to have SPMD ?
+\n many ugly stuff and constraint on p4 file, but prefer not explain it
+%note: must be fully qualified name, or name that are valid
+% on both machine. So if add some stuff in /etc/hosts
+% then not enough. Cf my tentative where adding a fake
+% aryx and xyra machine
+%so cant put localhost in this file, or maybe can if use only multiprocessor
+% ability
+%thought the int was for the rank, but no, it's for #procs
+%old: no: the integer represents the \co{rank} of the participating \co{node},
+%if put axyr then does not work :(
+%if put local then does not work :(
+%need localhost
+%pad: cant add xyra machine alias in /etc/xxx cos then
+% it will be only in the /etc of this machine, and mpirun
+% get confused.
+
+
+\noindent where [[<hostname>]] can also be an IP address, [[<#procs>]]
+represents the number of processes to launch on the specified host, and 
+[[<progname>]] the path {\em on the host} of the program to be launched which
+will participate in the computation.
+One can also also put [[1]] in [[<#procs>]] and duplicate the line multiple
+times with the same hostname as in:
+\begin{verbatim}
+aryx.cs.uiuc.edu 1 /path/to/prog
+aryx.cs.uiuc.edu 1 /path/to/prog
+\end{verbatim}
+\noindent which will be the method we use in the following 
+\footnote{
+The semantic of this P4 configuration file is not completely clear.
+For instance if one writes \texttt{aryx.cs.uiuc.edu 2 /path/to/prog},
+then this seems to imply that the 2 processes will be run in a shared
+memory mode which requires more configurations. So, to simplify, 
+I always use \texttt{1} for [[<#procs>]].
+}.
+Lines starting with a \verb+#+ are comments.
+This file can thus be used to define a cluster of machines. Each line
+can be seen as defining a \co{node} of this cluster, be it
+another processor on the same machine, or a different machine.
+\n node and rank concept ? not anymore here
+
+
+\subsubsection{Multiple processors} 
+
+Here is the MPI P4 ProcGroup configuration file to
+leverage a multi-processors machine:
+
+\t if only use multiprocessor, then can also simply do ./mpirun -np 3 ./prog arg1 arg2 
+
+<<config.pg>>=
+aryx.cs.uiuc.edu 0 /home/pad/c__syncweb/demos/mapreduce/distribution_test
+
+#aryx: 2 processors, local machine
+
+aryx.cs.uiuc.edu 1 /home/pad/c__syncweb/demos/mapreduce/distribution_test
+aryx.cs.uiuc.edu 1 /home/pad/c__syncweb/demos/mapreduce/distribution_test
+
+@ 
+\l in addition to process mentionned on mpirun command line
+
+The first line with the number [[0]] can seem strange, 
+but is for some reasons required by MPICH.
+You can see the documentation of P4 for more information~\cite{mpich-p4}.
+
+\n \label{sec:master-worker} here ? no, not anymore
+
+
+\subsubsection{Multiple machines} 
+
+To leverage other machines, possibly with multi processors too,
+just add as many entries as required, for instance with:
+
+<<config.pg>>=
+#phantom: a 4 processors machine
+phantom.cs.uiuc.edu 1  /tmp/distribution_test
+phantom.cs.uiuc.edu 1  /tmp/distribution_test
+phantom.cs.uiuc.edu 1  /tmp/distribution_test
+phantom.cs.uiuc.edu 1  /tmp/distribution_test
+
+#put other machines here:
+#...
+
+@ 
+
+Note that as the configuration file mentions the path
+to the MPI program on the corresponding machine (here 
+\f{/tmp/distribution\_test}), this program must be present on those
+different machines. It is the programmer's responsibility 
+to copy the program to the appropriate places on the different
+machines; MPI does not handle that (probably to keep with the KISS
+philosophy and UNIX philosophy to manage just one thing, and not more).
+
+
+Here is a simple target to add in your Makefile to automate the copy:
+<<Makefile.test>>=
+install:
+  scp distribution_test phantom.cs.uiuc.edu:/tmp
+# scp to other machines here
+@ 
+%can be automated, cf Advanced
+\l forward ref because use scp :) so need ssh 
+
+Note that if all the machines in your cluster use NFS, then 
+the previous step can be avoided as one can specify the path to the same
+binary on every machines
+\footnote{
+Under the condition that all the machines have the same architecture.
+}.
+
+\label{sec:mpi-ssh}
+Moreover, to instantiate the different programs on the 
+different machines, the [[mpirun]] tool, where the use
+is describe below, will need to 
+execute remote commands on those machines. 
+\l mpirun in path, just need install mpi-bin on other machine. cf section X, no need for libmpich-dev I think
+MPI can use 
+[[rsh]] or [[ssh]]. One can use the [[RSHCOMMAND]] environment
+variable to specify which one to use. 
+\l or configured in a special way ? also can do P4\_RSHCOMMAND
+In the following we will use [[ssh]] and so do:
+\begin{verbatim}
+  $ export RSHCOMMAND=ssh
+\end{verbatim}
+
+
+Before testing your program, you must also check that your [[ssh]]
+configuration is correctly set. [[ssh]] must be configured
+in a certain way so that you do not need to give a 
+password at each connection by using the automatic
+authentification scheme with a private key file
+(usually in \f{~/.ssh/id\_rsa}), as explained in the ssh manual
+or one of the numerous tutorials on ssh (e.g.,~\cite{ssh-automatic}).
+\l need run sshd
+
+Here is a simple test of ssh:
+\begin{verbatim}
+  $ ssh phantom.cs.uiuc.edu
+  ...
+  $ ssh aryx.cs.uiuc.edu
+  ...
+\end{verbatim}
+
+If at one point [[ssh]] asks you for a password, then your configuration
+is not correct and the commands explained in the following section will
+not work.
+
+\subsubsection{Running}
+\l could distribute this section in 2 previous one, so could show the simple -np
+
+Once the MPI configuration file is ready, and [[ssh]] correctly
+configured, one can finally use the [[mpirun]] MPI tool
+\l a ref ?
+that will then internally instantiate
+the different programs mentioned in the configuration file
+on the different machines and initiate the appropriate connections.
+Here is an example of such a command for our test program:
+
+\begin{verbatim}
+  $ mpirun -p4pg config.pg ./distribution_test
+\end{verbatim}
+\l would like to use tstmachines, but it does not accept the -p4pg :(
+
+\t if only use multiprocessor, then can also simply do ./mpirun -np 3 ./prog arg1 arg2 
+\t simpler, no need ssh
+
+
+\todo{
+mpirun = kind of ``virtual machine'' ? a la PVM in the end ?
+\co{virtual machine}, monitor
+\co{SPMD}
+ SPMD
+ in fact MPI does not force SPMD ? can give different path of different
+  programs in config file ?
+ worker ``threads'' model, worker pool
+a node can be on same machine.
+}
+
+
+\t note the output will be different because mpirun do stuff, also
+\t cool cos gather output. cf debug_mpi too.
+
+\n mpich: p4pg
+\l why need pass program name  as already mentionned in config.pg ?
+
+%old: 0 mean who will play role master, 1 worker, use internally later as explained. 
+
+%p4 uglyness part2:
+%why -p4pg ? why not -p3pg ? 
+%why -np ? need -np if don't use -p4pg but -machinename
+% can run via: 
+%    mpirun -np 3 ./prog -test_mpi
+%    mpirun -p4pg file.pg ./prog arg1 arg2
+
+Before showing the output of the previous [[mpirun]] command, 
+one can first turn on the debugging feature of [[distribution.ml]],
+to better see what happens, by adding the following line in 
+our test program:
+\l put page of test program ?
+
+<<set debug mpi flag if necessary>>=
+Distribution.debug_mpi := true;
+@ 
+
+\t say that MPI virtual machine is cool as dynamically transfer the output on distant machine to see them locally
+
+The output should now be:
+\label{sec:output-with-debug-mpi}
+\label{sec:output-mpi}
+\verbatiminput{expected_res_mpi.out}
+
+%normally something like:
+%S:DEBUG: mpi master, num clients=4
+%W2:DEBUG: mpi worker axyr, rank=2
+%W2:map: 2
+%W1:DEBUG: mpi worker axyr, rank=1
+%W3:DEBUG: mpi worker phantom.cs.uiuc.edu, rank=3
+%W4:DEBUG: mpi worker phantom.cs.uiuc.edu, rank=4
+%W1:map: 1
+%W1:DEBUG: worker exiting
+%S:reduce: acc=0, e=1
+%S:reduce: acc=1, e=1
+%S:reduce: acc=2, e=55
+%S:reduce: acc=57, e=2
+%S:result = 59
+%W2:DEBUG: worker exiting
+%W3:map: 3
+%W3:DEBUG: worker exiting
+%W4:map: 10
+%W4:DEBUG: worker exiting
+%P4 procgroup file is config.pg.
+
+You can compare with the output without MPI at Section~\ref{sec:output-naive}.
+Note that the order of the lines may be different but both output
+should contain a line with a \verb+result = xxx+ where [[xxx]]
+has the same value.
+
+
+
+\ifadvancedexplain
+\subsubsection{Why MPI is made that way ?}
+
+\begin{verbatim}
+% why MPI good
+note that programs does not mention any machine, nor does
+content of distribution.ml.
+everything is stored outside the program, in a config file.
+this has disadvantages, but have big advantage. Does not have
+to recompile program. Everything handled by mpirun for you.
+
+Who run the process on the different machines ? Where is the list
+of machines ? MPI default API does not handle that and does not
+want to handle that, which I think is good because with no machine names
+in the code, no need to recompile if the list changes. Instead everything
+is done via the process launcher command line MPI tool: mpirun
+
+also allow different scheme, p4, daemon, etc
+good separation of concern
+
+not hadcoded in prog => flexible. not even need multi machine,
+work on single machine. and if want add, easy, no need recompile.
+\end{verbatim}
+
+\subsubsection{What is doing [[mpirun]] ?}
+
+\begin{verbatim}
+argv, cf mpirun_debug_argv here ?
+
+ssh, run with good argument.
+MPI abuse command line to pass information to the instantiated process,
+ so that they can know their rank, if they are the master, etc.
+ (probably info about network to know how to connect to other).
+
+export RSHCOMMAND=ssh ? or configure -rsh=ssh mpich
+Is it faster to use rsh ? I guess no need encryption of data so faster ?
+so need way to ssh or rsh to other machines, and of course
+not ask password each time. See ssh manual. 
+here is trick ?
+
+ssh on stdout
+pass -p4rank
++ cluster info (config.pg) via argument
+
+use strace ?
+\end{verbatim}
+
+
+
+\fi % advancedexplain 
+
+
+
+\subsection{Benchmark}
+
+
+Finally, we can now compare the speed of our ``MPIfied''
+program with the original one. Here are the results on
+our test data:
+\l show different Fibonacci, and speedup,  see super-linear cos, use plot or table ? again use tikz/gnuplot ? ?
+
+\verbatiminput{expected_time.out}
+
+%normally something like:
+%---- without MPI, naive_map_reduce ---
+%TIME: 9.33s
+%---- with MPI  ---
+%TIME: 3.13s
+
+Note that even if we specified 6 nodes (6 processors among 2 machines),
+in our configuration file, we don't get a 6x speedup
+because of communication overheads and mainly because 
+our test data exercises only 4 processors. Indeed, because our input list
+contains only 4 numbers (cf Section~\ref{sec:test-mpi-ex}),
+2 nodes are not used at all. The total running time is thus
+bounded by the speed of the slowest processor in the cluster.
+Had we use a bigger list, this would have been less of a concern
+because the implementation of [[Distribution.map_reduce]] 
+internally uses a \co{pool of workers} strategy that continuously
+feeds idle nodes (cf Section~\ref{sec:implem-pool}).
+
+
+
+
+\ifadvancedexplain
+\subsection{Quick glance at the implementation}
+\label{sec:quickglance}
+%\l not sure it's a good idea to have this section here
+\label{sec:master-worker-bis}
+\label{sec:poolworker}
+
+%(* can run via: mpirun -np 3 ./prog -test_mpi *)
+
+\t \co{worker} \co{master} \co{pool}, SPMD
+
+
+<<distribution_test.ml>>=
+let test_mpi_raw () =
+  let rank = Mpi.comm_rank Mpi.comm_world in
+  pr (spf "rank: %d" rank);
+  if rank = 0
+  then 
+    Distribution.master reduce_ex [1;2;3;10] 
+  else begin
+    Distribution.worker map_ex;
+    raise Distribution.TaskFinished
+  end
+
+@ 
+
+\begin{verbatim}
+at some point where spmd diverge.
+ worker will listen (receive) compute and send back
+ master will send, then listen for answer and resend
+  until list empty, worker pool
+
+put other example, typical = cfiles, list of filename, 
+map = filename -> ast + stat
+reduce = ...-> stat
+list of filename, parse, analyze, return start + resut
+reduce = global stat, ex yacfe
+\end{verbatim}
+\fi %advanced use
+
+
+
+\ifadvanceduse
+\subsection{A more useful example}
+
+\begin{verbatim}
+%how distribute internal fib computation ? 
+% of course can memoize
+% but then can distribute inside ? no I think, not MPI model, 
+%  maybe CILK better for that
+
+%with files
+%so use NFS, big parser, ... here just do 'wc' 
+% so bottleneck will be io, but spirit could be
+% for instance parsing and static analysis, etc.
+%so don't use NFS!! copy data en bloc. Give concrete example
+% with acomment ?
+%show benchmark ?
+
+
+% * - split code so that can have a mapper and reduce.
+% *   usually have 2 functions, one that do_on_one_file (file, i, nbfiles) = 
+% *   and another one that build the list, and have a map_ex, and reduce_ex.
+% *   and finally the call to mpi_main:
+% *     (* will call either map_ex for worker or reduce_ex for master *)
+% *      biglist +> Distribution.mpi_main2 ~debug_mpi:true map_ex reduce_ex
+
+
+
+
+% note, can give anonymous func to distribution main, and for
+% instance rewrite xxx as: 
+% closure can even things in environment, but must be something
+% that when executed will also be valid on the client.
+
+
+
+% * Do we need threads in the master to listen asynchonously to the 
+% * first-ready worker ?
+% * Could, but MPI provides some helpers for doing that without threads
+% * (I guess using some select internally).
+% *  
+% * Do we need a trick to redirect worker output to master output ? 
+% * It's handled already :) mpirun is a quite good program. And with
+% * my Common._prefix_pr adjustment, very easy to see who is outputting
+% * what.
+% * 
+% * Do we need to manage errors such as killing the clients on the remove
+% * machines when there is for instance a pb, a bug in the master ? 
+% * Again, mpirun seems to automatically handle this.
+% * 
+% * 
+% * 
+% * 
+% * 
+% * 
+% * use the -stdout -stderr of mpirun ?
+% *
+
+
+
+% * Here is a generic MapReduce. Take a list of x, apply f, and reduce.
+% * What if more workers than files ? Currently assert not the case.
+% * How kill workers ? Currently send the special None to indicate such
+% * special code.
+% * 
+
+
+%specific to pad
+
+%(*
+% * procedure to use for pad:
+% * - add ocamlmpi/ to your software.
+% * - adapt Makefile to compile ocamlmpi and this file:
+% *    LIBS ocamlmpi/mpi.cma \
+% *         commons/commons_mpi.cma \
+% * 
+% *    MAKESUBDIRS ocamlmpi
+% *    INCLUDEDIRS ocamlmpi
+% *    rec 
+% *     $(MAKE) -C commons 
+% *     $(MAKE) all -C ocamlmpi
+% *     $(MAKE) distribution -C commons
+% *    rec.opt
+% *     $(MAKE) all.opt -C commons 
+% *     $(MAKE) all.opt -C ocamlmpi
+% *     $(MAKE) distribution.opt -C commons
+% *    cp_4mpi:
+% *       echo no copy needed yet
+% *    test_mpi: opt yacfe.opt cp_4mpi 
+% *       time mpirun -p4pg env-machines-onlyme.pg ./yacfe.opt -parse_all /home/pad/software-src/devel/sparse-git
+% * - can add   Distribution.mpi_actions() ++
+% *)
+%
+\end{verbatim}
+
+
+\fi %advanceduse, section
+
+\section{Interface}
+\label{sec:interface}
+
+\subsection{Main interface, [[Distribution.map_reduce]]}
+
+The main interface of the \f{distribution.ml}
+consists really in just a single function\footnote{
+whereas using MPI requires usually at least 6 functions and multiple types
+}, 
+% :) can be summarize by only one :) 
+[[map_reduce]], which takes as an argument the mapping function,
+the reduce function, the accumulator, and a list
+and returns the result of the reduction applied to the mapped elements.
+%old:after, so same return type than main, unit. So reduce
+% function supposed to do the job. Part reason
+% is SPMD, and same program but only 'master' 
+% so client return ?. In fact can cheat with mpi_main2.
+
+%?? exported function and entry point for the user  con
+
+<<distribution.mli>>=
+val map_reduce:
+  fmap:('a -> 'b) -> freduce:('c -> 'b -> 'c) -> 
+  'c -> 'a list -> 'c
+@ 
+
+Even if the type of this function looks pretty simple, there are
+actually a few assumptions on the context of the code using it;
+it can not be used anywhere in the same way as a [[naive_map_reduce]]:
+
+\begin{itemize}
+  \item The user must have a working MPI cluster environment
+    set before executing the program. This means machines with 
+    MPI and especially the [[mpirun]] program installed on, 
+    a correct MPI configuration file (e.g., a p4 file) with
+    all programs mentioned in this file correctly copied at the right place, 
+    and a working [[ssh]] or [[rsh]] configuration.
+
+  \item the [[fmap]] must be a pure function as any global mentioned
+    in it would not be shared by the other machines. Moreover, 
+    the argument of [[fmap]], the elements in the list, must make
+    sense also to the other machines. For instance, if the elements
+    are filenames that [[fmap]] will then open and process, then
+    those filenames must be accessible on the other machines
+    (again if you use NFS this is not an issue, except that the shared
+    disk may become a bottleneck).
+
+  \item the [[reduce]] function must be commutative. Indeed the
+    implementation strategy used in [[map_reduce]] makes the order
+    of the reductions independent of the order of the elements in
+    the original list.
+    \l could avoid that by remembering for each elements the result, their index
+
+  \item Internally the [[mpirun]] program communicates information
+    to the different nodes through the command line, 
+    for instance by adding some [[-p4rank xxx]] arguments
+    (cf Section~\ref{sec:mpirun-argv-use} for more details).
+    So, your program must either not play (nor assume certain things)
+    on [[Sys.argv]], or use the [[mpi_adjust_argv]] helper function.
+    \t where is this function ?
+
+  \item [[distribution.ml]], and MPI for a big part, assumes
+    a \co{SPMD} (Single Program Multiple Data) model. That means 
+    the same code will be executed on all nodes. While the 
+    code executed inside [[map_reduce]] will eventually diverge 
+    for the different nodes, as it internally uses MPI 
+    primitives, for instance to either send or receive data,
+    \l some nodes will receive some work, other play master
+    the code before the call to [[map_reduce]] will not, so
+    such code will be executed on all machines; this may
+    be an issue.
+    This is not an issue of course if the call to [[map_reduce]]
+    is placed directly after the [[main]] entry of your program.
+    
+
+\l does not contain anything specific to the local  machine, cos will be given to client.
+\l and filename same place  (if NFS can think copy data). Cf Advanced Example
+
+\end{itemize}
+
+\subsection{Auxiliary interfaces}
+\l functions and globals ?
+
+A variation of [[map_reduce]] is [[map_reduce_lazy]] which
+takes the list encapsulated in a closure: 
+
+<<distribution.mli>>=
+val map_reduce_lazy:
+  fmap:('a -> 'b) -> freduce:('c -> 'b -> 'c) -> 
+  'c -> (unit -> 'a list) -> 'c
+@ 
+
+The need, sometimes, to encapsulate the list in a closure comes from
+the SPMD model of \f{distribution.ml} mentioned before.
+%MPI which is also partly the model 
+Indeed, computing the list could itself takes
+some time, for instance because the list is the result of computing
+a list of names of files on your disk, and with an SPMD model, it means
+all nodes
+%old: the master and the workers
+%cf Section~\ref{sec:quickglance} for quick explanations about internals 
+% of distribution.ml and client/server model
+would execute the same program before
+getting the chance to diverge in [[map_reduce]]. 
+%This means the worker would also compute the list. 
+[[map_reduce_lazy]] solves this problem
+by delaying the evaluation of the list that in the end will be done
+internally in \f{distribution.ml} only by one node (later 
+called the master, cf Section~\ref{sec:master-worker-explain}).
+
+
+Finally, The [[debug_mpi]] global, mentioned before,
+can be used to turn on debugging information related to MPI: 
+
+<<distribution.mli>>=
+val debug_mpi: bool ref
+@ 
+
+They are a few remaining functions in [[distribution.mli]] but
+they are here mostly for documentation purpose, to list and document the
+types of the important internal functions.
+
+<<distribution.mli>>=
+(*****************************************************************************)
+(* Private *)
+(*****************************************************************************)
+<<distribution.mli private>>
+@ 
+
+\l had a \subsection{Internal functions}
+\l bad title ? private func ? put here ? or later ?
+
+
+\ifimplem
+\pagebreak
+\section{Implementation}
+\label{sec:implementation}
+
+The overall structure of \f{distribution.ml} is as follows:
+
+<<distribution.ml>>=
+<<copyright header>>
+open Common
+
+(*****************************************************************************)
+(* Prelude *)
+(*****************************************************************************)
+
+(* cf the distribution.ml.nw literate document for the documentation *)
+
+(*****************************************************************************)
+(* Globals *)
+(*****************************************************************************)
+<<debug global>>
+
+(*****************************************************************************)
+(* Protocol *)
+(*****************************************************************************)
+<<protocol for master/workers>>
+
+(*****************************************************************************)
+(* Helpers *)
+(*****************************************************************************)
+<<worker>>
+
+<<master>>
+
+<<under_mpirun>>
+
+(*****************************************************************************)
+(* Main entry point *)
+(*****************************************************************************)
+<<map_reduce>>
+
+<<map_reduce_lazy>>
+
+(*****************************************************************************)
+(* Extra *)
+(*****************************************************************************)
+<<protocol for argv>>
+<<mpi_adjust_argv>>
+
+@ 
+\n mentions literate document :)
+
+In the following we will explain those functions
+in a top-down approach and so we will start by explaining
+the functions nearly at the bottom and work out up in this list.
+But first, some explanations about \ocamlmpi are needed.
+
+\subsection{The \ocamlmpi API}
+
+As \f{distribution.ml} is essentially a thin layer above
+\ocamlmpi, it uses internally \ocamlmpi functions and global variables.
+The important elements of this API are:
+
+\begin{itemize}
+  \item The global [[Mpi.comm_world]] with type 
+    [[communicator]] that maintains global bookkeeping
+    MPI information about the node. It is 
+    initialized by [[mpirun]] and is represented as an opaque type
+    in OCaml.
+  
+  \item The function [[Mpi.comm_size]] with type
+    [[communicator -> int]], returning the number of nodes
+    participating in the computation.
+    \t used by master
+
+  \item The function [[Mpi.comm_rank]] with type
+    [[communicator -> rank]] to know the \co{rank} of the current
+    node, where [[rank]] is an integer type alias which can take
+    a value in the following range: [[ [0..comm_size-1] ]]
+    \l to know if master or worker
+
+  \item The function [[Mpi.send]] with type 
+    [['a -> rank -> tag -> communicator -> unit]], where [[tag]] is an
+    integer type alias, and is not important, and where
+    \l probably because cant have 'a in C MPI, so use tag to encode protocol info that we directly encode in the message ?
+    \l called notag later
+    [[rank]] corresponds to the rank of the current node.
+    % old: usually 0 for the master and [[Mpi.comm_rank Mpi.comm_world]] for the other nodes (cf below).
+    \l called rank_master
+    Note that this function is polymorphic and internally uses the
+    [[Marshall]] OCaml module to serialize data.
+    
+  \item The function [[Mpi.receive]] with type
+    [[rank -> tag -> communicator -> 'a]], the counterpart of [[send]].
+    
+  \item The constant [[Mpi.any_source]] with
+    [[rank]] type which is used when one wants to receive something
+    from any node.
+
+  \item The function [[Mpi.receive_status]] with type
+    [[rank -> tag -> communicator -> 'a * rank * tag]], which when
+    combined with the previous constant [[any_source]] can be used
+    as a kind of demultiplexer {\em a la} [[Unix.select]].
+    
+  \item function [[Mpi.barrier]] with type [[communicator -> unit]]
+    to implement barriers, but is actually not needed by [[distribution.ml]].
+  
+\end{itemize}
+
+Those functions corresponds to the original MPI C functions
+%(which is a C API) 
+but an important difference is that \ocamlmpi provides 
+polymorphic versions of [[Mpi.send]] and [[Mpi.receive]]
+thanks to the marshalling capabilities of the OCaml
+runtime. For more information  about \ocamlmpi, have a look at 
+[[mpi.mli]] which is well documented. This file is only
+about 400 lines of code, and describes among other things the 6 functions
+used internally in \f{distribution.ml}. Six functions and 400 LOC
+are quite small numbers, but the goal of \f{distribution.ml} is
+to go one step further and to reduce the API to only one function:
+[[Distribution.map_reduce]].
+%alt: so 7 functions, and goal distribution is programmer really
+% need to know only one :)
+
+
+%ocamlmpi provides also specialized version, but 
+% for genericity, simpler always use polymorphic one
+% as would otherwise require all our wrappers to each
+% time also provides specialization
+
+% why repeat rank in each of those func ? in most cases
+%  we always pass the rank of the current node, so could
+%  be done internally to simplify the interface ? 
+%  maybe clearer to be more explicit ? less globals ?
+ 
+\subsection{Main entry point}
+\label{sec:master-worker-explain}
+\t now ready. 
+\l cf section quickglance ?
+
+The skeleton code for [[map_reduce]] is as follows:
+<<map_reduce>>=
+let map_reduce ~fmap:map_ex ~freduce:reduce_ex acc xs =
+  if under_mpirun ()
+  then begin
+    <<map_reduce mpi case>>
+  end
+  else 
+    List.fold_left reduce_ex acc (List.map map_ex xs)
+@ 
+
+\noindent which allows to use [[map_reduce]] even without MPI, in
+which case it behaves like [[naive_map_reduce]]. It also uses
+the following helper:
+
+<<distribution.mli private>>=
+val under_mpirun : unit -> bool
+@
+\noindent which can detect if the program was run through [[mpirun]]
+(by using the global [[Sys.argv]], hence the [[unit]] argument).
+
+We can now go back to the real part of [[map_reduce]] which 
+implements a strategy with a \co{master} and a set of \co{workers}
+where the master will continuously feed with jobs the workers:
+
+<<map_reduce mpi case>>=
+let rank = Mpi.comm_rank Mpi.comm_world in
+if rank = rank_master
+then
+  master ~freduce:reduce_ex acc xs
+else begin
+  worker ~fmap:map_ex;
+  raise TaskFinished (* for the type system *)
+end
+@ 
+
+The important parts of this code and sub functions are:
+
+(1): The rank of the node is used to know who plays what, 
+    with as a convention [[0]] for the master:
+
+% put in protocol? put in a global section ? 
+% protocol good name ? maybe message types ? 
+<<protocol for master/workers>>=
+let rank_master = 0
+@ 
+
+(2): The master is responsible for the reduction,
+   which means that right now we distribute only the mapping 
+   computation. We could also distribute the reduction computation, 
+   but it would make the protocol and the code slightly more complex, so 
+   it is simpler for now to just distribute the [[map]].
+
+<<distribution.mli private>>=
+val master : freduce:('c -> 'b -> 'c) -> 'c -> 'b list -> 'c
+@ 
+ 
+   
+(3): The workers are responsible for the mapping: 
+
+<<distribution.mli private>>=
+val worker : fmap:('a -> 'b) -> unit
+@ 
+
+(4): For typing reason, an exception must be raised after
+    the worker call as they both have different return types.
+    It also means that 
+    the workers will never return anything to their callers, 
+    only the master will, so only the master will actually execute
+    the code after the call to [[map_reduce]] in the main program.
+
+<<protocol for master/workers>>=
+exception TaskFinished
+@
+
+\ifallcode
+<<distribution.mli private>>=
+exception TaskFinished
+@ 
+\fi 
+
+
+
+\todo{
+because ocamlmpi model is SPMD so client execute 
+ same program, and so both will execute [[mpi_main]] but
+ only one machine, we call {\em master}, will execute
+ the reduce function, the other, we call {\em worker} will
+ execute the map.
+and return value !! but cheat compared to before
+because worker raise TaskFinished
+
+ internals exposed, should not be used by user directly.
+ see again the master/worker and pool worker model.
+}
+
+
+
+
+\todo{
+lazy but do that because client and master execute same code .
+ up to the point where "synchronize with call to [[mpi_main]]"
+ and so client will also compute list ... which is stupid, 
+ so instead put in a closure.
+cf Section X for why lazy.
+almost same code. just diff = fxs())
+}
+
+The code of [[map_reduce_lazy]] is very similar to [[map_reduce]]:
+
+<<map_reduce_lazy>>=
+(* same but with xs lazy, so workers don't need to compute it *)
+let map_reduce_lazy ~fmap:map_ex ~freduce:reduce_ex acc fxs =
+  if under_mpirun ()
+  then begin
+    let rank = Mpi.comm_rank Mpi.comm_world in
+    if rank = rank_master
+    then
+      master ~freduce:reduce_ex acc (fxs()) (* changed code *)
+    else 
+      begin 
+        worker ~fmap:map_ex; (* normally raise already a UnixExit *)
+        raise TaskFinished
+      end
+  end
+  else 
+    let xs = fxs() in (* changed code *)
+    List.fold_left reduce_ex acc (List.map map_ex xs)
+
+@   
+\n could factorize ? could even perhaps use LP to factorize :) but actually good to show same code in complete form
+
+
+As explained in the previous section, MPI relies a lot
+on the command line arguments to pass information
+such as the rank of the current executing program
+and node. The following function is used
+to check that the program is run under MPI, 
+that is that the program was launched via [[mpirun]]\footnote{
+TODO: It is currently 
+quite specific to the P4 MPICH method, so one may have to extend it.
+}.
+\l a mpirun ``virtual machine''.
+
+\label{sec:mpirun-argv-use}
+<<under_mpirun>>=
+let under_mpirun () = 
+  Sys.argv +> Array.to_list +> List.exists (fun x -> 
+    x ="-p4pg"  || x = "-p4rmrank"
+  )
+@ 
+\t cf mpi_adjust_argv too ?
+
+
+
+
+
+\subsection{The master/workers protocol}
+
+Before showing the code of [[master]] and [[worker]], 
+we describe the format for the messages that will be 
+exchanged between the master and workers, that is the protocol:
+
+%old: was Some None, now clearer, thx to LP
+<<protocol for master/workers>>=
+type ('a, 'b) protocol = DataIn of 'a | DataRes of 'b | StopWorker
+@ 
+
+Figure~\ref{fig:protocol} presents an overview of the 
+behavior of the master and workers regarding the exchange
+of messages.
+
+We also define an exception for errors related to the protocol:
+<<protocol for master/workers>>=
+exception ProtocolError
+@ 
+
+
+%note: interesting bugfix, forgot a transition from B to B :) in master
+% LP powa :) specification powa 
+
+\begin{figure*}[tb!]
+\centering
+\begin{tabular}{cc}
+
+%the master
+\begin{tikzpicture}[
+%    every state/.style={draw=blue!50,very thick,fill=blue!20}
+]
+%  edge [lblstyle="auto",topath="bend left"];
+\begin{dot2tex}[dot,mathmode]
+digraph G {
+  d2ttikzedgelabels=true;
+  node [style="state"];
+  edge [lblstyle="auto"];
+#  F [label="Fxx"];
+
+  A [style="state,initial"];
+  A -> B [label="!DataIn*"];
+  edge [lblstyle="auto",topath="bend left"];
+  B -> C [label="?DataRes"];
+  C -> B [label="!DataIn"];
+  edge [lblstyle="auto",topath=""];
+  C -> C [label="?DataRes"];
+  C -> F [label="!StopWorker*"];
+  F [style="state,accepting"];
+}
+\end{dot2tex}
+% annotations
+%\node[left=1em] at (F.east) (l3) {reduce};
+\end{tikzpicture}
+& 
+%the worker
+\begin{tikzpicture}[
+]
+\begin{dot2tex}[dot,mathmode]
+digraph G {
+  d2ttikzedgelabels=true;
+  node [style="state"];
+  edge [lblstyle="auto",topath="bend left"];
+
+  A [style="state,initial"];
+  A -> B [label="?DataIn"];
+  B -> A [label="!DataRes"];
+  A -> F [label="?StopWorker"];
+  F [style="state,accepting"];
+}
+\end{dot2tex}
+\end{tikzpicture}
+ \\
+(a) Master & (b) Worker \\
+\end{tabular}
+\caption{Protocol}
+\label{fig:protocol}
+\end{figure*}
+\l swap arrows, put map and reduce inside F nodes ?
+
+%template:
+%\begin{tikzpicture}[
+%]
+%\begin{dot2tex}[dot,mathmode]
+%digraph G {
+%  d2ttikzedgelabels=true;
+%  node [style="state"];
+%  edge [lblstyle="auto",topath="bend left"];
+%
+%  S [style="state,initial"];
+%  A -> B [label=2];
+%  E [style="state,accepting"];
+%}
+%\end{dot2tex}
+%\end{tikzpicture}
+
+\subsection{The master}
+\label{sec:implem-pool}
+
+Here is the outline of the code for [[master]]:
+<<master>>=
+let master ~freduce:reduce_ex acc xs = 
+  let available_workers = Mpi.comm_size Mpi.comm_world - 1 in
+  let actual_workers = min (List.length xs) available_workers in
+
+  <<debug master>>
+  <<killing_workers helper>>
+  in
+
+
+  let in_list  = ref xs in
+  let out_list = ref [] in
+  let working = ref 0 in
+  Common.unwind_protect (fun () -> 
+ 
+    assert(List.length !in_list >= actual_workers);
+    
+    <<send initial work to valid workers>>
+    <<kill idle workers>>
+    <<enter server loop, [[in_list]] shrinks and [[out_list]] grows>>
+    <<no more remaining, kill workers>>
+
+    (* big work *)
+    List.fold_left reduce_ex acc !out_list
+
+  ) (fun e -> 
+    <<kill workers because problem>>
+  )
+@ 
+
+The first 2 lines are used to cover the case where the input list
+is smaller than the number of nodes participating in the commutation,
+in which case many nodes will be idle. The organization of the nodes
+are then as follow:
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+[[0]] & [[1..actual_workers]] & [[actual_workers+1..comm_size-1]] \\
+\hline
+master & workers & idle workers \\
+\hline
+\end{tabular}
+\end{center}
+
+\l inlist, outlist, also working ?
+
+The first part of the protocol consists in feeding for the first
+time the workers with [[DataIn]] messages;
+it corresponds to the transition from [[A]] to [[B]] 
+in Figure~\ref{fig:protocol}:
+
+%todo? define helper mpi_send that do the ugly notag and comm_world ?
+<<send initial work to valid workers>>=
+for i = 1 to actual_workers do
+  let arg = Common.pop2 in_list in
+  Mpi.send (DataIn arg) i notag Mpi.comm_world;
+  incr working;
+done;
+@ 
+
+Note the use of [[i]] to iterate over the ranks of the workers.
+It starts from 1 because 0 is used by the master.
+
+The previous excerpt mentions the [[notag]] variable which is 
+one of the argument needed by [[Mpi.send]] but is not relevant in
+our context:
+<<protocol for master/workers>>=
+let notag = 0
+@ 
+
+The main part of the the master consists in a loop where the master
+acts as a kind of \co{server} waiting for the results from the heavy
+computation (the [[fmap]]) done by his workers, and giving them back
+more work if some elements are remaining in [[in_list]]: 
+
+<<enter server loop, [[in_list]] shrinks and [[out_list]] grows>>=
+while !working > 0 do
+  let (res, src, _) = Mpi.receive_status Mpi.any_source notag Mpi.comm_world in
+  (match res with
+  | DataRes x -> 
+      Common.push2 x out_list;
+  | DataIn _ | StopWorker -> raise ProtocolError
+  );
+      
+  if not (null !in_list) then begin
+    let arg = Common.pop2 in_list in
+    Mpi.send (DataIn arg) src notag Mpi.comm_world;
+  end 
+  else decr working;
+done;
+@ 
+
+\label{sec:reduce-need-commut-implem}
+Note that because [[receive_status]] is non deterministic
+(some nodes may be faster than other nodes, some congestion on 
+certain paths in the network, etc), 
+the order of the [[push2]] in [[out_list]] are also 
+non deterministic
+and so the order of the elements in this list may not correspond
+to the order of the mapped elements in the original list. This is 
+why [[reduce]] must be commutative.
+%
+Note also the use of the same [[src]] variable in receiving and sending
+commands, which is the rank of the node currently involved in the 
+communication.
+
+\todo{
+would like to accentuate in sample the relation between the 2 src.
+how annotate ? make a pstrick arrow ? could use a src noweb tag,
+like I do for gccext, but tedious, and syncweb force me to be on
+separate line.
+}
+
+\todo{
+marshalling made easy
+pool worker model. feed worker.
+protocol = Some x  None, where None to signal end, cf [[killing_workers]]
+ if want distribute fold, then need more complex protocol
+ and worker would need not just the map but also reduce function
+in following say to which state corresponds different places ?
+available -1 cos not count master
+1 to actual, actual to available
+}
+
+
+
+Here is the code related to stopping the appropriate workers
+(the actual workers, or the idle ones) which use the
+[[StopWorker]] message:
+    
+<<no more remaining, kill workers>>=
+killing_workers (Common.enum 1 actual_workers);
+flush stderr;flush stdout;
+@ 
+\l why stderr ?
+\l (*Mpi.barrier Mpi.comm_world; *)
+
+<<kill workers because problem>>=
+pr2 (spf "PB: mpi master dying: %s" (Common.exn_to_s e));
+killing_workers (Common.enum 1 available_workers); 
+@ 
+%(*Mpi.barrier Mpi.comm_world*)
+
+
+<<kill idle workers>>=
+killing_workers (Common.enum_safe (actual_workers+1) available_workers);
+@
+
+<<killing_workers helper>>=
+let killing_workers xs = 
+  xs +> List.iter (fun i -> Mpi.send StopWorker i notag Mpi.comm_world)
+@ 
+
+
+\subsection{The workers}
+
+The [[worker]] code is simpler than the one for the master:
+
+<<worker>>=
+let worker ~fmap:map_ex = 
+  let rank = Mpi.comm_rank Mpi.comm_world in
+  let hostname = Unix.gethostname () in
+
+  <<debug worker>>
+
+  Common.unwind_protect (fun () -> 
+   <<enter worker loop>>
+  )
+  (fun e ->
+    <<exit worker>>
+  )
+
+@ 
+
+The worker also uses a loop, waiting for more work
+(and then executing an [[fmap]]) or an end-of-work 
+message ([[StopWorker]]):
+
+<<enter worker loop>>=
+while true do
+  let req = Mpi.receive rank_master notag Mpi.comm_world in
+  match req with
+  | DataIn req -> 
+      (* big work *)
+      let res = map_ex req in
+      Mpi.send (DataRes res) rank_master notag Mpi.comm_world
+  | StopWorker -> 
+      <<debug worker exit>>
+      raise (UnixExit (0))
+  | DataRes _ -> raise ProtocolError
+done
+@ 
+
+\note{
+interesting bugfix, if miss DataRes in the send, then mpirun
+crash but without clearly a good error message, sad.
+TODO should show at least that client raised a ProtocolError ?
+}
+
+<<exit worker>>=
+match e with 
+| UnixExit(0) -> exit 0
+| _ -> 
+    pr2 (spf "PB: mpi worker dying: %s" (Common.exn_to_s e));
+@ 
+
+This last excerpt means that the worker never returns to the caller,
+and so the code after the call to [[map_reduce]] in the main program
+will be executed only by the master node.
+
+\subsection{Extra code}
+\label{sec:extra}
+
+<<debug global>>=
+let debug_mpi = ref false
+@ 
+
+\ifdebugcode
+
+In the following, the global [[Common._prefix_pr]] is modified.
+This global is internally used by all the printing functions
+in the [[Common]] library (e.g., [[pr]], or [[pr2]] which prints on [[stderr]])
+which in turns allows to better trace from which machine
+an output comes from as shown in Section~\ref{sec:output-with-debug-mpi}.
+
+<<debug master>>=
+if !debug_mpi
+then Common._prefix_pr := ("MS:");
+if !debug_mpi
+then pr2 (spf "DEBUG: mpi master, number of clients=%d" available_workers);
+@ 
+
+<<debug worker>>=
+if !debug_mpi 
+then Common._prefix_pr := (spf "W%d:" rank);
+if !debug_mpi
+then pr2 (spf "DEBUG: mpi worker %s, rank=%d" hostname rank);
+@ 
+
+<<debug worker exit>>=
+if !debug_mpi 
+then pr2 ("DEBUG: worker exiting");
+flush stderr; flush stdout;
+@ 
+%(*Mpi.barrier Mpi.comm_world; *)
+
+\fi %debugcode
+
+\todo{
+ assume client then use Common.pr to have good diagnostic.
+ show ex of trace when have [[debug_mpi]] ? 
+}
+%todo: have also a verbose_mpi ? or debug_mpi with different levels ?
+
+
+%let mpi_actions () = [
+%  "-test_mpi", "   ", 
+%  Common.mk_action_n_arg test_mpi;
+%  "-test_mpi2", "   ", 
+%  Common.mk_action_n_arg test_mpi2;
+%  "-test_mpi3", "   ", 
+%  Common.mk_action_n_arg test_mpi3;
+%]
+
+%val map_ex : int -> int
+%val reduce_ex : int list -> unit
+%val test_mpi : 'a -> unit
+%val map_ex2 : int -> int
+%val reduce_ex2 : int list -> unit
+%val test_mpi2 : 'a -> unit
+%val test_mpi3 : 'a -> unit
+%val mpi_actions : unit -> (string * string * Common.action_func) list
+
+\ifdebugcode
+<<MISC1>>=
+val mpi_debug_argv : 'a -> unit
+@ 
+<<MISC2>>=
+let mpi_debug_argv _argv =
+  let rank = Mpi.comm_rank Mpi.comm_world in
+  Sys.argv +> Array.to_list +> List.iter (fun s -> 
+    pr2 (spf "%d: %s" rank s);
+  );
+  ()
+@ 
+\fi %debugcode
+
+\fi %implem section
+
+
+\ifadvanceduse
+\section{Advanced use}
+\label{sec:advanced}
+
+% * - add mpi argument processing in main.ml 
+% *     let argv = Distribution.mpi_adjust_argv Sys.argv in
+
+
+\label{sec:simd}
+%pb SPMD
+%should use Cilk if wants something different where can easily
+% distributed deeply nested code easily, without even specifying
+% bornes.
+
+%\subsection{Bookkeeping}
+
+%(* Currently mpirun does not send the same argument to the master and worker, 
+% * and it also add extra arguments which can confuse my Common.parse_options.
+% * So this function correct this deficiency by fixing this argv problem.
+% * 
+% * Not-perfect-but-basic-feels-right: not perfect but note that 
+% * test_mpi() does not require to deal with this pb. 
+% * You can still use test_mpi() without this if you
+% * dont need any argument dispatch using Arg.
+% * 
+% *)
+
+% say that extend Figure~x  with the following ...
+<<protocol for argv>>=
+type protocol_argv = Argv of string list
+@ 
+
+<<distribution.mli private>>=
+val mpi_adjust_argv : string array -> string array
+@ 
+\l show ex of main that use that. also show how master send argv to 
+\l worker
+
+<<mpi_adjust_argv>>=
+let mpi_adjust_argv argvold = 
+  let rank = Mpi.comm_rank Mpi.comm_world in
+  let numworkers = Mpi.comm_size Mpi.comm_world - 1 in
+  if rank = rank_master
+  then 
+    <<adjust argv for master>>
+  else
+    <<adjust argv for worker>>
+@       
+
+<<adjust argv for master>>=
+begin
+  (* the master get the full list of arguments, but also some 
+   * extra stuff that we must filter *)
+  let xs = Array.to_list argvold in
+  let xs = xs +> Common.take_until (fun s -> s = "-p4pg") in
+  (* send good argv to workers *)
+  for i = 1 to numworkers do
+    Mpi.send (Argv xs) i notag Mpi.comm_world;
+  done;
+  Array.of_list xs
+end
+@ 
+
+<<adjust argv for worker>>=
+begin
+  (* recieve argv from master as mpirun does not pass it to us *)
+  let (Argv res, src, _) = 
+    Mpi.receive_status Mpi.any_source notag Mpi.comm_world in
+  Array.of_list res
+end
+@
+
+\fi %advanceduse, section
+
+
+\section{Limitations}
+\label{sec:limitations}
+
+The original MapReduce~\cite{mapreduce} has not only support for automatically
+distributing computations but also provides automatic
+load balancing and fault-tolerance. None of this
+is currently provided by \f{distribution.ml}.
+
+The code is very polymorphic but not type-safe as \ocamlmpi
+uses internally the [[Marshall]] module. So, take care 
+to run every instance of your program with the latest
+compiled source code. To avoid possible inconsistencies,
+you should ensure this automatically by 
+coding appropriate targets in your Makefile such as 
+[[make install]].
+
+For your information, here are some alternatives to 
+MPI and \f{distribution.ml} for writing distributed applications in OCaml:
+
+\begin{itemize}
+  \item netplex
+  \item chameleon
+  \item jocaml
+  \item ocaml3pl
+  \item ensemble
+%  \item charm
+\end{itemize}
+
+
+Here is a list of TODOs:
+\begin{itemize}
+  \item Handle dead worker ? and redirect his job to another worker ?
+  \item collect some statistics on workers ? maybe can first 
+     broadcast an identification request where worker just do a `hostname` ?
+  \item typecheck ? add always as first element a string containing
+    the type so worker can assert \verb+((fst req) = "string")+
+  \item distribute also the fold
+\end{itemize}
+%todo_code:  (cf also end of this document where explain TODO)
+% - have a finalize_mpi ? so if TaskFinished then exit 0 in clients
+%   so dont get backtrace
+% - can then even distribute those fold :) 
+% - better error management, cf when but where forgot add a DataRes 
+%   then no useful information
+
+
+%todo_doc:
+% - SEMI une figure ? :) montre encore plus l'interet de LP.
+%   voir figure avec archi reseau, sequence d'execution, 
+% - SEMI des benchs ? la encore montre l'interet de LP.
+% - gather a section about SPMD and TaskFinished
+%
+%todo_lp:
+% - add some index after the @, cf norman paper, or write 
+%   a autodefs for ocaml, cf smldefs in noweb distrubution
+% - add possibility in code to see info about Mpi function
+%   described in the section before ?
+% - pretty printing of the code ? could at least try for
+%   keywords ? should not be that hard to do that in
+%   noweblatex ? first pre-process and then post-process.
+% - could perhaps also LP the result of some programs to render
+%   this document also in a regression testing document :)
+
+
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This document has presented the \f{distribution.ml} OCaml module
+to help distributing OCaml code. ``MPIfying'' an OCaml program,
+or ``MapReduceing'' it takes a little effort, but
+in addition to expected important performance benefits, it also
+has the good virtue to force you, the programmer, to use
+less global variables (as they would not be shared by
+the program running on the other machines)
+and to show more clearly the dependencies between functions.
+Your code may be paradoxically clearer after making it distributed :)
+
+
+\subsection*{Availability}
+\label{sec:availability}
+
+The code described in this document is available at:
+\begin{center}
+\url{http://aryx.kicks-ass.org/~pad/ocaml/mapreduce-latest.tgz}
+\end{center}
+
+%\subsection*{Acknowledgements}
+%\label{sec:acknowledgements}
+%dup: credits.txt
+
+\subsection*{Copyright}
+
+[[distribution.ml]] is governed by the following copyright:
+
+<<copyright header>>=
+(* Yoann Padioleau 
+ * 
+ * Copyright (C) 2009 University of Urbana Champaign
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License (GPL)
+ * version 2 as published by the Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * file license.txt for more details.
+ *)
+@ 
+
+
+
+%dup: changes.txt ?
+\subsection*{Changelog}
+\label{sec:changelog}
+%put in separate section ? 
+
+%src: dot2texi manual :)
+\begin{itemize}
+
+%  \item Version 0.2 (June 2009)
+%    \begin{itemize}
+%       \item Initial
+%    \end{itemize}
+
+  \item Version 0.1 (June 2009). Initial release
+
+%history: and good LP side effects
+% - rewrote mpi_main into a map_reduce and use internally a real List.fold, 
+%   the explanations are then simpler :) LP force you to have a
+%   cleaner API :)
+% - introduce master/worker instead of server/worker; again thx to LP :)
+%   was easier to explain.
+% - introduce the protocol !! instead of ugly Some|None or even
+%   sometimes nothing.
+% - add explanation about MPICH specificities
+% - put killing_workers as nested func, clearer that only used inside
+%   the master
+% - introduce DataIn, DataOut and ProtocolError !! :) now better
+%   understand the need for clean protocols in distributed apps :)
+%   also better error management
+% - bugfix on missing DataRes :) better see comunication needs
+% - introduce clearer protocol for mpi_adjust_argv too
+% - bugfix in spec :) forgot a transition for the master
+% - introduce rank_master, easier to explain, and notag
+% - better debugging separation of concern
+% - add necessary ref about file format information. I was not able
+%   to remember where I found this information ...
+% - have actual_workers and idle_workers so config file can contain
+%   more processors than needed and still ok. More robust.
+% - use in_list/out_list
+% - introduce private distribution.mli and moved code around. We don't
+%   need in section 3 to explain the implem and in section 4 to explain
+%   the master/worker as the config p4 files does not mention at all
+%   in the end the notion of rank! this can be hidden and revealed only
+%   in section 5.
+% - document all the assumptions in one place (about argv, mpirun, config
+%   file), again thx to LP :)
+
+
+
+\end{itemize}
+
+
+\appendix
+
+%TODO right now pb with index as dont include all code, noweb
+% can not find some chunk and then just dont generate any
+% index :( 
+
+%\section{Indexes}
+%
+%%\subsection{Code Chunks}
+%\nowebchunks
+%
+%%todo: need special support, cf smldefs 
+%%\subsection{Identifiers}
+%%\nowebindex
+%
+%\section{References} 
+
+\addcontentsline{toc}{section}{References}
+
+\begin{thebibliography}{99}
+
+\bibitem[1]{mapreduce} Dean Jeffrey and Ghemawat Sanjay,
+{\em MapReduce: Simplified Data Processing on Large Clusters}, 
+OSDI 2004.
+
+\bibitem[2]{mpi}
+{The Message Passing Interface (MPI) Standard}, 
+\url{http://www.mcs.anl.gov/research/projects/mpi/}
+
+\bibitem[3]{ocamlmpi} Xavier Leroy, 
+{OCamlMPI: Interface with the MPI Message-Passing Interface}, 
+\url{http://pauillac.inria.fr/~xleroy/software.html#ocamlmpi}
+
+\bibitem[4]{mpich} MPICH,
+\url{http://www.mcs.anl.gov/research/projects/mpich2/}
+
+\bibitem[5]{openmpi} OpenMPI,
+\url{http://www.open-mpi.org/}
+
+\bibitem[6]{mpich-p4} 
+The P4 Procgroup File,
+\url{http://www.mcs.anl.gov/research/projects/mpi/mpich1/docs/mpichman-chp4/node14.htm#Node21}
+%
+%also http://rainman.astro.uiuc.edu/cluster/scripts/howto-mpi.txt
+%
+%some good doc, where says origin of ch_p4 name, and why it sucks :)
+%http://www.netlib.org/utk/mpi-review/node15.html
+
+\bibitem[7]{commons-pad} Yoann Padioleau,
+Commons{\small $_{pad}$} OCaml Library, 
+\url{http://aryx.kicks-ass.org/~pad/ocaml/Commons.pdf}
+
+\bibitem[8]{ssh-automatic} SSH Automatic login,
+\url{http://wp.uberdose.com/2006/10/16/ssh-automatic-login/}
+
+\end{thebibliography}
+
+
+
+%******************************************************************************
+% Postlude
+%******************************************************************************
+
+\end{document}
