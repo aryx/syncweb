@@ -39,15 +39,6 @@ XXXCMD=
 XXXCMDOPT=
 endif
 
-ifeq ($(FEATURE_BACKTRACE), 1)
-BTCMD= $(MAKE) backtrace -C commons
-BTCMDOPT= $(MAKE) backtrace.opt -C commons
-BTCMA=commons/commons_backtrace.cma
-else
-BTCMD=
-BTCMDOPT=
-endif
-
 ifeq ($(FEATURE_PCRE), 1)
 REGEXPDIR=ocamlpcre
 REGEXPCMD= $(MAKE) -C ocamlpcre &&  $(MAKE) regexp -C commons
