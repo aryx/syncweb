@@ -290,10 +290,16 @@ let readjust_start2_with_md5sums file xs =
     let rec aux mark2s md5sums = 
       match mark2s, md5sums with
       | [], [] -> []
-      | (Start2(s, j, md5sum, pinfo))::xs, (s2, md5sum2)::ys ->
+      | (Start2(s, j, md5sum, pinfo) as x)::xs, (s2, md5sum2)::ys ->
           if s <> s2 
-          then failwith 
-            (spf "not same key in view and md5sum_auxfile: %s VS %s" s s2)
+          then begin 
+            pr2 (spf "not same key in view and md5sum_auxfile: %s VS %s" s s2);
+            if (Common2.y_or_no 
+                  "This may be because you moved entities. Continue?")
+            then x::xs
+            else failwith "Stop here"
+            
+          end
           else 
             if md5sum = None
             then
@@ -302,9 +308,13 @@ let readjust_start2_with_md5sums file xs =
             failwith "md5sums present in view file"
       | ((End2 _|Regular2 _) as x)::xs, ys ->
           x::aux xs ys
-      | (Start2(s, j, md5sum, pinfo))::xs, [] ->
-          failwith
-            "more marks in view file than md5sums in md5sum_auxfile"
+      | (Start2(s, j, md5sum, pinfo) as x)::xs, [] ->
+          pr2 "more marks in view file than md5sums in md5sum_auxfile";
+          if (Common2.y_or_no 
+                "This may be because you moved entities. Continue?")
+          then x::xs
+          else failwith "Stop here"
+          
       | [], y::ys ->
           failwith 
             "more md5sums in md5sum_auxfile than start marks in view file"
