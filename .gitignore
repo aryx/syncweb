@@ -1,5 +1,7 @@
 *.cm*
 *.annot
+*.o
+*.a
 
 /Makefile.config
 /globals/config.ml
