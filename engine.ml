@@ -316,8 +316,11 @@ let readjust_start2_with_md5sums file xs =
           else failwith "Stop here"
           
       | [], y::ys ->
-          failwith 
-            "more md5sums in md5sum_auxfile than start marks in view file"
+          pr2 "more md5sums in md5sum_auxfile than start marks in view file";
+          if (Common2.y_or_no 
+                "This may be because you moved entities. Continue?")
+          then []
+          else failwith "Stop here"
       
     in
     aux xs md5s
