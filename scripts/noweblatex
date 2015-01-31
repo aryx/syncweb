@@ -16,7 +16,9 @@ sub process_file {
     my $input = IO::File->new("< $file") or die "$! $file";
 
     while(defined($line = $input->getline())) {
-        if($line =~ /^#include \"(.*.tex.nw)\"/) {
+        if($line =~ /^#include \"(.*.tex.nw)\"/ ||
+           $line =~ /^#include \"(.*.nw)\"/
+          ) {
             process_file($1);
         } else {
             if($line =~ "<<.*>>") {
