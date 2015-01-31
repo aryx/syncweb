@@ -161,10 +161,157 @@ let lpize file =
     (* Sys.command (spf "rm -f %s" file) +> ignore; *)
   )
 
+let rename_chunk_names xs =
+  let origs, views = xs +> Common.partition_either (fun file ->
+    if file =~ ".*.nw$"
+    then Left file
+    else Right file
+  )
+  in
+
+  let hchunks = Hashtbl.create 101 in
+    
+  views +> List.iter (fun file ->
+    let view = parse_view ~lang:Lang.mark_C_short file in
+
+
+    let rec codetree x =
+      match x with
+      | RegularCode _ -> ()
+      | ChunkCode (info, xs, _indent) ->
+        Hashtbl.replace hchunks info.chunk_key true;
+        xs +> List.iter codetree
+    in
+    List.iter codetree view;
+    hchunks +> Common.hash_to_list +> List.iter (fun (k, _) -> 
+      pr k
+    );
+  );
+  let subst_maybe s =
+    if s =~ ".*8[acl]/" 
+    || s =~ ".*386"
+    || s =~ ".*x86" (* avoid apply on what was already applied *)
+    || s = "kernel basic includes"
+    || s =~ ".*\\.[chs]$"
+    then s
+    else
+      if Hashtbl.mem hchunks s
+      then s ^ "(x86)"
+      else s
+  in
+
+  origs +> List.iter (fun file ->
+    let orig = Engine.parse_orig file in
+    
+    let rec tex_or_chunkdef x =
+      match x with
+      | Tex xs -> Tex xs
+      | ChunkDef (def, ys) ->
+          let def = { def with chunkdef_key = subst_maybe def.chunkdef_key } in
+          ChunkDef (def, ys +> List.map code_or_chunk)
+    and code_or_chunk x =
+      match x with
+      | Code s -> Code s
+      | ChunkName (s, i) -> ChunkName (subst_maybe s, i)
+    in
+    let orig2 = List.map tex_or_chunkdef orig in
+    Engine.unparse_orig orig2 file
+  )
+
+let merge_files xs =
+  let hchunkkey_to_files = Hashtbl.create 101 in
+  let htopkeysfile = Hashtbl.create 101 in
+
+  (* first pass, find duplicate chunk names in different .nw *)
+  xs +> List.iter (fun file ->
+    let orig = 
+      try
+        Engine.parse_orig file 
+      with exn ->
+        failwith (spf "PB with %s, exn = %s" file (Common.exn_to_s exn))
+    in
+
+    let rec tex_or_chunkdef x =
+      match x with
+      | Tex xs -> ()
+      | ChunkDef (def, ys) ->
+        let key = def.chunkdef_key in
+        let hkey = 
+          try Hashtbl.find hchunkkey_to_files key
+          with Not_found ->
+            let h = Hashtbl.create 101 in
+            Hashtbl.add hchunkkey_to_files key h;
+            h
+        in
+        Hashtbl.replace hkey key file;
+        if key =~ ".*\\.ml[i]?$" 
+        then begin
+          let path = Filename.concat (Filename.dirname file) key in
+          if Sys.file_exists path && not (Hashtbl.mem htopkeysfile path)
+          then begin 
+            Hashtbl.add htopkeysfile path true;
+            pr (spf " %s\\" path);
+          end
+        end;
+
+               
+
+        ys +> List.iter code_or_chunk
+    and code_or_chunk x =
+      match x with
+      | Code s -> ()
+      | ChunkName (s, i) -> ()
+    in
+    List.iter tex_or_chunkdef orig
+  );
+
+  let lastdir = ref "" in
+
+  (* second pass, rename them *)
+  xs +> List.iter (fun file ->
+    let dir = Filename.dirname file in
+    let pr _ = () in (* TODO *)
+    if dir <> !lastdir then begin
+      pr "";
+      pr (spf "\\chapter{[[%s]]}" dir);
+      pr "";
+      lastdir := dir
+    end;
+
+    pr (spf "\\section{[[%s]]}" file);
+    
+    let orig = Engine.parse_orig file in
+
+    let subst_maybe key =
+      let files = Hashtbl.find_all hchunkkey_to_files key in
+      if List.length files > 1
+      then failwith (spf "TODO: ambiguous key: %s" key);
+      
+      key
+    in
+
+    let rec tex_or_chunkdef x =
+      match x with
+      | Tex xs -> Tex xs
+      | ChunkDef (def, ys) ->
+          let def = { def with chunkdef_key = subst_maybe def.chunkdef_key } in
+          ChunkDef (def, ys +> List.map code_or_chunk)
+    and code_or_chunk x =
+      match x with
+      | Code s -> Code s
+      | ChunkName (s, i) -> ChunkName (subst_maybe s, i)
+    in
+    let orig2 = List.map tex_or_chunkdef orig in
+    Engine.unparse_orig orig2 file;
+
+(*    Common.cat file +> List.iter pr; *)
+    Common.command2 (spf "rm -f %s" file);
+  )
+
 (* ---------------------------------------------------------------------- *)
 let actions () = [
 
-  "-parse_orig", "   <file>", 
+  "-parse_orig", "   <file>",
     Common.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
       let orig = Engine.parse_orig x in
@@ -216,6 +363,10 @@ let actions () = [
     );
   "-lpize", " <file>",
   Common.mk_action_1_arg lpize;
+  "-rename_chunk_names", " <origs and views>", 
+  Common.mk_action_n_arg rename_chunk_names;
+  "-merge_files", " <origs>", 
+  Common.mk_action_n_arg merge_files;
 ]
 
 (*****************************************************************************)
