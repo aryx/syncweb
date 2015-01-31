@@ -19,3 +19,4 @@ val lang_table : (string, mark_language) Common.assoc
 
 val mark_ocaml_short: mark_language
 val mark_ocaml: mark_language
+val mark_C_short: mark_language
