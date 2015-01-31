@@ -233,7 +233,10 @@ let main_action xs =
 
       let orig = Engine.parse_orig origf in
       (* we take the basename so that files can be put in any directory *)
-      let topkey = find_topkey_corresponding_to_file orig viewf in
+      let topkey = 
+        (* Filename.basename viewf *)
+        find_topkey_corresponding_to_file orig viewf
+      in
       if not (Sys.file_exists viewf)
       then
         let view = Engine.view_of_orig ~topkey orig in
@@ -242,7 +245,7 @@ let main_action xs =
         (* old: let date1 = Common.filemtime origf in
          *      let date2 = Common.filemtime viewf in
          *)
-        (* pr2 (spf "syncing %s and %s" origf viewf); *)
+        (* pr2 (spf "syncing %s and %s with key %s" origf viewf topkey);  *)
         let view = Engine.parse_view ~lang viewf in 
         let orig' = Engine.sync ~lang   orig view in
         let view' = Engine.view_of_orig ~topkey orig' in
@@ -268,7 +271,10 @@ let main_action xs =
         with_error f (fun () -> f, Engine.parse_orig f)
       ) in
       let orig = Engine.pack_multi_orig origs in
-      let topkey = find_topkey_corresponding_to_file orig viewf in
+      let topkey = 
+        (* Filename.basename viewf *)
+        find_topkey_corresponding_to_file orig viewf
+      in
 
       if not (Sys.file_exists viewf)
       then 
