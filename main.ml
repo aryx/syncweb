@@ -14,8 +14,9 @@ open Common
  * [2] http://www.cs.tufts.edu/~nr/noweb/
  * 
  * todo: 
+ *  - add some Common.profile, parsing orig, parsing view, extract view, etc
  *  - optimize make sync when have many files, cache in a .marshall
- *    the parsing of the .tex.nw? or use hashtbl instead of list for faster
+ *    the parsing of the .nw? or use hashtbl instead of list for faster
  *    lookup
  *  - detect recursive chunks that leads to weird thing when do 'make sync'
  *  - could autodetect language based on view filenames?
@@ -104,6 +105,15 @@ let find_topkey_corresponding_to_file orig viewf =
     in
     aux revdir candidates
   )
+
+let count_dollar s =
+  let cnt = ref 0 in
+  for i = 0 to String.length s - 1 do
+    if String.get s i = '$'
+    then incr cnt
+  done;
+  !cnt
+
 
 (*****************************************************************************)
 (* Actions *)
@@ -221,6 +231,7 @@ let rename_chunk_names xs =
 let merge_files xs =
   let hchunkkey_to_files = Hashtbl.create 101 in
   let htopkeysfile = Hashtbl.create 101 in
+  let hfile_to_topkeys = Hashtbl.create 101 in
 
   (* first pass, find duplicate chunk names in different .nw *)
   xs +> List.iter (fun file ->
@@ -236,25 +247,24 @@ let merge_files xs =
       | Tex xs -> ()
       | ChunkDef (def, ys) ->
         let key = def.chunkdef_key in
-        let hkey = 
+        let hfiles_of_key = 
           try Hashtbl.find hchunkkey_to_files key
           with Not_found ->
             let h = Hashtbl.create 101 in
             Hashtbl.add hchunkkey_to_files key h;
             h
         in
-        Hashtbl.replace hkey key file;
+        Hashtbl.replace hfiles_of_key file true;
         if key =~ ".*\\.ml[i]?$" 
         then begin
           let path = Filename.concat (Filename.dirname file) key in
           if Sys.file_exists path && not (Hashtbl.mem htopkeysfile path)
           then begin 
             Hashtbl.add htopkeysfile path true;
-            pr (spf " %s\\" path);
+            (* pr (spf " %s\\" path); *)
+            Hashtbl.add hfile_to_topkeys file key
           end
         end;
-
-               
 
         ys +> List.iter code_or_chunk
     and code_or_chunk x =
@@ -270,7 +280,7 @@ let merge_files xs =
   (* second pass, rename them *)
   xs +> List.iter (fun file ->
     let dir = Filename.dirname file in
-    let pr _ = () in (* TODO *)
+(*    let pr _ = () in (* TODO *) *)
     if dir <> !lastdir then begin
       pr "";
       pr (spf "\\chapter{[[%s]]}" dir);
@@ -279,33 +289,67 @@ let merge_files xs =
     end;
 
     pr (spf "\\section{[[%s]]}" file);
+
+    (* to have a single topkey entry *)
+    let xs = Hashtbl.find_all hfile_to_topkeys file in
+    xs +> List.iter (fun topkey ->
+      pr (spf "<<%s/%s>>=" dir topkey);
+      pr (spf "<<%s>>" topkey);
+      pr "@";
+      pr ""
+    );
     
     let orig = Engine.parse_orig file in
 
     let subst_maybe key =
-      let files = Hashtbl.find_all hchunkkey_to_files key in
-      if List.length files > 1
-      then failwith (spf "TODO: ambiguous key: %s" key);
-      
-      key
+      try 
+        let h = Hashtbl.find hchunkkey_to_files key in
+        let files = Common.hashset_to_list h in
+        if List.length files > 1
+        then key ^ (spf "(%s)" (Filename.basename file))
+        else key
+      with Not_found -> key
     in
 
     let rec tex_or_chunkdef x =
       match x with
-      | Tex xs -> Tex xs
+      | Tex xs -> 
+        [Tex (xs +> List.map (fun s ->
+          if s =~ "^\\\\section" ||
+             s =~ "^\\\\subsection" ||
+             s =~ "^%----"
+          then s
+          else "%%" ^ s
+        ))]
       | ChunkDef (def, ys) ->
+          (*TODO: detect if even number of $ in which case need
+           * add a fake %$ to the end
+           *)
           let def = { def with chunkdef_key = subst_maybe def.chunkdef_key } in
-          ChunkDef (def, ys +> List.map code_or_chunk)
+          let nbdollars = ys +> List.map (function
+            | Code s -> count_dollar s
+            | ChunkName (s, _) -> count_dollar s
+          ) +> Common2.sum
+          in
+          [ChunkDef (def, ys +> List.map code_or_chunk)] @
+          (if nbdollars mod 2 = 1
+           then [Tex ["%$"]]
+           else []
+          )
     and code_or_chunk x =
       match x with
       | Code s -> Code s
       | ChunkName (s, i) -> ChunkName (subst_maybe s, i)
     in
-    let orig2 = List.map tex_or_chunkdef orig in
+    let orig2 = List.map tex_or_chunkdef orig +> List.flatten in
     Engine.unparse_orig orig2 file;
 
-(*    Common.cat file +> List.iter pr; *)
+    Common.cat file +> List.iter pr; 
     Common.command2 (spf "rm -f %s" file);
+
+    Hashtbl.find_all hfile_to_topkeys file +> List.iter (fun topkey ->
+      Common.command2 (spf "rm -f %s/%s" dir topkey);
+    )
   )
 
 (* ---------------------------------------------------------------------- *)
