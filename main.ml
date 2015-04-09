@@ -261,7 +261,7 @@ let merge_files xs =
           if Sys.file_exists path && not (Hashtbl.mem htopkeysfile path)
           then begin 
             Hashtbl.add htopkeysfile path true;
-            (* pr (spf " %s\\" path); *)
+            (* pr2 (spf " %s\\" path); *)
             Hashtbl.add hfile_to_topkeys file key
           end
         end;
@@ -280,7 +280,7 @@ let merge_files xs =
   (* second pass, rename them *)
   xs +> List.iter (fun file ->
     let dir = Filename.dirname file in
-(*    let pr _ = () in (* TODO *) *)
+    (* let pr _ = () in (* TODO *)   *)
     if dir <> !lastdir then begin
       pr "";
       pr (spf "\\chapter{[[%s]]}" dir);

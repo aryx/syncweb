@@ -368,6 +368,7 @@ let parse_view ~lang file =
         (match x with
         | Start2 (s, i, md5sum, pinfo) -> 
             let (body, endmark, rest) = 
+             try 
               Common2.split_when (fun x -> match x with 
               | End2 (s2,_, pinfo2) -> 
                   (match s2 with
@@ -376,6 +377,8 @@ let parse_view ~lang file =
                   )
               | _ -> false
               ) xs
+             with Not_found ->
+               failwith (s_of_pinfo pinfo ^ " could not find end mark")
             in
             let body' = aux (readjust_mark2_remove_indent i body) in
             ChunkCode ({
