@@ -4,16 +4,19 @@ open Common
 (* Purpose *)
 (*****************************************************************************)
 
-(* dup: readme.txt
- * syncweb is a command line tool enabling programmers to use the
+(* syncweb is a command line tool enabling programmers to use the
  * literate programming[1] development methodology, using the noweb[2]
  * tool, while still being able to modify the generated files
  * from the literate document.
+ * dup: readme.txt
  * 
  * [1] http://en.wikipedia.org/wiki/Literate_programming
  * [2] http://www.cs.tufts.edu/~nr/noweb/
  * 
  * todo: 
+ *  - bug: if have a chunkname that is used two times (so it factorizes
+ *    code), and that you modify one instance, then it does not propagate
+ *    to the other!! bug!! (see pb with char_code vs charcode in Efuns.nw)
  *  - add some Common.profile, parsing orig, parsing view, extract view, etc
  *  - optimize make sync when have many files, cache in a .marshall
  *    the parsing of the .nw? or use hashtbl instead of list for faster
@@ -418,7 +421,10 @@ let actions () = [
 (*****************************************************************************)
 
 let main_action xs = 
-  let lang = List.assoc !lang (Lang.lang_table) in
+  let lang = 
+    try List.assoc !lang (Lang.lang_table) 
+    with Not_found -> failwith (spf "lang %s not found" !lang)
+  in
   let md5sum_in_auxfile = !md5sum_in_auxfile in
   let less_marks = !less_marks in
 
