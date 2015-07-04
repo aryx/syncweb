@@ -214,7 +214,8 @@ let parse_orig file =
                 chunkdef_end = fst3 endmark;
               }, process_body body') in
               item::agglomerate rest
-            with Not_found -> failwith "no end mark found"
+            with Not_found -> 
+              failwith (spf "no end mark found, at line %d" line)
             )
 
         | End1 -> failwith (spf "line %d: a end mark without a start" line)
