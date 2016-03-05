@@ -53,7 +53,7 @@ let with_error file f =
     pr2 (spf "processing %s" file);
     f ()
   with e ->
-    pr2 (spf "PB while was processing %s" file);
+    pr2 (spf "Problem found while was processing %s" file);
     raise e
 
 (*****************************************************************************)
@@ -61,7 +61,9 @@ let with_error file f =
 (*****************************************************************************)
 
 open Engine
-(* allows to have multiple filenames with the same name but different dir *)
+(* Allows to have multiple filenames with the same name but different dir.
+ * We used take the basename so that files could be put in any directory.
+ *)
 let find_topkey_corresponding_to_file orig viewf =
   (* old: Filename.basename viewf *)
   let base = Filename.basename viewf in
@@ -115,7 +117,6 @@ let find_topkey_corresponding_to_file orig viewf =
 (*****************************************************************************)
 
 let actions () = [
-
   "-parse_orig", "   <file>",
     Common.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
@@ -179,21 +180,20 @@ let actions () = [
 (*****************************************************************************)
 
 let main_action xs = 
-  let lang = 
-    try List.assoc !lang (Lang.lang_table) 
-    with Not_found -> failwith (spf "lang %s not found" !lang)
-  in
   let md5sum_in_auxfile = !md5sum_in_auxfile in
   let less_marks = !less_marks in
+  let lang = 
+    try List.assoc !lang (Lang.lang_table md5sum_in_auxfile)
+    with Not_found -> failwith (spf "lang %s not found" !lang)
+  in
 
   match xs with
   (* simple case, one tex.nw file, one view *)
   | [origf;viewf] -> 
 
       let orig = Engine.parse_orig origf in
-      (* we take the basename so that files can be put in any directory *)
       let topkey = 
-        (* Filename.basename viewf *)
+        (* old: Filename.basename viewf *)
         find_topkey_corresponding_to_file orig viewf
       in
       if not (Sys.file_exists viewf)
@@ -231,7 +231,7 @@ let main_action xs =
       ) in
       let orig = Engine.pack_multi_orig origs in
       let topkey = 
-        (* Filename.basename viewf *)
+        (* old: Filename.basename viewf *)
         find_topkey_corresponding_to_file orig viewf
       in
 
@@ -275,13 +275,12 @@ let options () =
   [
     "-lang", Arg.Set_string lang, 
     (spf " <lang> (default=%s, choices=%s)" !lang 
-        (Common.join "|" (List.map fst Lang.lang_table)));
+        (Common.join "|" (List.map fst (Lang.lang_table true))));
 
     "-md5sum_in_auxfile", Arg.Set md5sum_in_auxfile, 
     " ";
     "-less_marks", Arg.Set less_marks, 
     " ";
-
 
     "-version",   Arg.Unit (fun () -> 
       pr2 (spf "syncweb version: %s" Config.version);

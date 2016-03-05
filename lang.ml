@@ -17,11 +17,12 @@ type mark_language = {
   unparse_mark_start: key:string -> md5:string option -> string;
   unparse_mark_end: key:string -> string;
 
+  (* for -less_marks, the x: mark *)
   parse_mark_startend: string -> (string * string * string option) option;
   unparse_mark_startend: key:string -> md5:string option -> string;
 }
 
-
+(* from common2.ml *)
 let (==~) s re =
   Str.string_match re s 0
 
@@ -29,14 +30,15 @@ let (==~) s re =
 (* Language specific handling in views  *)
 (*****************************************************************************)
 
-(* todo: can even factorize because many use the same comment format.
- * Maybe can just provide the tokens to make a comment ?
+(* todo: could factorize because many languages use the same comment format.
+ * Maybe we could just provide the tokens to make a comment ?
  * todo: without key in endmark ? but need adjust parse_view
  *)
 
+(* no mark in the comment, shorter format because of md5sum_in_auxfile *)
 let mark_ocaml_short =
   {
-    parse_mark_start = (fun s -> 
+    parse_mark_start = (fun s ->
       if s =~ "\\([ \t]*\\)(\\*s: \\(.*\\) \\*)$"
       then 
         let (a,b) = Common.matched2 s in
@@ -54,13 +56,12 @@ let mark_ocaml_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "(*s: %s *)" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
       spf "(*e: %s *)" key
     );
-
 
 
     parse_mark_startend = (fun s -> 
@@ -74,7 +75,7 @@ let mark_ocaml_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "(*x: %s *)" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
@@ -111,7 +112,9 @@ let mark_ocaml =
       spf "(* nw_e: %s *)" key);
 
     parse_mark_startend = (fun s -> None);
-    unparse_mark_startend = (fun ~key ~md5 -> raise Todo);
+    unparse_mark_startend = (fun ~key ~md5 -> 
+      failwith "-less_marks is not supported for this language"
+    );
   }
 
 let mark_shell = 
@@ -144,7 +147,7 @@ let mark_shell =
     parse_mark_startend = (fun s -> 
       None);
     unparse_mark_startend = (fun ~key ~md5 -> 
-      raise Todo
+      failwith "-less_marks is not supported for this language"
     );
   }
 
@@ -168,7 +171,7 @@ let mark_ocamlyacc_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "/*(*s: %s *)*/" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
@@ -188,7 +191,7 @@ let mark_ocamlyacc_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "/*(*x: %s *)*/" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
@@ -222,7 +225,9 @@ let mark_C =
       spf "/* nw_e: %s */" key);
   
     parse_mark_startend = (fun s -> None);
-    unparse_mark_startend = (fun ~key ~md5 -> raise Todo);
+    unparse_mark_startend = (fun ~key ~md5 -> 
+      failwith "-less_marks is not supported for this language"
+    );
   }
 
 let mark_C_short =
@@ -245,7 +250,7 @@ let mark_C_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "/*s: %s */" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
@@ -265,7 +270,7 @@ let mark_C_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "/*x: %s */" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
@@ -290,7 +295,7 @@ let mark_haskell_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "{-s: %s -}" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
@@ -310,7 +315,7 @@ let mark_haskell_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "{-x: %s -}" key;
-      | Some s -> raise Todo
+      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
@@ -321,10 +326,10 @@ let mark_haskell_short =
 (* Final table  *)
 (*****************************************************************************)
 
-let lang_table = [
-  "ocaml", mark_ocaml_short;
+let lang_table auxfile = [
+  "ocaml", if auxfile then mark_ocaml_short else mark_ocaml;
+  "C",     if auxfile then mark_C_short else mark_C;
   "shell", mark_shell;
-  "C",     mark_C_short;
   "ocamlyacc", mark_ocamlyacc_short;
   "php", mark_C_short;
   "haskell", mark_haskell_short;

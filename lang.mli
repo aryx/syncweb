@@ -13,7 +13,8 @@ type mark_language = {
   unparse_mark_startend: key:string -> md5:string option -> string;
 }
 
-val lang_table : (string, mark_language) Common.assoc
+val lang_table : 
+  bool (* use md5sum auxfile *) -> (string, mark_language) Common.assoc
 
 (* for testing *)
 
