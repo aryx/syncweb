@@ -16,17 +16,24 @@ sub process_file {
     my ($file) = @_;
     my $input = IO::File->new("< $file") or die "$! $file";
 
+    my $inverbatim = 0;
+    my $inchunk = 0;
+
     while(defined($line = $input->getline())) {
         if($line =~ /^#include \"(.*.tex.nw)\"/ ||
            $line =~ /^#include \"(.*.nw)\"/
           ) {
             process_file($1);
         } else {
-            if($line =~ "<<.*>>") {
 
+            if($line =~ /begin{verbatim}/) { $inverbatim = 1; }
+            if($line =~ /end{verbatim}/)   { $inverbatim = 0; }
+            if($line =~ /^<<.*>>=/) { $inchunk = 1; }
+            if($line =~ /^@/) { $inchunk = 0; }
+
+            if($line =~ /<<.*>>/) {
                 # must be before next case
                 #TODO? $line =~ s/\[\[(.*?)\]\]/{\\tt $1}/g;
-
                 $line =~ s/_/\\_/g;
             }
 
@@ -37,8 +44,15 @@ sub process_file {
     $line =~ s/^[ \t]*\\l (.*)$/\\SaveVerb{Verb}+$1+\\less{\\UseVerb{Verb}}/;
     # can have code in comments that contains special symbol like <<
     # so simpler to just filter such code
-    $line =~ s/^%.*/%/;
+    #update: but then in verbatim the line is skipped, which is annoying
+    # for instance for lex %token declarations, so I commented it
 
+            if($line =~ /^%/) {
+                $line =~ s/^%.*/%/ if (!$inverbatim && !$inchunk);
+             }
+            if($inverbatim) {
+                $line =~ s/<</xx/g;
+            }
             print OUTFILE $line;
         }
     }
