@@ -1,5 +1,4 @@
 open Common
-open Common2
 
 (*****************************************************************************)
 (* Prelude *)
@@ -83,6 +82,8 @@ let md5sum_auxfile_of_file file =
 (*****************************************************************************)
 (* Helpers  *)
 (*****************************************************************************)
+let (==~) s re =
+    Str.string_match re s 0
 
 let generate_n_spaces i =
   Common2.repeat " " i +> Common.join ""
@@ -104,9 +105,9 @@ let show_orig_view ?(force_display=false)key s_orig s_view =
     ()
   else begin
     pr2 "<<<<<<< orig <<<<<<<<";
-    pr2_no_nl s_orig;
+    Common2.pr2_no_nl s_orig;
     pr2 "====================";
-    pr2_no_nl s_view;
+    Common2.pr2_no_nl s_view;
     pr2 ">>>>>>> view >>>>>>>>";
   end
 
@@ -165,6 +166,9 @@ let key_of_chunckdef_string s =
   else failwith "not a chunkdef string"
 
 
+let fst3 = Common2.fst3
+let snd3 = Common2.snd3
+let thd3 = Common2.thd3
 
 let parse_orig file = 
   let xs = Common.cat file in 
@@ -729,7 +733,7 @@ let sync ~lang orig views =
                 
                 pr2 ("a chunk has been deleted or moved for: " ^ key);
                 pr2 "<<<<<<< orig <<<<<<<<";
-                pr2_no_nl s_orig;
+                Common2.pr2_no_nl s_orig;
                 pr2 "====================";
                 if (Common2.y_or_no "keep the one in orig?")
                 then ChunkDef (def, body_orig)
@@ -855,7 +859,7 @@ let sync ~lang orig views =
         pr2 ("Not consumed: " ^ k);
         pr2 ("<<<<<<<<<<<<<<<<");
         let strs = (x::xs) +> List.map snd +> List.map s_of_chunkdef_body in
-        strs +> List.iter pr2_no_nl;
+        strs +> List.iter Common2.pr2_no_nl;
         pr2 (">>>>>>>>>>>>>>>>");
   );
 

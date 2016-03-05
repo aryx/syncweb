@@ -6,8 +6,6 @@
 # Yes I know about autoconf ... and autoconf sux.
 
 #TODO use: noweave, md5sum
-
-
 # assume standard: binutils, gcc, as, ld, gnu toolchain
 # assume standard: make, sh?, perl?
 # assume standard: diffutils, fileutils, findutils, grep, patchutils, sh-utils
@@ -24,9 +22,8 @@ my $projectcmdline =
 
 my $prefix="/usr/local";
 
-my $bt=0;
-
 #my $opt=".opt";
+#my $bt=1;
 
 local $_ = join ' ', @ARGV;
 
@@ -34,8 +31,8 @@ local $_ = join ' ', @ARGV;
 /-h/ || /--help/ and die "usage: $0 [--prefix=path] [--with/out-backtrace]\n";
 /--prefix=([^ ]*)/ and $prefix = $1;
 
-/--with-backtrace/ and $bt = 1;
-/--without-backtrace/ and $bt = 0;
+#/--with-backtrace/ and $bt = 1;
+#/--without-backtrace/ and $bt = 0;
 
 #/--no-opt/ and $opt = "";
 #/--opt/ and $opt = ".opt";
@@ -91,9 +88,6 @@ $error +=
                  "OCaml (the wonderful language) is present.",
                  "The program ocaml is missing or is not a good version. We need at least 4.00.1",
                  );
-
-
-
 
 
 #if ($opt eq ".opt") {
@@ -227,8 +221,8 @@ LIBDIR=$prefix/lib
 SHAREDIR=$src
 
 # Features
-FEATURE_BACKTRACE=$bt
 ";
+#FEATURE_BACKTRACE=$bt
 
 # The OPTBIN variable is here to allow to use ocamlc.opt instead of
 # ocaml, when it is available, which speeds up compilation. So
@@ -236,12 +230,11 @@ FEATURE_BACKTRACE=$bt
 # or setenv it to \".opt\" in your startup script.
 #OPTBIN=$opt
 
-pr2 "Generating commons/features.ml";
-`cpp -DFEATURE_BACKTRACE=$bt commons/features.ml.in > commons/features.ml`;
-
+#pr2 "Generating commons/features.ml";
+#`cpp -DFEATURE_BACKTRACE=$bt commons/features.ml.in > commons/features.ml`;
 #pr2 "Generating appropriate links in yyy/ (python=$python)";
 
 pr2 "Generating globals/config.ml";
-#old: my $command = "perl -p -i -e 's#Not_found.\*#Not_found->\\\"$src\\\"#' globals/config.ml";
 my $command = "perl -p -e 's#Not_found.\*#Not_found->\\\"$src\\\"#' globals/config.ml.in > globals/config.ml";
 `$command`;
+#old: my $command = "perl -p -i -e 's#Not_found.\*#Not_found->\\\"$src\\\"#' globals/config.ml";

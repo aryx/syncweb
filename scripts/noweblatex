@@ -8,6 +8,7 @@ use IO::File;
 my $file = $ARGV[0];
 
 # automatic renaming of the xxx_yyy.zzz extension for noweb in <<>>= lines
+# and more ...
 
 open(OUTFILE, "> /tmp/yyy.nw");
 

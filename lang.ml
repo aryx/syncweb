@@ -1,6 +1,5 @@
 open Common
-open Common2
-
+ 
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
@@ -21,15 +20,17 @@ type mark_language = {
   unparse_mark_startend: key:string -> md5:string option -> string;
 }
 
+
+let (==~) s re =
+  Str.string_match re s 0
+
 (*****************************************************************************)
 (* Language specific handling in views  *)
 (*****************************************************************************)
 
-
-(* todo: can even factorize as many use the same comment format.
- * Maybe can just even provide the tokens to make a comment ?
- * 
- * todo: withoyt key in endmark ? but need adjust parse_view
+(* todo: can even factorize because many use the same comment format.
+ * Maybe can just provide the tokens to make a comment ?
+ * todo: without key in endmark ? but need adjust parse_view
  *)
 
 let mark_ocaml_short =

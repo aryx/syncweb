@@ -16,11 +16,6 @@ SRC=lang.ml engine.ml test.ml main.ml
 TARGET=syncweb
 PROGS=syncweb
 
-ifeq ($(FEATURE_GUI),1)
-PROGS+=xxx_browser
-GUIEXECDIR=gui
-endif
-
 OPTPROGS= $(PROGS:=.opt)
 
 #------------------------------------------------------------------------------
@@ -53,12 +48,10 @@ REGEXPCMDOPT=
 endif
 
 
-
 #------------------------------------------------------------------------------
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
 LIBS= commons/lib.cma \
       $(REGEXPCMA) \
-      commons/commons_features.cma \
       globals/globals.cma
 
 MAKESUBDIRS=commons \
@@ -99,7 +92,6 @@ rec:
 	$(XXXCMD)
 	$(BTCMD)
 	$(REGEXPCMD)
-	$(MAKE) features -C commons 
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i all || exit 1; done 
 
 rec.opt:
@@ -107,7 +99,6 @@ rec.opt:
 	$(XXXCMDOPT)
 	$(BTCMDOPT)
 	$(REGEXPCMDOPT)
-	$(MAKE) features.opt -C commons 
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i all.opt || exit 1; done 
 
 #	+for D in $(MAKESUBDIRS); do $(MAKE) $$D || exit 1 ; done

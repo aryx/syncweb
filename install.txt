@@ -1,5 +1,5 @@
 You must first install a recent version of 
- - OCaml (at least 3.09.2), 
+ - OCaml (at least 4.00.1), 
    see http://caml.inria.fr/download.en.html
  - Noweb 
    see http://www.cs.tufts.edu/~nr/noweb/
