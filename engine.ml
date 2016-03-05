@@ -1,10 +1,11 @@
+(* Copyright 2009-2016 Yoann Padioleau, see copyright.txt *)
 open Common
 
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
 (* 
- * history: started by defining types for orig and view that describes
+ * history: I started by defining types for orig and view that describes
  * how I want the two formats. Basically a list of stuff (aka chunks in
  * LP terminology) . Then wrote parse_orig, parse_view, the unparser,
  * and then view_of_orig and orig_of_view. Then finally wrote sync.
