@@ -50,16 +50,16 @@ endif
 
 #------------------------------------------------------------------------------
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
-LIBS= commons/lib.cma \
+LIBS= external/commons/commons.cma \
       $(REGEXPCMA) \
       globals/globals.cma
 
-MAKESUBDIRS=commons \
+MAKESUBDIRS= \
   $(XXXDIR) \
   $(REGEXPDIR) \
   globals
 
-INCLUDEDIRS=commons \
+INCLUDEDIRS=external/commons \
   $(XXXINCLUDE) \
   $(REGEXPINCLUDE) \
   globals
@@ -88,14 +88,12 @@ all.opt: opt
 top: $(TARGET).top
 
 rec:
-	$(MAKE) -C commons 
 	$(XXXCMD)
 	$(BTCMD)
 	$(REGEXPCMD)
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i all || exit 1; done 
 
 rec.opt:
-	$(MAKE) all.opt -C commons 
 	$(XXXCMDOPT)
 	$(BTCMDOPT)
 	$(REGEXPCMDOPT)

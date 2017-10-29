@@ -9,8 +9,7 @@ TARGET=globals
 SRC= flag.ml config.ml
 
 LIBS=
-INCLUDEDIRS=../commons
-#INCLUDES=-I ../commons
+INCLUDEDIRS=$(TOP)/external/commons
 
 ##############################################################################
 # Generic
