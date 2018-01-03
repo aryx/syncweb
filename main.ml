@@ -228,6 +228,15 @@ in
     let file2 = Common2.filename_of_dbe (d,b,"w") in
     unparse_orig_web orig file2
   );
+
+  "-to_tex", " <orig> <file>", 
+  Common.mk_action_2_arg (fun origfile texfile -> 
+    (* todo: parse .aux? *)
+    let (_d,_b,_e) = Common2.dbe_of_filename texfile in
+    let orig = Web.parse origfile in
+    Web_to_tex.web_to_tex orig texfile;
+  );
+
 ]
 
 (*****************************************************************************)

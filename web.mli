@@ -7,7 +7,7 @@ type t = tex_or_chunkdef list
 
     and chunkdef = {
       chunkdef_key: string;
-      chunkdef_end: string;
+      chunkdef_end: string; (* usually just '@' *)
     }
     and code_or_chunk =
       | Code of string
