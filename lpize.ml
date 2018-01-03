@@ -1,12 +1,10 @@
 open Common
 
-open Engine
-
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
 (*
- * See now pfff -lpize which supports fine grained split of entities
+ * See now pfff -lpize which supports fine-grained split of entities
  *)
 
 (*****************************************************************************)

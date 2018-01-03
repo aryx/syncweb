@@ -1,6 +1,7 @@
 open Common
 
-open Engine
+open Web
+open Code
 
 (*****************************************************************************)
 (* Prelude *)
@@ -46,7 +47,7 @@ let rename_chunknames xs =
     | _ -> s
   in
   xs |> List.iter (fun file ->
-    let orig = Engine.parse_orig file in
+    let orig = Web.parse file in
     
     let rec tex_or_chunkdef x =
       match x with
@@ -60,7 +61,7 @@ let rename_chunknames xs =
       | ChunkName (s, i) -> ChunkName (subst_maybe s, i)
     in
     let orig2 = List.map tex_or_chunkdef orig in
-    Engine.unparse_orig orig2 file
+    Web.unparse orig2 file
   )
 
 (*****************************************************************************)
@@ -78,8 +79,7 @@ let rename_chunknames_archi xs =
   let hchunks = Hashtbl.create 101 in
     
   views +> List.iter (fun file ->
-    let view = Engine.parse_view ~lang:Lang.mark_C_short file in
-
+    let view = Code.parse ~lang:Lang.mark_C_short file in
 
     let rec codetree x =
       match x with
@@ -107,7 +107,7 @@ let rename_chunknames_archi xs =
   in
 
   origs +> List.iter (fun file ->
-    let orig = Engine.parse_orig file in
+    let orig = Web.parse file in
     
     let rec tex_or_chunkdef x =
       match x with
@@ -121,7 +121,7 @@ let rename_chunknames_archi xs =
       | ChunkName (s, i) -> ChunkName (subst_maybe s, i)
     in
     let orig2 = List.map tex_or_chunkdef orig in
-    Engine.unparse_orig orig2 file
+    Web.unparse orig2 file
   )
 
 (*****************************************************************************)
@@ -137,7 +137,7 @@ let merge_files xs =
   xs +> List.iter (fun file ->
     let orig = 
       try
-        Engine.parse_orig file 
+        Web.parse file 
       with exn ->
         failwith (spf "PB with %s, exn = %s" file (Common.exn_to_s exn))
     in
@@ -199,7 +199,7 @@ let merge_files xs =
       pr ""
     );
     
-    let orig = Engine.parse_orig file in
+    let orig = Web.parse file in
 
     let subst_maybe key =
       try 
@@ -242,7 +242,7 @@ let merge_files xs =
       | ChunkName (s, i) -> ChunkName (subst_maybe s, i)
     in
     let orig2 = List.map tex_or_chunkdef orig +> List.flatten in
-    Engine.unparse_orig orig2 file;
+    Web.unparse orig2 file;
 
     Common.cat file +> List.iter pr; 
     Common.command2 (spf "rm -f %s" file);

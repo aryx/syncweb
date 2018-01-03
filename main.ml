@@ -60,7 +60,7 @@ let with_error file f =
 (* Helpers *)
 (*****************************************************************************)
 
-open Engine
+open Web
 (* Allows to have multiple filenames with the same name but different dir.
  * We used take the basename so that files could be put in any directory.
  *)
@@ -120,21 +120,21 @@ let actions () = [
   "-parse_orig", "   <file>",
     Common.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
-      let orig = Engine.parse_orig x in
-      Engine.unparse_orig orig tmpfile;
+      let orig = Web.parse x in
+      Web.unparse orig tmpfile;
       Common.command2(spf "diff %s %s" x tmpfile);
     );
   "-parse_view", "   <file>", 
     Common.mk_action_1_arg (fun x -> 
-      ignore(Engine.parse_view ~lang:Lang.mark_ocaml_short x);
+      ignore(Code.parse ~lang:Lang.mark_ocaml_short x);
     );
 
   "-view_of_orig", "   <file> <key>", 
     Common.mk_action_2_arg (fun x key -> 
-      let orig = Engine.parse_orig x in
-      let view = Engine.view_of_orig key orig in
+      let orig = Web.parse x in
+      let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
-      Engine.unparse_view ~lang:Lang.mark_ocaml view tmpfile;
+      Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
       tmpfile +> Common.cat +> List.iter pr;
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
@@ -142,13 +142,13 @@ let actions () = [
   (* superseded by Main.main_action now *)
   "-sync", "   <orig> <view>", 
     Common.mk_action_2_arg (fun origf viewf -> 
-      let orig = Engine.parse_orig origf in
-      let views = Engine.parse_view ~lang:Lang.mark_ocaml viewf in
+      let orig = Web.parse origf in
+      let views = Code.parse ~lang:Lang.mark_ocaml viewf in
 
-      let orig' = Engine.sync ~lang:Lang.mark_ocaml     orig views  in
+      let orig' = Sync.sync ~lang:Lang.mark_ocaml     orig views  in
 
       let tmpfile = "/tmp/xxx" in
-      Engine.unparse_orig orig' tmpfile;
+      Web.unparse orig' tmpfile;
       Common.command2(spf "diff %s %s" origf tmpfile);
     );
   "-unmark", "   <file>", 
@@ -180,7 +180,7 @@ let actions () = [
   (* pad's hacks *)
   "-to_noweb", " <orig>", 
   Common.mk_action_1_arg (fun file -> 
-    let orig = Engine.parse_orig file in
+    let orig = Web.parse file in
     let orig =
       orig |> List.map (function 
         | Tex xs -> 
@@ -194,7 +194,7 @@ let actions () = [
         | x -> x
       )
     in
-    Engine.unparse_orig orig (file ^ "_noweb.nw")
+    Web.unparse orig (file ^ "_noweb.nw")
   );
 
   "-to_web", " <orig>", 
@@ -223,7 +223,7 @@ let unparse_orig_web orig filename =
   )
 in
 
-    let orig = Engine.parse_orig file in
+    let orig = Web.parse file in
     let (d,b,e) = Common2.dbe_of_filename file in
     let file2 = Common2.filename_of_dbe (d,b,"w") in
     unparse_orig_web orig file2
@@ -246,31 +246,31 @@ let main_action xs =
   (* simple case, one tex.nw file, one view *)
   | [origf;viewf] -> 
 
-      let orig = Engine.parse_orig origf in
+      let orig = Web.parse origf in
       let topkey = 
         (* old: Filename.basename viewf *)
         find_topkey_corresponding_to_file orig viewf
       in
       if not (Sys.file_exists viewf)
       then
-        let view = Engine.view_of_orig ~topkey orig in
-        Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view viewf
+        let view = Web_to_code.view_of_orig ~topkey orig in
+        Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view viewf
       else begin
         (* old: let date1 = Common.filemtime origf in
          *      let date2 = Common.filemtime viewf in
          *)
         (* pr2 (spf "syncing %s and %s with key %s" origf viewf topkey);  *)
-        let view = Engine.parse_view ~lang viewf in 
-        let orig' = Engine.sync ~lang   orig view in
-        let view' = Engine.view_of_orig ~topkey orig' in
+        let view = Code.parse ~lang viewf in 
+        let orig' = Sync.sync ~lang   orig view in
+        let view' = Web_to_code.view_of_orig ~topkey orig' in
         (* regenerate orig and view *)
         if orig <> orig' then begin
           pr2 "orig has been updated";
-          Engine.unparse_orig orig' origf;
+          Web.unparse orig' origf;
         end;
         if view <> view' then begin
           pr2 "view has been regenerated";
-          Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
+          Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
         end;
       end
 
@@ -282,9 +282,9 @@ let main_action xs =
         | _ -> raise Impossible
       in
       let origs = origfs +> List.map (fun f -> 
-        with_error f (fun () -> f, Engine.parse_orig f)
+        with_error f (fun () -> f, Web.parse f)
       ) in
-      let orig = Engine.pack_multi_orig origs in
+      let orig = Web.pack_multi origs in
       let topkey = 
         (* old: Filename.basename viewf *)
         find_topkey_corresponding_to_file orig viewf
@@ -292,25 +292,25 @@ let main_action xs =
 
       if not (Sys.file_exists viewf)
       then 
-        let view = Engine.view_of_orig ~topkey orig in
-        Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view viewf
+        let view = Web_to_code.view_of_orig ~topkey orig in
+        Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view viewf
       else begin
         (* pr2 (spf "syncing %s" viewf); *)
 
         with_error viewf (fun () ->
-        let view = Engine.parse_view ~lang viewf in 
-        let orig' = Engine.sync ~lang  orig view in
-        let view' = Engine.view_of_orig  ~topkey orig' in
+        let view = Code.parse ~lang viewf in 
+        let orig' = Sync.sync ~lang  orig view in
+        let view' = Web_to_code.view_of_orig  ~topkey orig' in
         (* regenerate orig and view *)
         if view <> view' then begin
           pr2 "view has been regenerated";
-          Engine.unparse_view ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
+          Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
         end;
-        let origs' = Engine.unpack_multi_orig orig' in
+        let origs' = Web.unpack_multi orig' in
         Common2.zip origs origs' +> List.iter (fun ((f1, orig), (f2, orig')) ->
           if orig <> orig' then begin
             pr2 (spf "orig %s has been updated" f1);
-            Engine.unparse_orig orig' f1;
+            Web.unparse orig' f1;
           end;
         );
         )
