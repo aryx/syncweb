@@ -167,12 +167,67 @@ let actions () = [
       then Common.write_file file s
       else failwith "ok, skipping"
     );
+
   "-lpize", " <file>",
   Common.mk_action_1_arg Lpize.lpize;
-  "-rename_chunk_names", " <origs and views>", 
-  Common.mk_action_n_arg Lpize.rename_chunk_names;
+  "-rename_chunknames", " <origs>", 
+  Common.mk_action_n_arg Refactor.rename_chunknames;
+  "-rename_chunknames_archi", " <origs and views>", 
+  Common.mk_action_n_arg Refactor.rename_chunknames_archi;
   "-merge_files", " <origs>", 
-  Common.mk_action_n_arg Lpize.merge_files;
+  Common.mk_action_n_arg Refactor.merge_files;
+
+  (* pad's hacks *)
+  "-to_noweb", " <orig>", 
+  Common.mk_action_1_arg (fun file -> 
+    let orig = Engine.parse_orig file in
+    let orig =
+      orig |> List.map (function 
+        | Tex xs -> 
+          Tex (xs |> List.map (fun s -> 
+            match s with
+            | _ when s =~ "^%.*" -> "%"
+            | _ when s =~ "^[ \t]*\\\\[tln] " -> "%"
+            (* todo: #include *)
+            | _ -> s
+          ))
+        | x -> x
+      )
+    in
+    Engine.unparse_orig orig (file ^ "_noweb.nw")
+  );
+
+  "-to_web", " <orig>", 
+  Common.mk_action_1_arg (fun file -> 
+
+let unparse_orig_web orig filename =
+  Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
+    let pr s = pr_no_nl (s ^ "\n") in
+    orig +> List.iter (function
+    | Tex xs -> 
+        xs +> List.iter pr;
+    | ChunkDef (def, body) -> 
+        let start = spf "<<%s>>=" def.chunkdef_key in
+        let end_mark = def.chunkdef_end in
+        pr start;
+        body +> List.iter (function
+        | Code s -> 
+            pr s
+        | ChunkName (s, indent) -> 
+            Common2.do_n indent (fun () -> pr_no_nl " ");
+            let item = spf "<<%s>>" s in
+            pr item;
+        );
+        pr end_mark;
+    );
+  )
+in
+
+    let orig = Engine.parse_orig file in
+    let (d,b,e) = Common2.dbe_of_filename file in
+    let file2 = Common2.filename_of_dbe (d,b,"w") in
+    unparse_orig_web orig file2
+  );
 ]
 
 (*****************************************************************************)
