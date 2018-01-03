@@ -14,8 +14,8 @@ type t = codetree list
        chunk_md5sum: string option;
        mutable pretty_print: position option;
      }
-     (* work with the less_marks flag *)
-     and position = First | Middle | Last
+     (* work with the -less_marks flag *)
+     and position = First (* s: *) | Middle (* x: *) | Last (* e: *)
 
 (* may also parse the .md5sum_xxx file if it exists *)
 val parse: lang:Lang.mark_language -> Common.filename -> t
