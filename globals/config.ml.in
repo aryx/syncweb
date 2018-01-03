@@ -1,4 +1,4 @@
-let version = "0.3"
+let version = "0.4"
 
 let path = 
   try (Sys.getenv "SYNCWEB_HOME") 
