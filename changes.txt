@@ -1,6 +1,18 @@
 -*- org -*-
 
-* 0.4
+* TODO 0.4
+
+** Features:
+- automatic indexing provided by codegraph!
+- index for defs and uses of entities, including record fields!
+(better than ctwill of Knuth?)
+- mini-indexes a la ctwill of Knuth (see his books such as MMIXware).
+
+** Internals:
+- bypass completely noweb. Generate .tex directly
+(I used to have a noweblatexpad script, but it was a hack, and
+for the automatic indexing, easier to bypass noweb which is not
+a big help)
 
 * 0.3
 
