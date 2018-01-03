@@ -14,3 +14,6 @@
 /graph_code.marshall.opti
 /syncweb.opt
 /demos/demo
+/demos/.md5sum_demo_ml
+/demos/.md5sum_demo_mli
+/tests/test.ml
