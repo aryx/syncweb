@@ -59,14 +59,14 @@ let re_md5sum_in_aux_file = Str.regexp
   "\\(.*\\) |\\(.*\\)$"
 
 (*****************************************************************************)
-(* Parser  *)
+(* Helpers parser  *)
 (*****************************************************************************)
 
-(* First version, again we assume line oriented and special cases.
+(* First version, again we assume line-oriented and special cases.
  * Do special case for first chunk, generate chunk corresponding
  * to filename with fake prelude and postlude ?
  * 
- * Do multi files ? well no need I think, just call sync multiple 
+ * Do multi files? well no need I think, just call sync multiple 
  * times with the different view files.
  *)
 
@@ -164,9 +164,12 @@ let readjust_start2_with_md5sums file xs =
 
   else xs
   
+(*****************************************************************************)
+(* Parser  *)
+(*****************************************************************************)
 
 (* old: was computing a first "implicit" chunk corresponding to the name if
- * the file, but not worth the extra complexity 
+ * the file, but not worth the extra complexity.
  *)
 let parse ~lang file = 
   let xs = Common.cat file in 
@@ -275,8 +278,7 @@ let rec adjust_pretty_print_field view =
       )
             
 
-
-(* assume first chunkcode corresponds to the filename ? *)
+(* assume first chunkcode corresponds to the filename? *)
 let unparse 
   ?(md5sum_in_auxfile=false) 
   ?(less_marks=false)

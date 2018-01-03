@@ -1,4 +1,4 @@
-(* Copyright 2009-2016 Yoann Padioleau, see copyright.txt *)
+(* Copyright 2009-2017 Yoann Padioleau, see copyright.txt *)
 open Common
 
 (*****************************************************************************)
@@ -62,7 +62,7 @@ let with_error file f =
 
 open Web
 (* Allows to have multiple filenames with the same name but different dir.
- * We used take the basename so that files could be put in any directory.
+ * We used to take the basename so that files could be put in any directory.
  *)
 let find_topkey_corresponding_to_file orig viewf =
   (* old: Filename.basename viewf *)
