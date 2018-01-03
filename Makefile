@@ -11,7 +11,7 @@ VERSION=$(shell cat globals/config.ml.in |grep version |perl -p -e 's/.*"(.*)".*
 ##############################################################################
 TOP=$(shell pwd)
 
-SRC=lang.ml engine.ml test.ml lpize.ml main.ml 
+SRC=lang.ml engine.ml test.ml lpize.ml refactor.ml main.ml 
 
 TARGET=syncweb
 PROGS=syncweb
