@@ -60,7 +60,7 @@ let build_chunk_hash_from_views views =
         let md5sum = x.chunk_md5sum in
         
         let body' = 
-          body +> List.map (* and side effect *) (fun x -> 
+          body |> List.map (* and side effect *) (fun x -> 
             match x with
             | ChunkCode (y, _body, j) -> 
                 aux x;
@@ -88,7 +88,7 @@ let build_chunk_hash_from_views views =
     | RegularCode s -> 
         failwith ("code without enclosing chunk: " ^ s)
   in
-  views +> List.iter aux;
+  views |> List.iter aux;
   h
 
 (*****************************************************************************)
@@ -143,17 +143,17 @@ let candidates_against_orig body_orig view_elems orig_elems =
 let sync ~lang orig views = 
 
   let h = build_chunk_hash_from_views views in
-  let chunks = h +> Common.hash_to_list +> List.map (fun (k, v) -> k, ref v) in
+  let chunks = h |> Common.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
   let h_view = Common.hash_of_list chunks in
 
 
   let h = Web_to_code.build_chunk_hash_from_orig orig in
-  let chunks = h +> Common.hash_to_list +> List.map (fun (k, v) -> k, ref v) in
+  let chunks = h |> Common.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
   let h_orig = Common.hash_of_list chunks in
 
   (* we explore the orig in the original order *)
   let orig' = 
-    orig +> List.map (function
+    orig |> List.map (function
     | Tex s -> 
         Tex s
     | ChunkDef (def, body_orig) -> 
@@ -192,7 +192,7 @@ let sync ~lang orig views =
                 (try 
                     (* Case3: equal chunk *)
                     let elem_view = 
-                      !aref_view +> List.find (fun (md5, body_view) -> 
+                      !aref_view |> List.find (fun (md5, body_view) -> 
                         (* bugfix: have written body_view = body_view :) 
                          * type system can not catch such bugs :( 
                          *)
@@ -297,15 +297,15 @@ let sync ~lang orig views =
   in
 
   (* check if have consumed every elements in the view *)
-  h_view +> Common.hash_to_list +> List.iter (fun (k,v) -> 
+  h_view |> Common.hash_to_list |> List.iter (fun (k,v) -> 
     match !v with
     | [] -> ()
     | x::xs -> 
         pr2 ("Not consumed: " ^ k);
         pr2 ("<<<<<<<<<<<<<<<<");
-        let strs = (x::xs) +> List.map snd +> List.map 
+        let strs = (x::xs) |> List.map snd |> List.map 
           Web_to_code.s_of_chunkdef_body in
-        strs +> List.iter Common2.pr2_no_nl;
+        strs |> List.iter Common2.pr2_no_nl;
         pr2 (">>>>>>>>>>>>>>>>");
   );
 

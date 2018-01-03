@@ -15,15 +15,15 @@ open Code
 (* Helpers  *)
 (*****************************************************************************)
 let generate_n_spaces i =
-  Common2.repeat " " i +> Common.join ""
+  Common2.repeat " " i |> Common.join ""
 
 let s_of_chunkdef_body xs = 
-  xs +> List.map (function 
+  xs |> List.map (function 
   | Code s -> s
   | ChunkName (s, i) -> 
       let spaces = generate_n_spaces i in
       spaces ^ (spf "<<%s>>" s)
-  ) +> Common2.unlines
+  ) |> Common2.unlines
 
 
 (*****************************************************************************)
@@ -32,7 +32,7 @@ let s_of_chunkdef_body xs =
 
 let build_chunk_hash_from_orig orig = 
   let h = Hashtbl.create 101 in
-    orig +> List.iter (function
+    orig |> List.iter (function
     | Tex xs -> ()
     | ChunkDef (def, body) -> 
         let key = def.chunkdef_key in
@@ -52,17 +52,17 @@ let web_to_code ~topkey orig =
         failwith (spf "view_of_orig: not able to find the chunkdef of '%s'" key)
     in
 
-    bodys +> List.map (fun body -> 
+    bodys |> List.map (fun body -> 
 
       let s = s_of_chunkdef_body body in
       let md5sum = Common2.md5sum_of_string s in
 
       let body' = 
-        body +> List.map (function
+        body |> List.map (function
         | Code s -> [RegularCode s]
         | ChunkName (s,i) -> 
             aux (s,i)
-        ) +> List.flatten
+        ) |> List.flatten
       in
 
       ChunkCode ({

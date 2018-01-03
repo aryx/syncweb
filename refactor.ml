@@ -54,7 +54,7 @@ let rename_chunknames xs =
       | Tex xs -> Tex xs
       | ChunkDef (def, ys) ->
           let def = { def with chunkdef_key = subst_maybe def.chunkdef_key } in
-          ChunkDef (def, ys +> List.map code_or_chunk)
+          ChunkDef (def, ys |> List.map code_or_chunk)
     and code_or_chunk x =
       match x with
       | Code s -> Code s
@@ -69,7 +69,7 @@ let rename_chunknames xs =
 (*****************************************************************************)
 
 let rename_chunknames_archi xs =
-  let origs, views = xs +> Common.partition_either (fun file ->
+  let origs, views = xs |> Common.partition_either (fun file ->
     if file =~ ".*.nw$"
     then Left file
     else Right file
@@ -78,7 +78,7 @@ let rename_chunknames_archi xs =
 
   let hchunks = Hashtbl.create 101 in
     
-  views +> List.iter (fun file ->
+  views |> List.iter (fun file ->
     let view = Code.parse ~lang:Lang.mark_C_short file in
 
     let rec codetree x =
@@ -86,10 +86,10 @@ let rename_chunknames_archi xs =
       | RegularCode _ -> ()
       | ChunkCode (info, xs, _indent) ->
         Hashtbl.replace hchunks info.chunk_key true;
-        xs +> List.iter codetree
+        xs |> List.iter codetree
     in
     List.iter codetree view;
-    hchunks +> Common.hash_to_list +> List.iter (fun (k, _) -> 
+    hchunks |> Common.hash_to_list |> List.iter (fun (k, _) -> 
       pr k
     );
   );
@@ -106,7 +106,7 @@ let rename_chunknames_archi xs =
       else s
   in
 
-  origs +> List.iter (fun file ->
+  origs |> List.iter (fun file ->
     let orig = Web.parse file in
     
     let rec tex_or_chunkdef x =
@@ -114,7 +114,7 @@ let rename_chunknames_archi xs =
       | Tex xs -> Tex xs
       | ChunkDef (def, ys) ->
           let def = { def with chunkdef_key = subst_maybe def.chunkdef_key } in
-          ChunkDef (def, ys +> List.map code_or_chunk)
+          ChunkDef (def, ys |> List.map code_or_chunk)
     and code_or_chunk x =
       match x with
       | Code s -> Code s
@@ -134,7 +134,7 @@ let merge_files xs =
   let hfile_to_topkeys = Hashtbl.create 101 in
 
   (* first pass, find duplicate chunk names in different .nw *)
-  xs +> List.iter (fun file ->
+  xs |> List.iter (fun file ->
     let orig = 
       try
         Web.parse file 
@@ -166,7 +166,7 @@ let merge_files xs =
           end
         end;
 
-        ys +> List.iter code_or_chunk
+        ys |> List.iter code_or_chunk
     and code_or_chunk x =
       match x with
       | Code s -> ()
@@ -178,7 +178,7 @@ let merge_files xs =
   let lastdir = ref "" in
 
   (* second pass, rename them *)
-  xs +> List.iter (fun file ->
+  xs |> List.iter (fun file ->
     let dir = Filename.dirname file in
     (* let pr _ = () in (* TODO *)   *)
     if dir <> !lastdir then begin
@@ -192,7 +192,7 @@ let merge_files xs =
 
     (* to have a single topkey entry *)
     let xs = Hashtbl.find_all hfile_to_topkeys file in
-    xs +> List.iter (fun topkey ->
+    xs |> List.iter (fun topkey ->
       pr (spf "<<%s/%s>>=" dir topkey);
       pr (spf "<<%s>>" topkey);
       pr "@";
@@ -214,7 +214,7 @@ let merge_files xs =
     let rec tex_or_chunkdef x =
       match x with
       | Tex xs -> 
-        [Tex (xs +> List.map (fun s ->
+        [Tex (xs |> List.map (fun s ->
           if s =~ "^\\\\section" ||
              s =~ "^\\\\subsection" ||
              s =~ "^%----"
@@ -226,12 +226,12 @@ let merge_files xs =
            * add a fake %$ to the end
            *)
           let def = { def with chunkdef_key = subst_maybe def.chunkdef_key } in
-          let nbdollars = ys +> List.map (function
+          let nbdollars = ys |> List.map (function
             | Code s -> count_dollar s
             | ChunkName (s, _) -> count_dollar s
-          ) +> Common2.sum
+          ) |> Common2.sum
           in
-          [ChunkDef (def, ys +> List.map code_or_chunk)] @
+          [ChunkDef (def, ys |> List.map code_or_chunk)] @
           (if nbdollars mod 2 = 1
            then [Tex ["%$"]]
            else []
@@ -241,13 +241,13 @@ let merge_files xs =
       | Code s -> Code s
       | ChunkName (s, i) -> ChunkName (subst_maybe s, i)
     in
-    let orig2 = List.map tex_or_chunkdef orig +> List.flatten in
+    let orig2 = List.map tex_or_chunkdef orig |> List.flatten in
     Web.unparse orig2 file;
 
-    Common.cat file +> List.iter pr; 
+    Common.cat file |> List.iter pr; 
     Common.command2 (spf "rm -f %s" file);
 
-    Hashtbl.find_all hfile_to_topkeys file +> List.iter (fun topkey ->
+    Hashtbl.find_all hfile_to_topkeys file |> List.iter (fun topkey ->
       Common.command2 (spf "rm -f %s/%s" dir topkey);
     )
   )

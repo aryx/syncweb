@@ -32,17 +32,17 @@ let lpize file =
   let files = Common.cat file |> Common.exclude (fun s -> s =~ "^[ \t]*$") in
   (* sanity check *)
   let group_by_basename =
-    files +> List.map (fun file -> Filename.basename file, file)
-      +> Common.group_assoc_bykey_eff
+    files |> List.map (fun file -> Filename.basename file, file)
+      |> Common.group_assoc_bykey_eff
   in
-  group_by_basename +> List.iter (fun (base, xs) ->
+  group_by_basename |> List.iter (fun (base, xs) ->
     if List.length xs > 1
     then pr2 (spf "multiple files with same name: %s" 
-                     (xs +> Common.join "\n"))
+                     (xs |> Common.join "\n"))
   );
 
   let current_topdir = ref "" in
-  files +> List.iter (fun file ->
+  files |> List.iter (fun file ->
     let xs = Common.split "/" file in
     let hd = List.hd xs in
     if hd <> !current_topdir
@@ -57,7 +57,7 @@ let lpize file =
     
     let base = (*Filename.basename*) file in
     pr (spf "<<%s>>=" base);
-    Common.cat file +> List.iter (fun s ->
+    Common.cat file |> List.iter (fun s ->
       pr (untabify s);
     );
     pr "@";
@@ -65,6 +65,6 @@ let lpize file =
     pr "";
 
     (* for the initial 'make sync' to work *)
-    Sys.command (spf "rm -f %s" file) +> ignore;
+    Sys.command (spf "rm -f %s" file) |> ignore;
   )
 

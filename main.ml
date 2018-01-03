@@ -67,7 +67,7 @@ open Web
 let find_topkey_corresponding_to_file orig viewf =
   (* old: Filename.basename viewf *)
   let base = Filename.basename viewf in
-  let defs = orig +> Common.map_filter (function
+  let defs = orig |> Common.map_filter (function
     | Tex _ -> None
     | ChunkDef (def, _xs) -> 
       let s = def.chunkdef_key in
@@ -81,23 +81,23 @@ let find_topkey_corresponding_to_file orig viewf =
   | [x] -> x
   | x::y::ys ->
     (* same basenames, need to use the directory as a discriminator *)
-    let revdir = Filename.dirname viewf +> Common.split "/" +> List.rev in
+    let revdir = Filename.dirname viewf |> Common.split "/" |> List.rev in
     let candidates = 
-      (x::y::ys) +> List.map (fun file ->
-        Filename.dirname file +> Common.split "/" +> List.rev,
+      (x::y::ys) |> List.map (fun file ->
+        Filename.dirname file |> Common.split "/" |> List.rev,
         file
        )
     in
     let err () = 
       failwith (spf "too many matching topkeys for %s (%s)" viewf
-                  ((x::y::ys) +> Common.join ", "))
+                  ((x::y::ys) |> Common.join ", "))
     in
     let rec aux revdir candidates =
       match revdir with
       | [] -> err ()
       | x::xs ->
         let same_top_revdir_candidates =
-          candidates +> Common.map_filter (fun (revdir, fullfile) ->
+          candidates |> Common.map_filter (fun (revdir, fullfile) ->
             match revdir with
             | [] -> None
             | y::ys -> if y = x then Some (ys, fullfile) else None
@@ -135,7 +135,7 @@ let actions () = [
       let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
       Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
-      tmpfile +> Common.cat +> List.iter pr;
+      tmpfile |> Common.cat |> List.iter pr;
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
 
@@ -155,7 +155,7 @@ let actions () = [
     Common.mk_action_1_arg (fun file -> 
 
       let xs = Common.cat file in
-      let xs = xs +> Common.exclude (fun s ->
+      let xs = xs |> Common.exclude (fun s ->
         s =~ "^[ \t]*(\\*[sex]:"
       )
       in
@@ -203,14 +203,14 @@ let actions () = [
 let unparse_orig_web orig filename =
   Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
-    orig +> List.iter (function
+    orig |> List.iter (function
     | Tex xs -> 
-        xs +> List.iter pr;
+        xs |> List.iter pr;
     | ChunkDef (def, body) -> 
         let start = spf "<<%s>>=" def.chunkdef_key in
         let end_mark = def.chunkdef_end in
         pr start;
-        body +> List.iter (function
+        body |> List.iter (function
         | Code s -> 
             pr s
         | ChunkName (s, indent) -> 
@@ -281,7 +281,7 @@ let main_action xs =
         | x::xs -> List.rev xs, x
         | _ -> raise Impossible
       in
-      let origs = origfs +> List.map (fun f -> 
+      let origs = origfs |> List.map (fun f -> 
         with_error f (fun () -> f, Web.parse f)
       ) in
       let orig = Web.pack_multi origs in
@@ -307,7 +307,7 @@ let main_action xs =
           Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
         end;
         let origs' = Web.unpack_multi orig' in
-        Common2.zip origs origs' +> List.iter (fun ((f1, orig), (f2, orig')) ->
+        Common2.zip origs origs' |> List.iter (fun ((f1, orig), (f2, orig')) ->
           if orig <> orig' then begin
             pr2 (spf "orig %s has been updated" f1);
             Web.unparse orig' f1;

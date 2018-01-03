@@ -36,7 +36,7 @@ type t = codetree list
 (* Helpers  *)
 (*****************************************************************************)
 let generate_n_spaces i =
-  Common2.repeat " " i +> Common.join ""
+  Common2.repeat " " i |> Common.join ""
 
 let (==~) s re =
     Str.string_match re s 0
@@ -86,7 +86,7 @@ type mark2 =
   | End2 of string option * int * pinfo
 
 let readjust_mark2_remove_indent i body = 
-  body +> List.map (function
+  body |> List.map (function
   | Start2 (s, j, md5sum, pinfo) -> 
       if j < i 
       then failwith (s_of_pinfo pinfo ^ 
@@ -117,7 +117,7 @@ let readjust_start2_with_md5sums file xs =
   if Sys.file_exists (md5sum_auxfile_of_file file)
   then 
     let md5s = 
-      Common.cat (md5sum_auxfile_of_file file) +> 
+      Common.cat (md5sum_auxfile_of_file file) |> 
         List.map (fun s -> 
           if s ==~ re_md5sum_in_aux_file
           then Common.matched2 s
@@ -171,7 +171,7 @@ let readjust_start2_with_md5sums file xs =
 let parse ~lang file = 
   let xs = Common.cat file in 
 
-  let xs' = xs +> Common.index_list_1 +> List.map (fun (s, line) -> 
+  let xs' = xs |> Common.index_list_1 |> List.map (fun (s, line) -> 
     match lang.Lang.parse_mark_startend s with
     | Some (tabs, key,  md5) -> 
         [End2 (Some key, String.length tabs, mkp file line);
@@ -189,7 +189,7 @@ let parse ~lang file =
                 [Regular2 (s, mkp file line)]
             )
         )
-  ) +> List.flatten +> readjust_start2_with_md5sums file
+  ) |> List.flatten |> readjust_start2_with_md5sums file
   in
 
   (* the view does not need to contain the key at the end mark; it's
@@ -255,12 +255,12 @@ let rec adjust_pretty_print_field view =
           in
           (* recurse *)
           adjust_pretty_print_field rest;
-          same_key +> List.iter (function
+          same_key |> List.iter (function
           | ChunkCode (_info, xs, i) ->
               adjust_pretty_print_field xs
           | _ -> raise Impossible
           );
-          let same_key' = same_key +> List.map (function
+          let same_key' = same_key |> List.map (function
             | ChunkCode(info, _, _) -> info
             | _ -> raise Impossible
           )
@@ -270,7 +270,7 @@ let rec adjust_pretty_print_field view =
             let (hd, middle, tl) = Common2.head_middle_tail same_key' in
             hd.pretty_print <- Some First;
             tl.pretty_print <- Some Last;
-            middle +> List.iter (fun x -> x.pretty_print <- Some Middle);
+            middle |> List.iter (fun x -> x.pretty_print <- Some Middle);
           end
       )
             
@@ -309,7 +309,7 @@ let unparse
       | (Some (Middle|Last)) -> 
           pr (lang.Lang.unparse_mark_startend key md5sum);
       );
-      body +> List.iter (function
+      body |> List.iter (function
       | RegularCode s -> 
           (* bugfix: otherwise make sync will not fixpoint *)
           if Common2.is_blank_string s
@@ -340,7 +340,7 @@ let unparse
       )
     in
 
-    views +> List.iter (function
+    views |> List.iter (function
     | ChunkCode (chunkcode, body, i) -> 
         aux (chunkcode, body, i)
     | RegularCode s -> 
@@ -351,6 +351,6 @@ let unparse
 
   if md5sum_in_auxfile then begin
     Common.write_file ~file:(md5sum_auxfile_of_file filename)
-      (!md5sums +> List.rev +> Common.join "\n");
+      (!md5sums |> List.rev |> Common.join "\n");
   end;
   ()

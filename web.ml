@@ -104,7 +104,7 @@ let thd3 = Common2.thd3
 
 let parse file = 
   let xs = Common.cat file in 
-  let xs' = xs +> Common.index_list_1 +> List.map (fun (s, i) -> 
+  let xs' = xs |> Common.index_list_1 |> List.map (fun (s, i) -> 
     s, i,
     (match s with
     | _ when s ==~ regexp_chunkdef_end -> End1
@@ -115,7 +115,7 @@ let parse file =
   in
   (* todo: more flexible *)
   let rec process_body ys =
-    ys +> List.map (fun s -> 
+    ys |> List.map (fun s -> 
       if s ==~ regexp_chunk_ref
       then
         let (key, indent) = key_and_index_chunk_ref_string s in
@@ -139,7 +139,7 @@ let parse file =
               let (body, endmark, rest) = 
                 Common2.split_when (fun x -> thd3 x = End1) xs
               in
-              if (not (body +> List.for_all (fun x -> thd3 x = Regular1)))
+              if (not (body |> List.for_all (fun x -> thd3 x = Regular1)))
               then failwith 
                 (spf "line %d: body of chunkdef contains other chunkdef" line);
 
@@ -166,14 +166,14 @@ let parse file =
 let unparse orig filename =
   Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
-    orig +> List.iter (function
+    orig |> List.iter (function
     | Tex xs -> 
-        xs +> List.iter pr;
+        xs |> List.iter pr;
     | ChunkDef (def, body) -> 
         let start = spf "<<%s>>=" def.chunkdef_key in
         let end_mark = def.chunkdef_end in
         pr start;
-        body +> List.iter (function
+        body |> List.iter (function
         | Code s -> 
             pr s
         | ChunkName (s, indent) -> 
@@ -204,9 +204,9 @@ let unparse orig filename =
  *)
 
 let pack_multi xs = 
-  xs +> List.map (fun (file, xs) -> 
+  xs |> List.map (fun (file, xs) -> 
     Tex (["MULTIFILE:" ^ file])::xs
-  ) +> List.flatten
+  ) |> List.flatten
 
 
 let rec unpack_multi orig =
@@ -220,7 +220,7 @@ let rec unpack_multi orig =
   if not (null pre)
   then failwith "could not find a MULTIFILE mark in packed orig, weird";
 
-  groups +> List.map (fun (x, xs) ->
+  groups |> List.map (fun (x, xs) ->
     match x with
     | Tex [s] when s =~ "MULTIFILE:\\(.*\\)$" ->
         Common.matched1 s, xs
