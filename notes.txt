@@ -1,0 +1,4 @@
+you can move chunks from the source files directly, but you must
+not modify the content of the chunk at the same time. If you need
+to do so do it in two steps. Move the chunk; syncweb; then
+modify the chunk.
