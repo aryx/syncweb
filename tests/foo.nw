@@ -1,0 +1,52 @@
+\documentclass[]{report}
+
+\usepackage{noweb}
+%\noweboptions{footnotesizecode,nomargintag}
+%\noweboptions{shortxref}
+
+\begin{document}
+
+\title{Foo}
+\author{Bar}
+
+\maketitle 
+
+\chapter{First chapter}
+
+\section{First section}
+
+This is some example
+of latex.
+Here is a quote [[foo_bar()]].
+
+Here is some chunks
+<<foo.c>>=
+<<included files>>
+// This is some comment 
+     <<function [[main()]]>>
+// And another one
+@
+
+\section{Second section}
+
+And now some included files:
+<<included files>>=
+#include "foo.h"
+@
+
+\pagebreak
+
+\section{Third section}
+
+<<function [[main()]]>>=
+void main() {
+  int i;
+}
+@
+
+<<included files>>=
+#include "bar.h"
+@
+
+
+\end{document}
