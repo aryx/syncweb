@@ -23,6 +23,14 @@ type tex_string = elt list
      *)
     | Q of string (* [[ ]] *)
 
+type chunk_info = {
+  mutable prev_def: chunkid option;
+  mutable next_def: chunkid option;
+  mutable chunk_uses: chunkid list;
+
+  (* todo: defs and uses of entities using codegraph *)
+}
+
 (*****************************************************************************)
 (* Parsing  *)
 (*****************************************************************************)
@@ -89,21 +97,12 @@ let pr_in_code pr s =
 (*****************************************************************************)
 (* Chunk crossrefs  *)
 (*****************************************************************************)
-let hdefs_from_orig orig =
+let hkey_to_def__from_orig orig =
   (* less: could use the Hashtbl.find_all? *)
   let h = Hashtbl.create 101 in
   let rec aux orig = 
     orig |> List.iter (function
-      | Tex xs -> 
-        (* multi-file support *)
-        xs |> List.iter (fun s ->
-          match s with
-          | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
-            let file = Common.matched1 s in
-            let orig = Web.parse file in
-            aux orig
-          | _ -> ()
-        )
+      | Tex xs -> ()
       | ChunkDef (def, body) -> 
         let key = def.chunkdef_key in
         (* we refer to the first one *)
@@ -115,6 +114,22 @@ let hdefs_from_orig orig =
   aux orig;
   h
 
+let hchunkid_info__from_orig orig =
+  let h = Hashtbl.create 101 in
+
+  (* first pass *)
+  let rec tex_or_chunkdef x =
+    raise Todo
+  in
+  (* second pass *)
+  let rec tex_or_chunkdef x =
+    raise Todo
+  and code_or_chunk x =
+    raise Todo
+  in
+
+  h
+
 (*****************************************************************************)
 (* Entry point  *)
 (*****************************************************************************)
@@ -122,8 +137,8 @@ let hdefs_from_orig orig =
 let web_to_tex orig texfile =
   Common.with_open_outfile texfile (fun (pr, _chan)  ->
   let cnt = ref 0 in
-  let hdefs = hdefs_from_orig orig in
-  let hdefs_already = Hashtbl.create 101 in
+  let hkey_to_def = hkey_to_def__from_orig orig in
+  let hchunkid_info = hchunkid_info__from_orig orig in
   let last = ref (spf "\\nwfilename{%s}" ("TODO.nw"))  in
 
   let rec tex_or_chunkdef x =
@@ -131,11 +146,8 @@ let web_to_tex orig texfile =
     | Tex xs ->
       xs |> List.iter (fun s ->
         (match s with
-        (* multi-file support *)
         | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
-          let file = Common.matched1 s in
-          let orig = Web.parse file in
-          List.iter tex_or_chunkdef orig;
+          failwith "you must call Web.expand_sharp_include before"
         (* pad's special macros for todos and notes 
          * todo: get rid of noweblatex and code in main.ml for to_noweb? 
          *)
@@ -161,6 +173,7 @@ let web_to_tex orig texfile =
         )
       );
     | ChunkDef (def, ys) ->
+      let chunk_info = Hashtbl.find hchunkid_info def.chunkdef_id in
       incr cnt;
       pr !last;
       pr (spf "\\nwbegincode{%d}" !cnt);
@@ -176,11 +189,10 @@ let web_to_tex orig texfile =
           pr "\\edoc{}";
       );
       pr (spf "~{\\nwtagstyle{}\\subpageref{NW%d}}" def.chunkdef_id);
-      (if Hashtbl.mem hdefs_already def.chunkdef_key
-      then pr "}\\plusendmoddef"
-      else pr "}\\endmoddef"
+      (match chunk_info.prev_def with
+      | None -> pr "}\\endmoddef"
+      | Some _ -> pr "}\\plusendmoddef"
       );
-      Hashtbl.replace hdefs_already def.chunkdef_key true;
       pr "\n";
 
       ys |> List.iter code_or_chunk;
@@ -206,7 +218,7 @@ let web_to_tex orig texfile =
           pr "\\edoc{}";
       );
       let def = 
-        try Hashtbl.find hdefs s 
+        try Hashtbl.find hkey_to_def s 
         with Not_found ->
           failwith (spf "Could not find def for |%s|" s)
           
