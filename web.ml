@@ -29,6 +29,10 @@ type t = tex_or_chunkdef list
    and chunkdef = {
     chunkdef_key: tex_string;
     chunkdef_end: string; (* specific string *)
+    (* this is used in web_to_tex to store in external hashtbl additional
+     * information about a chunk
+     *)
+    chunkdef_id: int;
    }
    and code_or_chunk =
      | Code of string
@@ -106,6 +110,8 @@ let fst3 = Common2.fst3
 let snd3 = Common2.snd3
 let thd3 = Common2.thd3
 
+let cnt_id = ref 0
+
 let parse file = 
   let xs = Common.cat file in 
   let xs' = xs |> Common.index_list_1 |> List.map (fun (s, i) -> 
@@ -148,10 +154,11 @@ let parse file =
                 (spf "line %d: body of chunkdef contains other chunkdef" line);
 
               let body' = List.map fst3 body in
-
+              incr cnt_id;
               let item = ChunkDef ({
                 chunkdef_key = key_of_chunckdef_string (fst3 x);
                 chunkdef_end = fst3 endmark;
+                chunkdef_id = !cnt_id;
               }, process_body body') in
               item::agglomerate rest
             with Not_found -> 

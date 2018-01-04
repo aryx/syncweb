@@ -1,8 +1,10 @@
 \documentclass[]{report}
 
 \usepackage{noweb}
-%\noweboptions{footnotesizecode,nomargintag}
+\noweboptions{footnotesizecode,nomargintag}
 %\noweboptions{shortxref}
+\usepackage{hyperref}
+ \hypersetup{colorlinks=true}
 
 \begin{document}
 

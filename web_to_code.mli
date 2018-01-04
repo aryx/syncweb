@@ -10,3 +10,6 @@ val build_chunk_hash_from_orig:
   Web.t -> (string, Web.code_or_chunk list list) Hashtbl.t
 val s_of_chunkdef_body:
   Web.code_or_chunk list -> string
+(* used by ?? *)
+val build_chunk_hash_from_orig:
+  Web.t -> (Web.tex_string, Web.code_or_chunk list list) Hashtbl.t

@@ -288,6 +288,7 @@ let sync ~lang orig views =
                         ChunkDef({
                           chunkdef_key = key;
                           chunkdef_end = def.chunkdef_end;
+                          chunkdef_id = def.chunkdef_id;
                         }, body')
                     )
                 )

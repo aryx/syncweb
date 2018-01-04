@@ -8,6 +8,10 @@ type t = tex_or_chunkdef list
     and chunkdef = {
       chunkdef_key: tex_string;
       chunkdef_end: string; (* usually just '@' *)
+    (* this is used in web_to_tex to store in external hashtbl additional
+     * information about a chunk
+     *)
+    chunkdef_id: int;
     }
     and code_or_chunk =
       | Code of string

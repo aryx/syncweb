@@ -89,6 +89,31 @@ let pr_in_code pr s =
 (*****************************************************************************)
 (* Chunk crossrefs  *)
 (*****************************************************************************)
+let hdefs_from_orig orig =
+  (* less: could use the Hashtbl.find_all? *)
+  let h = Hashtbl.create 101 in
+  let rec aux orig = 
+    orig |> List.iter (function
+      | Tex xs -> 
+        (* multi-file support *)
+        xs |> List.iter (fun s ->
+          match s with
+          | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
+            let file = Common.matched1 s in
+            let orig = Web.parse file in
+            aux orig
+          | _ -> ()
+        )
+      | ChunkDef (def, body) -> 
+        let key = def.chunkdef_key in
+        (* we refer to the first one *)
+        if Hashtbl.mem h key
+        then ()
+        else Hashtbl.add h key def
+    );
+  in
+  aux orig;
+  h
 
 (*****************************************************************************)
 (* Entry point  *)
@@ -97,7 +122,8 @@ let pr_in_code pr s =
 let web_to_tex orig texfile =
   Common.with_open_outfile texfile (fun (pr, _chan)  ->
   let cnt = ref 0 in
-  let hdefs = Hashtbl.create 101 in
+  let hdefs = hdefs_from_orig orig in
+  let hdefs_already = Hashtbl.create 101 in
   let last = ref (spf "\\nwfilename{%s}" ("TODO.nw"))  in
 
   let rec tex_or_chunkdef x =
@@ -105,6 +131,7 @@ let web_to_tex orig texfile =
     | Tex xs ->
       xs |> List.iter (fun s ->
         (match s with
+        (* multi-file support *)
         | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
           let file = Common.matched1 s in
           let orig = Web.parse file in
@@ -137,6 +164,7 @@ let web_to_tex orig texfile =
       incr cnt;
       pr !last;
       pr (spf "\\nwbegincode{%d}" !cnt);
+      pr (spf "\\sublabel{NW%d}" def.chunkdef_id);
 
       pr "\\moddef{";
       let elts = parse_string def.chunkdef_key in
@@ -147,11 +175,12 @@ let web_to_tex orig texfile =
           pr s;
           pr "\\edoc{}";
       );
-      (if Hashtbl.mem hdefs def.chunkdef_key
+      pr (spf "~{\\nwtagstyle{}\\subpageref{NW%d}}" def.chunkdef_id);
+      (if Hashtbl.mem hdefs_already def.chunkdef_key
       then pr "}\\plusendmoddef"
       else pr "}\\endmoddef"
       );
-      Hashtbl.replace hdefs def.chunkdef_key true;
+      Hashtbl.replace hdefs_already def.chunkdef_key true;
       pr "\n";
 
       ys |> List.iter code_or_chunk;
@@ -176,6 +205,13 @@ let web_to_tex orig texfile =
           pr s;
           pr "\\edoc{}";
       );
+      let def = 
+        try Hashtbl.find hdefs s 
+        with Not_found ->
+          failwith (spf "Could not find def for |%s|" s)
+          
+      in
+      pr (spf "~{\\nwtagstyle{}\\subpageref{NW%d}}" def.chunkdef_id);
       pr "\\RA{}";
       pr "\n";
   in
