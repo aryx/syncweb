@@ -23,11 +23,13 @@ Here is a quote [[foo_bar()]].
 Another quote [[$(OBJS)]] %$
 and [[$@]] or [[$^]] or [[#include]] or [['&']] or [['\']] or [['%']]
 
+Here is pad special quote {{main()}}.
+
 Here is some chunks
 <<foo.c>>=
 <<included files>>
 // This is some comment 
-     <<function [[main()]]>>
+     <<function [[main]]>>
 // And another one
 @
 
@@ -42,7 +44,7 @@ And now some included files:
 
 \section{Third section}
 
-<<function [[main()]]>>=
+<<function [[main]]>>=
 void main() {
   int i;
 }
@@ -62,5 +64,8 @@ badusage(void)
     Exit();
 }
 @
+\section{Index}
+
+\nowebindex
 
 \end{document}

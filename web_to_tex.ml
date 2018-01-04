@@ -12,8 +12,8 @@ open Web
  * confusing.
  * 
  * pre-history:
- *  - noweblatexpad hacky script supporting \t \n \l as preprocessor
- *    to noweave of noweb
+ *  - 'noweblatexpad' hacky script supporting \t \n \l; preprocessor
+ *    applied before noweave (of noweb)
  *  - decide to replace completely noweave of noweb (I already do not
  *    use notangle, so really now I use only noweb.sty), so easier to plugin
  *    code to support accurate defs/uses from codegraph
@@ -27,6 +27,16 @@ open Web
  *    (available in Icon version of noweb with the -autodefs options, found
  *     appropriate tex command by looking at output of 
  *    ~/packages/MacOS/stow/noweb/bin/noweave -autodefs c -index wc.nw
+ *  - TODO support for accurate defs and uses using codegraph information
+ * 
+ * todo:
+ *  - less: generate prev/next that works in two column; need to
+ *    setup the glue thing?
+ *  - less: generate chunk index?
+ *  - later: pretty printing? based again on pfff and codemap renderer?
+ *    no color, but can still do stuff probably?
+ *  - Quote of code (recursive now), chunkname can also 
+ *    contain some quote! need lexer functions? because recursive!
  *)
 
 (*****************************************************************************)
@@ -39,6 +49,12 @@ type tex_string = elt list
      * it should be Quote of code_or_chunk list 
      *)
     | Q of string (* [[ ]] *)
+    (* pad's extension {{main()}} turns into a [[main()]]_subpageref!
+     * Note that noweb allows to write [[<<function [[foo] ]>> ]] 
+     * and you will get the subpageref, but this is annoying to type
+     * and you get the 'function' extra prefix.
+     *)
+    | B of string (* {{ }} *)
 
 type chunk_info = {
   mutable prev_def: chunkid option;
@@ -59,6 +75,8 @@ let (parse_string: string -> tex_string) = fun s ->
     | [] -> s_of_acc acc
     | '['::'['::xs ->
       s_of_acc acc @ aux_quote [] xs
+    | '{'::'{'::xs ->
+      s_of_acc acc @ aux_brace [] xs
     | x::xs ->
       aux_string (x::acc) xs
   and aux_quote acc xs =
@@ -69,6 +87,14 @@ let (parse_string: string -> tex_string) = fun s ->
       aux_string [] xs
     | x::xs ->
       aux_quote (x::acc) xs
+  and aux_brace acc xs =
+    match xs with
+    | [] -> failwith "could not find end of brace"
+    | '}'::'}'::xs ->
+      B (Common2.string_of_chars (List.rev acc))::
+      aux_string [] xs
+    | x::xs ->
+      aux_brace (x::acc) xs
   and s_of_acc acc =
     if acc = []
     then []
@@ -106,10 +132,6 @@ let pr_in_code pr s =
     | '}'-> pr "\\}"
     | c -> pr (spf "%c" c)
   )
-
-(*****************************************************************************)
-(* Codegraph automatic indexing  *)
-(*****************************************************************************)
 
 (*****************************************************************************)
 (* Chunk crossrefs  *)
@@ -182,6 +204,54 @@ let label_of_id id =
   spf "NW%d" id
 
 (*****************************************************************************)
+(* Codegraph automatic indexing  *)
+(*****************************************************************************)
+
+(*****************************************************************************)
+(* Entity crossrefs  *)
+(*****************************************************************************)
+let ident1_of_entity s =
+  let xs = Common2.list_of_string s in
+  xs |> List.map (fun c ->
+    match c with
+    | '_' -> "{\\_}"
+    | c -> (spf "%c" c)
+  ) |> String.concat ""
+
+let ident2_of_entity s =
+  let xs = Common2.list_of_string s in
+  xs |> List.map (fun c ->
+    match c with
+    | '_' -> ":un"
+    | c -> (spf "%c" c)
+  ) |> String.concat ""
+
+let nwixident_of_entity s =
+  let s1 = ident1_of_entity s in
+  let s2 = ident2_of_entity s in
+  spf "{\\nwixident{%s}}{%s}" s1 s2
+  
+
+(* hack entity indexing based on pad's convention to name chunks *)
+let pr_indexing pr hnwixident def =
+  match def.chunkdef_key with
+  (* todo: new format *)
+  (* | s when s =~ "function \\[\\[\\(.*\\)()\\]\\]" -> *)
+  | s when s =~ "function \\[\\[\\(.*\\)\\]\\]" ->
+    let f = Common.matched1 s in
+    let nwident = nwixident_of_entity f in
+    Hashtbl.replace hnwixident nwident true;
+    pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
+  | _ -> ()
+
+let pr_final_index pr hnwixident = 
+  hnwixident |> Common.hash_to_list |> Common.sort_by_key_lowfirst 
+  |> List.iter (fun (k, _bool) ->
+    pr (spf "\\nwixlogsorted{i}{%s}%%\n" k);
+  )
+      
+
+(*****************************************************************************)
 (* Entry point  *)
 (*****************************************************************************)
 
@@ -190,6 +260,7 @@ let web_to_tex orig texfile =
   let cnt = ref 0 in
   let hkey_to_def = hkey_to_def__from_orig orig in
   let hchunkid_info = hchunkid_info__from_orig orig in
+  let hnwixident = Hashtbl.create 101 in
   let last = ref (spf "\\nwfilename{%s}" ("TODO.nw"))  in
 
   let rec tex_or_chunkdef x =
@@ -210,6 +281,11 @@ let web_to_tex orig texfile =
     *)
           (* skip *)
           pr "%SKIPPED\n"
+        | "\\end{document}" -> 
+          pr "\\nwenddocs{}\n";
+          pr_final_index pr hnwixident;
+          pr s
+
         | _ ->
          
         let elts = parse_string s in
@@ -219,6 +295,27 @@ let web_to_tex orig texfile =
             pr "{\\tt{}";
             pr_in_quote pr s;
             pr "}";
+          | B s ->
+            (match s with
+            (* special case {{foo()}} *)
+            | _ when s =~ "^\\(.*\\)()$" ->
+              let f = Common.matched1 s in
+              (* todo: handle new format 'function [[foo()]]' *)
+              let name = spf "function [[%s]]" f in
+              let def = 
+                try Hashtbl.find hkey_to_def name
+                with Not_found ->
+                  failwith (spf "could not find def of |%s|" name)
+              in
+              pr "$\\texttt{";
+              pr_in_quote pr s;
+              pr "}";
+              pr (spf "^{\\nwtagstyle{}\\subpageref{%s}}$" 
+                (label_of_id def.chunkdef_id))
+              
+            | _ -> failwith (spf "not handling yet {{}} format for: %s" s)
+            )
+           
         );
         pr "\n";
         )
@@ -238,6 +335,8 @@ let web_to_tex orig texfile =
           pr "\\code{}";
           pr s;
           pr "\\edoc{}";
+        | B s ->
+          failwith "{{ }} inside chunk definition is not allowed"
       );
       pr (spf "~{\\nwtagstyle{}\\subpageref{%s}}" (label_of_id def.chunkdef_id));
       (match chunk_info.prev_def with
@@ -265,7 +364,11 @@ let web_to_tex orig texfile =
       pr "\\nwenddeflinemarkup";
       pr "\n";
 
+      (* recurse *)
       ys |> List.iter code_or_chunk;
+      (* entity indexing *)
+      pr_indexing pr hnwixident def;
+
       pr ("\\nwendcode{}");
       incr cnt;
       pr (spf "\\nwbegindocs{%d}\\nwdocspar" !cnt);
@@ -286,6 +389,9 @@ let web_to_tex orig texfile =
           pr "\\code{}";
           pr s;
           pr "\\edoc{}";
+        | B s ->
+          failwith "{{ }} inside a chunk name is not allowed"
+
       );
       let def = 
         try Hashtbl.find hkey_to_def s 
