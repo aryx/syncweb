@@ -11,6 +11,11 @@ open Code
  * a.k.a. 'tangling' in Knuth's and literate programming terminology.
  * I could call this file tangle.ml, but I always found this terminology
  * confusing.
+ * 
+ * related:
+ *  - notangle from noweb from Norma Ramsey
+ *  - nofake Perl script from Christian Lindig
+ *  - lipsum from Christian Lindig
  *)
 
 (*****************************************************************************)
