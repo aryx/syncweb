@@ -2,20 +2,20 @@
 (* usually a .nw file *)
 type t = tex_or_chunkdef list
   and tex_or_chunkdef =
-    | Tex      of texstring list
+    | Tex      of tex_string list
     | ChunkDef of chunkdef * code_or_chunk list
 
     and chunkdef = {
-      chunkdef_key: texstring;
+      chunkdef_key: tex_string;
       chunkdef_end: string; (* usually just '@' *)
     }
     and code_or_chunk =
       | Code of string
-      | ChunkName of texstring * int (* indentation *)
+      | ChunkName of tex_string * int (* indentation *)
   (* Those strings can contain noweb quotes ([[ ]]), but they are
    * not parsed here. See Web_to_tex.texstring instead.
    *)
-  and texstring = string 
+  and tex_string = string 
 
 val parse: Common.filename -> t
 

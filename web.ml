@@ -5,10 +5,10 @@ open Common
 (* Prelude *)
 (*****************************************************************************)
 (*
- * Web.t used to be called Engine.orig, and Code.t Engine.view, so
+ * Web.t below used to be called Engine.orig, and Code.t Engine.view, so
  * many of the comments below refer to this old naming scheme.
  * This was before I decided that syncweb could also generate
- * the .tex, bypassing completely noweb.
+ * the .tex (bypassing completely noweb).
  *)
 
 (*****************************************************************************)
@@ -23,20 +23,20 @@ open Common
 type t = tex_or_chunkdef list
 
  and tex_or_chunkdef =
-   | Tex of texstring list (* why a list? because each elt is a line *)
+   | Tex of tex_string list (* why a list? because each elt is a line *)
    | ChunkDef of chunkdef * code_or_chunk list
 
    and chunkdef = {
-    chunkdef_key: texstring;
+    chunkdef_key: tex_string;
     chunkdef_end: string; (* specific string *)
    }
    and code_or_chunk =
      | Code of string
-     | ChunkName of texstring * int (* indentation *)
+     | ChunkName of tex_string * int (* indentation *)
   (* Those strings can contain noweb quotes ([[ ]]), but they are
-   * not parsed here. See Web_to_tex.texstring instead.
+   * not parsed here. See Web_to_tex.tex_string instead.
    *)
-  and texstring = string 
+  and tex_string = string 
 
 (*****************************************************************************)
 (* Invariants  *)
@@ -190,7 +190,7 @@ let unparse orig filename =
   )
 
 (*****************************************************************************)
-(* Multi file support  *)
+(* Multi file support *)
 (*****************************************************************************)
 (* For the moment the multi file support is really a hack. I just 
  * abuse the Tex constructor to remember that a serie of tex_or_chunkdef 
