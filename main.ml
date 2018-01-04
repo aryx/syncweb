@@ -229,11 +229,14 @@ in
     unparse_orig_web orig file2
   );
 
-  "-to_tex", " <orig> <file>", 
-  Common.mk_action_2_arg (fun origfile texfile -> 
+  "-to_tex", " <orig>", 
+  Common.mk_action_1_arg (fun origfile -> 
     (* todo: parse .aux? *)
-    let (_d,_b,_e) = Common2.dbe_of_filename texfile in
+    let (d,b,e) = Common2.dbe_of_filename origfile in
+    if (e <> "nw")
+    then failwith (spf "expect a .nw file not a .%s" e);
     let orig = Web.parse origfile in
+    let texfile = Common2.filename_of_dbe (d,b,"tex") in
     Web_to_tex.web_to_tex orig texfile;
   );
 

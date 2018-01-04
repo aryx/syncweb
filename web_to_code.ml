@@ -9,6 +9,8 @@ open Code
 (*****************************************************************************)
 (*
  * AKA 'tangle' in Knuth's and literate programming terminology.
+ * I could call this file tangle.ml, but I always found this terminology
+ * confusing.
  *)
 
 (*****************************************************************************)
