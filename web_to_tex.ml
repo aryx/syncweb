@@ -6,8 +6,8 @@ open Web
 (*****************************************************************************)
 (* Prelude  *)
 (*****************************************************************************)
-(*
- * a.k.a 'weave' in Knuth's and literate programming terminology.
+(* Getting the tex code from a noweb file, 
+ * a.k.a 'weaving' in Knuth's and literate programming terminology.
  * I could call this file weave.ml, but I always found this terminology
  * confusing.
  *)
@@ -63,6 +63,22 @@ let pr_in_quote pr s =
   xs |> List.iter (fun c ->
     match c with
     | '_' -> pr "{\\char95}"
+    | '$' -> pr "{\\char36}"
+    | '^' -> pr "{\\char94}"
+    | '#' -> pr "{\\char35}"
+    | '&' -> pr "{\\char38}"
+    | '%' -> pr "{\\char37}"
+    | '\\' -> pr "{\\char92}"
+    | c -> pr (spf "%c" c)
+  )
+
+let pr_in_code pr s =
+  let xs = Common2.list_of_string s in
+  xs |> List.iter (fun c ->
+    match c with     
+    | '\\'-> pr "\\\\"
+    | '{'-> pr "\\{"
+    | '}'-> pr "\\}"
     | c -> pr (spf "%c" c)
   )
 
@@ -80,16 +96,32 @@ let pr_in_quote pr s =
 
 let web_to_tex orig texfile =
   Common.with_open_outfile texfile (fun (pr, _chan)  ->
-    (* pad's special macros for todos and notes 
-     * todo: get rid of noweblatex and code in main.ml for to_noweb? 
-     *)
   let cnt = ref 0 in
   let hdefs = Hashtbl.create 101 in
+  let last = ref (spf "\\nwfilename{%s}" ("TODO.nw"))  in
 
   let rec tex_or_chunkdef x =
     match x with
     | Tex xs ->
       xs |> List.iter (fun s ->
+        (match s with
+        | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
+          let file = Common.matched1 s in
+          let orig = Web.parse file in
+          List.iter tex_or_chunkdef orig;
+        (* pad's special macros for todos and notes 
+         * todo: get rid of noweblatex and code in main.ml for to_noweb? 
+         *)
+        | _ when s =~ "^\\\\[ntl] .*" -> 
+    (* todo:
+    $line =~ s/^[ \t]*\\t (.*  )$/\\SaveVerb{Verb}+$1+\\todo{\\UseVerb{Verb}}/;
+    $line =~ s/^[ \t]*\\n (.*  )$/\\SaveVerb{Verb}+$1+\\note{\\UseVerb{Verb}}/;
+    $line =~ s/^[ \t]*\\l (.*  )$/\\SaveVerb{Verb}+$1+\\less{\\UseVerb{Verb}}/;
+    *)
+          (* skip *)
+          pr "%SKIPPED\n"
+        | _ ->
+         
         let elts = parse_string s in
         elts |> List.iter (function
           | S s -> pr s
@@ -99,9 +131,11 @@ let web_to_tex orig texfile =
             pr "}";
         );
         pr "\n";
+        )
       );
     | ChunkDef (def, ys) ->
       incr cnt;
+      pr !last;
       pr (spf "\\nwbegincode{%d}" !cnt);
 
       pr "\\moddef{";
@@ -121,12 +155,15 @@ let web_to_tex orig texfile =
       pr "\n";
 
       ys |> List.iter code_or_chunk;
-
-      pr ("\\nwendcode{}\n");
+      pr ("\\nwendcode{}");
+      incr cnt;
+      pr (spf "\\nwbegindocs{%d}\\nwdocspar" !cnt);
+      last := "\\nwenddocs{}";
+      pr "\n";
   and code_or_chunk x =
     match x with
     | Code s -> 
-      pr s;
+      pr_in_code pr s;
       pr "\n";
     | ChunkName (s, i) ->
       pr (generate_n_spaces i);

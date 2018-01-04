@@ -18,6 +18,8 @@
 This is some example
 of latex.
 Here is a quote [[foo_bar()]].
+Another quote [[$(OBJS)]] %$
+and [[$@]] or [[$^]] or [[#include]] or [['&']] or [['\']] or [['%']]
 
 Here is some chunks
 <<foo.c>>=
@@ -48,5 +50,15 @@ void main() {
 #include "bar.h"
 @
 
+<<function [[badusage]]>>=
+void
+badusage(void)
+{
+
+    fprint(STDERR, 
+           "Usage: mk [-f file] [-(n|a|e|t|k|i)] [-d[egp]] [targets ...]\n");
+    Exit();
+}
+@
 
 \end{document}

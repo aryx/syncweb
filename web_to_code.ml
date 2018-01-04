@@ -7,8 +7,8 @@ open Code
 (*****************************************************************************)
 (* Prelude  *)
 (*****************************************************************************)
-(*
- * AKA 'tangle' in Knuth's and literate programming terminology.
+(* Getting the code from a noweb file,
+ * a.k.a. 'tangling' in Knuth's and literate programming terminology.
  * I could call this file tangle.ml, but I always found this terminology
  * confusing.
  *)
