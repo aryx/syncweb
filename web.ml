@@ -23,6 +23,7 @@ open Common
 type t = tex_or_chunkdef list
 
  and tex_or_chunkdef =
+    (* this can contain some pad's #include and noweb quotes [[]] *)
    | Tex of tex_string list (* why a list? because each elt is a line *)
    | ChunkDef of chunkdef * code_or_chunk list
 
@@ -32,7 +33,7 @@ type t = tex_or_chunkdef list
     (* this is used in web_to_tex to store in external hashtbl additional
      * information about a chunk
      *)
-    chunkdef_id: int;
+    chunkdef_id: chunkid;
    }
    and code_or_chunk =
      | Code of string
@@ -41,6 +42,7 @@ type t = tex_or_chunkdef list
    * not parsed here. See Web_to_tex.tex_string instead.
    *)
   and tex_string = string 
+  and chunkid = int
 
 (*****************************************************************************)
 (* Invariants  *)
@@ -67,7 +69,6 @@ let (==~) s re =
 (*****************************************************************************)
 (* Parser  *)
 (*****************************************************************************)
-
 
 (* First version: do as in nofake, very line-oriented and assume
  * a few things:
@@ -199,6 +200,23 @@ let unparse orig filename =
 (*****************************************************************************)
 (* Multi file support *)
 (*****************************************************************************)
+
+let expand_sharp_include orig =
+  orig |> List.map (function
+    | Tex xs ->
+      xs |> List.map (fun s ->
+        match s with
+        | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
+          let file = Common.matched1 s in
+          let orig = parse file in
+          orig
+        | _ -> [Tex [s]]
+        ) |> List.flatten
+    | ChunkDef (def, xs) ->
+      [ChunkDef (def, xs)]
+  ) |> List.flatten
+
+
 (* For the moment the multi file support is really a hack. I just 
  * abuse the Tex constructor to remember that a serie of tex_or_chunkdef 
  * belongs to a file. This hack allows to use 'sync' as-is, without any

@@ -117,6 +117,7 @@ let find_topkey_corresponding_to_file orig viewf =
 (*****************************************************************************)
 
 let actions () = [
+  (* testing *)
   "-parse_orig", "   <file>",
     Common.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
@@ -129,6 +130,7 @@ let actions () = [
       ignore(Code.parse ~lang:Lang.mark_ocaml_short x);
     );
 
+  (* tangling *)
   "-view_of_orig", "   <file> <key>", 
     Common.mk_action_2_arg (fun x key -> 
       let orig = Web.parse x in
@@ -138,6 +140,20 @@ let actions () = [
       tmpfile |> Common.cat |> List.iter pr;
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
+
+  (* weaving *)
+  "-to_tex", " <orig>", 
+  Common.mk_action_1_arg (fun origfile -> 
+    (* todo: parse .aux? *)
+    let (d,b,e) = Common2.dbe_of_filename origfile in
+    if (e <> "nw")
+    then failwith (spf "expect a .nw file not a .%s" e);
+    let orig = Web.parse origfile in
+    (* multi-file support *)
+    let orig = Web.expand_sharp_include orig in
+    let texfile = Common2.filename_of_dbe (d,b,"tex") in
+    Web_to_tex.web_to_tex orig texfile;
+  );
 
   (* superseded by Main.main_action now *)
   "-sync", "   <orig> <view>", 
@@ -168,6 +184,7 @@ let actions () = [
       else failwith "ok, skipping"
     );
 
+
   "-lpize", " <file>",
   Common.mk_action_1_arg Lpize.lpize;
   "-rename_chunknames", " <origs>", 
@@ -188,7 +205,7 @@ let actions () = [
             match s with
             | _ when s =~ "^%.*" -> "%"
             | _ when s =~ "^[ \t]*\\\\[tln] " -> "%"
-            (* todo: #include *)
+            (* less: #include *)
             | _ -> s
           ))
         | x -> x
@@ -227,17 +244,6 @@ in
     let (d,b,e) = Common2.dbe_of_filename file in
     let file2 = Common2.filename_of_dbe (d,b,"w") in
     unparse_orig_web orig file2
-  );
-
-  "-to_tex", " <orig>", 
-  Common.mk_action_1_arg (fun origfile -> 
-    (* todo: parse .aux? *)
-    let (d,b,e) = Common2.dbe_of_filename origfile in
-    if (e <> "nw")
-    then failwith (spf "expect a .nw file not a .%s" e);
-    let orig = Web.parse origfile in
-    let texfile = Common2.filename_of_dbe (d,b,"tex") in
-    Web_to_tex.web_to_tex orig texfile;
   );
 
 ]
