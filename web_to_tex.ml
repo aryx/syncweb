@@ -239,10 +239,10 @@ let ident2_of_entity s =
     | c -> (spf "%c" c)
   ) |> String.concat ""
 
-let nwixident_of_entity s =
+let nwixident_of_entity s suffix =
   let s1 = ident1_of_entity s in
   let s2 = ident2_of_entity s in
-  spf "{\\nwixident{%s}}{%s}" s1 s2
+  spf "{\\nwixident{%s%s}}{%s}" s1 suffix s2
   
 
 (* hack entity indexing based on pad's convention to name chunks *)
@@ -252,14 +252,15 @@ let pr_indexing pr hnwixident def =
   (* | s when s =~ "function \\[\\[\\(.*\\)()\\]\\]" -> *)
   | s when s =~ "\\(function\\|constructor\\|destructor\\|macro\\) \\[\\[\\(.*\\)\\]\\]" ->
     let _, f = Common.matched2 s in
-    let nwident = nwixident_of_entity f in
+    let nwident = nwixident_of_entity f "()" in
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
   | _ -> ()
 
 let pr_final_index pr hnwixident = 
-  hnwixident |> Common.hash_to_list |> Common.sort_by_key_lowfirst 
-  |> List.iter (fun (k, _bool) ->
+  hnwixident |> Common.hash_to_list |> List.map (fun (k, _bool) ->
+    String.lowercase k, k) |> Common.sort_by_key_lowfirst 
+  |> List.iter (fun (_k, k) ->
     pr (spf "\\nwixlogsorted{i}{%s}%%\n" k);
   )
       
