@@ -41,34 +41,17 @@ XXXCMD=
 XXXCMDOPT=
 endif
 
-ifeq ($(FEATURE_PCRE), 1)
-REGEXPDIR=ocamlpcre
-REGEXPCMD= $(MAKE) -C ocamlpcre &&  $(MAKE) regexp -C commons
-REGEXPCMDOPT= $(MAKE) -C ocamlpcre &&  $(MAKE) regexp.opt -C commons
-REGEXPCMA=ocamlpcre/lib/pcre.cma  commons/commons_regexp.cma
-#PCRESYSCMA=pcre.cma
-REGEXPINCLUDE=ocamlpcre/lib
-#PCREINCLUDE= +pcre
-else
-REGEXPCMD=
-REGEXPCMDOPT=
-endif
-
-
 #------------------------------------------------------------------------------
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
 LIBS= external/commons/commons.cma \
-      $(REGEXPCMA) \
       globals/globals.cma
 
 MAKESUBDIRS= \
   $(XXXDIR) \
-  $(REGEXPDIR) \
   globals
 
 INCLUDEDIRS=external/commons \
   $(XXXINCLUDE) \
-  $(REGEXPINCLUDE) \
   globals
 
 ##############################################################################
@@ -96,14 +79,10 @@ top: $(TARGET).top
 
 rec:
 	$(XXXCMD)
-	$(BTCMD)
-	$(REGEXPCMD)
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i all || exit 1; done 
 
 rec.opt:
 	$(XXXCMDOPT)
-	$(BTCMDOPT)
-	$(REGEXPCMDOPT)
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i all.opt || exit 1; done 
 
 #	+for D in $(MAKESUBDIRS); do $(MAKE) $$D || exit 1 ; done
