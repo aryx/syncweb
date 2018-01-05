@@ -12,17 +12,13 @@ VERSION=$(shell cat globals/config.ml.in |grep version |perl -p -e 's/.*"(.*)".*
 TOP=$(shell pwd)
 
 SRC=\
- lang.ml \
- web.ml code.ml \
- web_to_code.ml \
- web_to_tex.ml \
  sync.ml \
  refactor.ml \
  test.ml main.ml
 
 TARGET=syncweb
-PROGS=syncweb
 
+PROGS=$(TARGET)
 OPTPROGS= $(PROGS:=.opt)
 
 #------------------------------------------------------------------------------
@@ -42,15 +38,13 @@ XXXCMDOPT=
 endif
 
 #------------------------------------------------------------------------------
+SUBDIRS=globals frontend backend
+
+MAKESUBDIRS= $(XXXDIR) $(SUBDIRS)
+INCLUDEDIRS=external/commons $(SUBDIRS:%=%)
+LIBS= external/commons/commons.cma $(SUBDIRS:%=%/lib.cma)
+
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
-LIBS= external/commons/commons.cma \
-      globals/globals.cma
-
-MAKESUBDIRS= \
-  $(XXXDIR) \
-  globals
-
-INCLUDEDIRS=external/commons $(MAKESUBDIRS)
 
 ##############################################################################
 # Generic

@@ -1,14 +1,12 @@
 TOP=..
--include $(TOP)/Makefile.config
 
 ##############################################################################
 # Variables
 ##############################################################################
 TARGET=lib
 
-SRC= flag.ml config.ml
-
-INCLUDEDIRS=$(TOP)/external/commons
+SRC= web_to_code.ml web_to_tex.ml
+INCLUDEDIRS=$(TOP)/external/commons $(TOP)/frontend
 
 ##############################################################################
 # Generic
@@ -25,10 +23,3 @@ $(TARGET).cma: $(OBJS)
 	$(OCAMLC) -a -o $(TARGET).cma $(OBJS)
 $(TARGET).cmxa: $(OPTOBJS)
 	$(OCAMLOPT) -a -o $(TARGET).cmxa $(OPTOBJS)
-
-config.ml:
-	@echo "config.ml is missing. Have you run ./configure?"
-	@exit 1
-
-distclean::
-	rm -f config.ml

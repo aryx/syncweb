@@ -18,3 +18,5 @@
 /demos/.md5sum_demo_mli
 /tests/test.ml
 /lpize/lpize
+/backend/.depend
+/frontend/.depend
