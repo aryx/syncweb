@@ -17,7 +17,7 @@ SRC=\
  web_to_code.ml \
  web_to_tex.ml \
  sync.ml \
- lpize.ml refactor.ml \
+ refactor.ml \
  test.ml main.ml
 
 TARGET=syncweb
