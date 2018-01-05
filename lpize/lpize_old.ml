@@ -68,3 +68,8 @@ let lpize file =
     Sys.command (spf "rm -f %s" file) |> ignore;
   )
 
+
+(*
+  "-lpize", " <file>",
+  Common.mk_action_1_arg Lpize.lpize;
+*)

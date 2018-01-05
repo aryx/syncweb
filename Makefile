@@ -50,9 +50,7 @@ MAKESUBDIRS= \
   $(XXXDIR) \
   globals
 
-INCLUDEDIRS=external/commons \
-  $(XXXINCLUDE) \
-  globals
+INCLUDEDIRS=external/commons $(MAKESUBDIRS)
 
 ##############################################################################
 # Generic
@@ -80,35 +78,24 @@ top: $(TARGET).top
 rec:
 	$(XXXCMD)
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i all || exit 1; done 
-
 rec.opt:
 	$(XXXCMDOPT)
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i all.opt || exit 1; done 
 
-#	+for D in $(MAKESUBDIRS); do $(MAKE) $$D || exit 1 ; done
-
-
-syncweb: $(LIBS) $(OBJS)
+$(TARGET): $(LIBS) $(OBJS)
 	$(OCAMLC) $(BYTECODE_STATIC) -o $@ $(SYSLIBS) $^
 
-syncweb.opt: $(LIBS:.cma=.cmxa) $(OPTOBJS) 
+$(TARGET).opt: $(LIBS:.cma=.cmxa) $(OPTOBJS) 
 	$(OCAMLOPT) $(STATIC) -o $@ $(SYSLIBS:.cma=.cmxa) $^
-
-
 
 $(TARGET).top: $(LIBS) $(OBJS) 
 	$(OCAMLMKTOP) -o $@ $(SYSLIBS) $^
 
 
-
-
 clean::
-	rm -f syncweb syncweb.opt 
-clean:: 
-	rm -f $(TARGET).top
+	rm -f $(TARGET) $(TARGET).opt $(TARGET).top
 clean::
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i clean; done 
-
 
 depend::
 	set -e; for i in $(MAKESUBDIRS); do $(MAKE) -C $$i depend; done
@@ -156,7 +143,6 @@ install: all
 uninstall:
 	rm -f $(BINDIR)/syncweb
 	rm -f $(BINDIR)/scripts/noweblatex 
-
 
 version:
 	@echo $(VERSION)

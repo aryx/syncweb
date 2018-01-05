@@ -185,8 +185,6 @@ let actions () = [
     );
 
 
-  "-lpize", " <file>",
-  Common.mk_action_1_arg Lpize.lpize;
   "-rename_chunknames", " <origs>", 
   Common.mk_action_n_arg Refactor.rename_chunknames;
   "-rename_chunknames_archi", " <origs and views>", 

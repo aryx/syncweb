@@ -21,15 +21,12 @@ INCLUDEDIRS=$(TOP)/external/commons
 # Top rules
 ##############################################################################
 all:: $(TARGET).cma
-
 all.opt: $(TARGET).cmxa
 
 $(TARGET).cma: $(OBJS) $(LIBS)
 	$(OCAMLC) -a -o $(TARGET).cma $(OBJS)
-
 $(TARGET).cmxa: $(OPTOBJS) $(LIBS:.cma=.cmxa)
 	$(OCAMLOPT) -a -o $(TARGET).cmxa $(OPTOBJS)
-
 
 config.ml:
 	@echo "config.ml is missing. Have you run ./configure?"
