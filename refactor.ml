@@ -32,6 +32,10 @@ let rename_chunknames xs =
     match s with
     | _ when s =~ "^function \\([a-zA-Z0-9_]+\\)$" ->
       spf "function [[%s]]" (Common.matched1 s)
+    | _ when s =~ "^constructor \\([a-zA-Z0-9_]+\\)$" ->
+      spf "constructor [[%s]]" (Common.matched1 s)
+    | _ when s =~ "^destructor \\([a-zA-Z0-9_]+\\)$" ->
+      spf "destructor [[%s]]" (Common.matched1 s)
     | _ when s =~ "^global \\([a-zA-Z0-9_]+\\)$" ->
       spf "global [[%s]]" (Common.matched1 s)
     | _ when s =~ "^enum \\([a-zA-Z0-9_]+\\)$" ->
