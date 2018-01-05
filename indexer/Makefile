@@ -2,10 +2,10 @@ TOP=..
 ##############################################################################
 # Variables
 ##############################################################################
-TARGET=indexize
+TARGET=indexer
 
-SRC= indexize.ml \
-     main_indexize.ml
+SRC= index_pfff.ml \
+     main_indexer.ml
 
 #todo: use $(TOP)/external/ at some point for that too
 PFFF=/home/pad/pfff

@@ -2,11 +2,11 @@ TOP=..
 ##############################################################################
 # Variables
 ##############################################################################
-TARGET=lpize
+TARGET=lpizer
 
 SRC= find_source.ml \
      lpize_pfff.ml \
-     main_lpize.ml
+     main_lpizer.ml
 
 #todo: use $(TOP)/external/ at some point for that too
 PFFF=/home/pad/pfff

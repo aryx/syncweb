@@ -21,3 +21,7 @@
 /backend/.depend
 /frontend/.depend
 /codegraph/indexize
+/indexer/indexer
+/indexer/indexize
+/lpizer/lpize
+/lpizer/lpizer
