@@ -23,9 +23,10 @@ let hook_def_node_for_c node g =
 let hook_use_edge_for_c src dst g loc =
   (match snd src, snd dst with
   | E.Function, E.Function ->
-    pr (spf "USE:call:%s:%d:%s:%s"
+    pr (spf "USE:call:%s:%d:%s"
           loc.PI.file loc.PI.line
-          (fst src) (fst dst))
+          (*(fst src) not needed *)
+          (fst dst))
   | _ -> ()
   )
   
@@ -78,5 +79,5 @@ let build_graph_code lang xs =
   in
   let output_dir = !output_dir ||| (Sys.getcwd()) in
   Graph_code.save g (dep_file_of_dir output_dir);
-  Graph_code.print_statistics stats g;
+  (* Graph_code.print_statistics stats g; *)
   ()
