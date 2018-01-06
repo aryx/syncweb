@@ -20,7 +20,7 @@ LINK_LIBS=commons globals\
   lang_c/parsing lang_cpp/parsing \
   lang_ml/parsing lang_ml/analyze \
 
-INCLUDEDIRS=$(INCLUDE_LIBS:%=-I $(PFFF)/%/)
+INCLUDEDIRS=$(INCLUDE_LIBS:%=$(PFFF)/%/)
 SYSLIBS=nums.cma bigarray.cma unix.cma str.cma
 LIBS=$(LINK_LIBS:%=$(PFFF)/%/lib.cma) 
 

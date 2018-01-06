@@ -11,17 +11,21 @@ SRC= index_pfff.ml \
 PFFF=/home/pad/pfff
 INCLUDE_LIBS=commons \
   h_program-lang graph_code \
-  lang_c/parsing lang_cpp/parsing \
+  lang_cpp/parsing lang_c/parsing lang_c/analyze \
   lang_ml/parsing lang_ml/analyze \
 
 LINK_LIBS=commons globals\
+  commons_wrappers/graph \
   h_program-lang graph_code matcher \
-  lang_c/parsing lang_cpp/parsing \
+  lang_cpp/parsing  lang_c/parsing lang_c/analyze \
   lang_ml/parsing lang_ml/analyze \
 
-INCLUDEDIRS=$(INCLUDE_LIBS:%=-I $(PFFF)/%/)
+INCLUDEDIRS=$(INCLUDE_LIBS:%=$(PFFF)/%/) ../lpizer
 SYSLIBS=nums.cma bigarray.cma unix.cma str.cma
-LIBS=$(LINK_LIBS:%=$(PFFF)/%/lib.cma) 
+LIBS= $(PFFF)/external/ocamlgraph/ocamlgraph.cma \
+      $(PFFF)/commons/lib.cma \
+      $(PFFF)/commons_core/commons_core.cma \
+     $(LINK_LIBS:%=$(PFFF)/%/lib.cma) 
 
 ##############################################################################
 # Generic
@@ -34,7 +38,7 @@ LIBS=$(LINK_LIBS:%=$(PFFF)/%/lib.cma)
 all:: $(TARGET)
 all.opt: $(TARGET).opt
 
-$(TARGET): $(LIBS) $(OBJS) 
+$(TARGET): $(LIBS) ../lpizer/find_source.cmo $(OBJS) 
 	$(OCAMLC) -o $@ $(SYSLIBS) $^
 
 $(TARGET).opt: $(LIBS:.cma=.cmxa) $(OPTOBJS) 
