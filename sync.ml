@@ -147,7 +147,7 @@ let sync ~lang orig views =
   let h_view = Common.hash_of_list chunks in
 
 
-  let h = Web_to_code.build_chunk_hash_from_orig orig in
+  let h = Crossref_chunk.hchunkname_to_body__from_orig orig in
   let chunks = h |> Common.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
   let h_orig = Common.hash_of_list chunks in
 

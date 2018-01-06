@@ -5,8 +5,9 @@ TOP=..
 ##############################################################################
 TARGET=lib
 
-SRC= web_to_code.ml \
-     crossref_chunk.ml crossref_code.ml web_to_tex.ml
+SRC= crossref_chunk.ml crossref_code.ml \
+     web_to_code.ml \
+     web_to_tex.ml
 
 INCLUDEDIRS=$(TOP)/external/commons $(TOP)/frontend
 

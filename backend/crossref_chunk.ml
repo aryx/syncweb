@@ -16,10 +16,36 @@ type chunk_xref = {
 }
 
 (*****************************************************************************)
-(* Chunk crossrefs  *)
+(* Chunkname to X  *)
 (*****************************************************************************)
+(* for web_to_code.ml and sync.ml *)
+let hchunkname_to_body__from_orig orig = 
+  let h = Hashtbl.create 101 in
+    orig |> List.iter (function
+    | Tex xs -> ()
+    | ChunkDef (def, body) -> 
+        let key = def.chunkdef_key in
+        Common2.hupdate_default key (fun x -> x @ [body]) (fun()->[]) h;
+    );
+  h
+
+(* for crossref_code.ml *)
+let hchunkname_to_defs__from_orig orig =
+  (* use the Hashtbl.find_all *)
+  let h = Hashtbl.create 101 in
+  let rec aux orig = 
+    orig |> List.iter (function
+      | Tex xs -> ()
+      | ChunkDef (def, body) -> 
+        let key = def.chunkdef_key in
+        Hashtbl.add h key (def, body)
+    );
+  in
+  aux orig;
+  h
+
+(* for web_to_tex.ml *)
 let hchunkname_to_def__from_orig orig =
-  (* less: could use the Hashtbl.find_all? *)
   let h = Hashtbl.create 101 in
   let rec aux orig = 
     orig |> List.iter (function
@@ -34,6 +60,10 @@ let hchunkname_to_def__from_orig orig =
   in
   aux orig;
   h
+
+(*****************************************************************************)
+(* Chunkid to X  *)
+(*****************************************************************************)
 
 let hchunkid_info__from_orig orig =
   let hchunkid_info = Hashtbl.create 101 in

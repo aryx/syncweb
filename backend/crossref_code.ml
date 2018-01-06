@@ -56,17 +56,44 @@ let parse_defs_and_uses file =
 (* Chunkid -> defs * uses *)
 (*****************************************************************************)
 let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
-  let _h = Hashtbl.create 101 in
-  (* step1: get list of files mentioned in defs and uses, so we know
+  let hchunkname_to_defs = Crossref_chunk.hchunkname_to_defs__from_orig orig in
+
+  let hresult = Hashtbl.create 101 in
+
+  (* step1: get the list of files mentioned in defs and uses, so we know
    * all the toplevel file chunks
    *)
+  let files =
+    ((defs |> List.map (fun (x, _, _) -> x.file))@
+     (uses |> List.map (fun (x, _, _) -> x.file))) |> Common2.uniq
+  in
+
   (* step2: tangle the toplevel file chunks (e.g., mk/main.c) while
    * remembering which LOC correspond to which chunkid
    *)
+  (* use Hashtbl.find_all property *)
+  let _hchunkid_to_locs = Hashtbl.create 101 in
+  files |> List.iter (fun file ->
+    let _loc = ref 1 in
+    (* similar to web_to_code.ml *)
+    let rec aux key =
+      let defs = Hashtbl.find_all hchunkname_to_defs key in
+      defs |> List.iter (fun (def, body) -> 
+        let _id = def.chunkdef_id in
+        raise Todo
+      )
+    in
+    aux file
+  );
+
   (* step3: create hashtbl to go from file x LOC to defs and uses *)
+  let _hloc_to_defs_uses = 
+    ((defs |> List.map (fun (loc, a, b) -> loc, (a, Left b))) @
+     (uses |> List.map (fun (loc, a, b) -> loc, (a, Right b)))
+    ) |> Common.hash_of_list
+  in
+
   (* step4: iterate over all LOC for a chunkid and accumulate the defs
    * and uses there
    *)
-  
-  
-  raise Todo
+  hresult

@@ -37,19 +37,10 @@ let s_of_chunkdef_body xs =
 (* Orig->View  *)
 (*****************************************************************************)
 
-let build_chunk_hash_from_orig orig = 
-  let h = Hashtbl.create 101 in
-    orig |> List.iter (function
-    | Tex xs -> ()
-    | ChunkDef (def, body) -> 
-        let key = def.chunkdef_key in
-        Common2.hupdate_default key (fun x -> x @ [body]) (fun()->[]) h;
-    );
-  h
 
 (* then see Code.unparse to save the code in a file *)
 let web_to_code ~topkey orig = 
-  let h = build_chunk_hash_from_orig orig in
+  let h = Crossref_chunk.hchunkname_to_body__from_orig orig in
 
   let rec aux (key,i) = 
     let bodys = 
