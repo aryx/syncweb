@@ -9,7 +9,7 @@ open Web
 (* the goal is that given a chunkid, we can know the previous and next
  * definitions sharing the same chunkname and the users of the chunk.
  *)
-type chunk_info = {
+type chunk_xref = {
   mutable prev_def: chunkid option;
   mutable next_def: chunkid option;
   mutable chunk_users: chunkid list;

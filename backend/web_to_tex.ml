@@ -170,7 +170,8 @@ let nwixident_of_entity s suffix =
   
 
 (* hack entity indexing based on pad's convention to name chunks *)
-let pr_indexing pr hnwixident def =
+let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
+(* old hack
   match def.chunkdef_key with
   (* todo: new format *)
   (* | s when s =~ "function \\[\\[\\(.*\\)()\\]\\]" -> *)
@@ -180,6 +181,22 @@ let pr_indexing pr hnwixident def =
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
   | _ -> ()
+*)
+  let (defs, uses) = 
+    try Hashtbl.find hdefs_and_uses_of_chunkid def.chunkdef_id
+    with Not_found -> [], []
+  in
+  defs |> List.iter (fun (_loc, s, _kind) ->
+    let nwident = nwixident_of_entity s "()" in
+    Hashtbl.replace hnwixident nwident true;
+    pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
+  );
+  uses |> List.iter (fun (_loc, s, _kind) ->
+    let nwident = nwixident_of_entity s "()" in
+    Hashtbl.replace hnwixident nwident true;
+    pr (spf "\\nwindexuse%s{%s}" nwident (label_of_id def.chunkdef_id))
+  );
+  ()
 
 let pr_final_index pr hnwixident = 
   hnwixident |> Common.hash_to_list |> List.map (fun (k, _bool) ->
@@ -192,7 +209,7 @@ let pr_final_index pr hnwixident =
 (* Entry point  *)
 (*****************************************************************************)
 
-let web_to_tex orig texfile (_defs, _uses) =
+let web_to_tex orig texfile (defs, uses) =
   Common.with_open_outfile texfile (fun (pr, _chan)  ->
   (* for nwbegincode{}, not sure it's needed *)
   let cnt = ref 0 in
@@ -206,6 +223,10 @@ let web_to_tex orig texfile (_defs, _uses) =
   let hnwixident = Hashtbl.create 101 in
   (* for [< >] and avoiding adding too many refs *)
   let hreferenced_def_already_recently = Hashtbl.create 101 in
+  (* for crossref defs/uses of code entities (right now just functions) *)
+  let hdefs_and_uses_of_chunkid = 
+    Crossref_code.hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) in
+
 
   let rec tex_or_chunkdef x =
     match x with
@@ -294,7 +315,7 @@ let web_to_tex orig texfile (_defs, _uses) =
         )
       );
     | ChunkDef (def, ys) ->
-      let chunk_info = Hashtbl.find hchunkid_info def.chunkdef_id in
+      let chunk_xref = Hashtbl.find hchunkid_info def.chunkdef_id in
       (* ugly hack *)
       last_chunkdef := def.chunkdef_key;
       incr cnt;
@@ -314,25 +335,25 @@ let web_to_tex orig texfile (_defs, _uses) =
           error "{{ }} inside chunk definition is not allowed"
       );
       pr (spf "~{\\nwtagstyle{}\\subpageref{%s}}" (label_of_id def.chunkdef_id));
-      (match chunk_info.CC.prev_def with
+      (match chunk_xref.CC.prev_def with
       | None -> pr "}\\endmoddef"
       | Some _ -> pr "}\\plusendmoddef"
       );
       pr "\\nwstartdeflinemarkup";
-      if chunk_info.CC.chunk_users <> []
+      if chunk_xref.CC.chunk_users <> []
       then begin
         pr "\\nwusesondefline{";
-        chunk_info.CC.chunk_users |> List.iter (fun id ->
+        chunk_xref.CC.chunk_users |> List.iter (fun id ->
           pr (spf "\\\\{%s}" (label_of_id id))
         );
         pr "}";
       end;
       pr (spf "\\nwprevnextdefs{%s}{%s}"
-            (match chunk_info.CC.prev_def with
+            (match chunk_xref.CC.prev_def with
             | None -> "\\relax"
             | Some id -> label_of_id id
             )
-            (match chunk_info.CC.next_def with
+            (match chunk_xref.CC.next_def with
             | None -> "\\relax"
             | Some id -> label_of_id id
             ));
@@ -342,7 +363,7 @@ let web_to_tex orig texfile (_defs, _uses) =
       (* recurse *)
       ys |> List.iter code_or_chunk;
       (* entity indexing *)
-      pr_indexing pr hnwixident def;
+      pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def;
 
       pr ("\\nwendcode{}");
       incr cnt;
