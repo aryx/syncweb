@@ -142,17 +142,18 @@ let actions () = [
     );
 
   (* weaving *)
-  "-to_tex", " <orig>", 
-  Common.mk_action_1_arg (fun origfile -> 
+  "-to_tex", " <nw file> <defs and uses file>", 
+  Common.mk_action_2_arg (fun origfile defs_and_uses_file -> 
     (* todo: parse .aux? *)
     let (d,b,e) = Common2.dbe_of_filename origfile in
     if (e <> "nw")
     then failwith (spf "expect a .nw file not a .%s" e);
     let orig = Web.parse origfile in
+    let (defs, uses) = Crossref_code.parse_defs_and_uses defs_and_uses_file in
     (* multi-file support *)
     let orig = Web.expand_sharp_include orig in
     let texfile = Common2.filename_of_dbe (d,b,"tex") in
-    Web_to_tex.web_to_tex orig texfile;
+    Web_to_tex.web_to_tex orig texfile (defs, uses);
   );
 
   (* superseded by Main.main_action now *)

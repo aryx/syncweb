@@ -3,6 +3,8 @@ open Common
 
 open Web
 
+module CC = Crossref_chunk
+
 (*****************************************************************************)
 (* Prelude  *)
 (*****************************************************************************)
@@ -190,7 +192,7 @@ let pr_final_index pr hnwixident =
 (* Entry point  *)
 (*****************************************************************************)
 
-let web_to_tex orig texfile =
+let web_to_tex orig texfile (_defs, _uses) =
   Common.with_open_outfile texfile (fun (pr, _chan)  ->
   (* for nwbegincode{}, not sure it's needed *)
   let cnt = ref 0 in
@@ -312,25 +314,25 @@ let web_to_tex orig texfile =
           error "{{ }} inside chunk definition is not allowed"
       );
       pr (spf "~{\\nwtagstyle{}\\subpageref{%s}}" (label_of_id def.chunkdef_id));
-      (match chunk_info.prev_def with
+      (match chunk_info.CC.prev_def with
       | None -> pr "}\\endmoddef"
       | Some _ -> pr "}\\plusendmoddef"
       );
       pr "\\nwstartdeflinemarkup";
-      if chunk_info.chunk_users <> []
+      if chunk_info.CC.chunk_users <> []
       then begin
         pr "\\nwusesondefline{";
-        chunk_info.chunk_users |> List.iter (fun id ->
+        chunk_info.CC.chunk_users |> List.iter (fun id ->
           pr (spf "\\\\{%s}" (label_of_id id))
         );
         pr "}";
       end;
       pr (spf "\\nwprevnextdefs{%s}{%s}"
-            (match chunk_info.prev_def with
+            (match chunk_info.CC.prev_def with
             | None -> "\\relax"
             | Some id -> label_of_id id
             )
-            (match chunk_info.next_def with
+            (match chunk_info.CC.next_def with
             | None -> "\\relax"
             | Some id -> label_of_id id
             ));
