@@ -77,20 +77,22 @@ let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
     let loc = ref 1 in
     (* similar to web_to_code.ml *)
     let rec aux key =
-      let defs = Hashtbl.find_all hchunkname_to_defs key in
+      let defs = Hashtbl.find_all hchunkname_to_defs key |> List.rev in
+      incr loc (* the s: *);
       defs |> List.iter (fun (def, body) -> 
         (* this assumes you are using -less_marks *)
-        incr loc; (* the s: or x: mark *)
         let id = def.chunkdef_id in
         body |> List.iter (function
           | Code _ -> 
             Hashtbl.add hchunkid_to_locs id ({ file; line = !loc});
+            pr (spf "id = %d (name = %s), loc = %s:%d"
+                  id key file !loc);
             incr loc
           | ChunkName (key, _indent) ->
             aux key
         );
-        incr loc (* the e: mark *)
-      )
+      incr loc (* the e: or x: *)
+      );
     in
     aux file
   );
