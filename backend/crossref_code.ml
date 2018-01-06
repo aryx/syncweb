@@ -72,28 +72,47 @@ let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
    * remembering which LOC correspond to which chunkid
    *)
   (* use Hashtbl.find_all property *)
-  let _hchunkid_to_locs = Hashtbl.create 101 in
+  let hchunkid_to_locs = Hashtbl.create 101 in
   files |> List.iter (fun file ->
-    let _loc = ref 1 in
+    let loc = ref 1 in
     (* similar to web_to_code.ml *)
     let rec aux key =
       let defs = Hashtbl.find_all hchunkname_to_defs key in
       defs |> List.iter (fun (def, body) -> 
-        let _id = def.chunkdef_id in
-        raise Todo
+        (* this assumes you are using -less_marks *)
+        incr loc; (* the s: or x: mark *)
+        let id = def.chunkdef_id in
+        body |> List.iter (function
+          | Code _ -> 
+            Hashtbl.add hchunkid_to_locs id ({ file; line = !loc});
+            incr loc
+          | ChunkName (key, _indent) ->
+            aux key
+        );
+        incr loc (* the e: mark *)
       )
     in
     aux file
   );
 
   (* step3: create hashtbl to go from file x LOC to defs and uses *)
-  let _hloc_to_defs_uses = 
-    ((defs |> List.map (fun (loc, a, b) -> loc, (a, Left b))) @
-     (uses |> List.map (fun (loc, a, b) -> loc, (a, Right b)))
+  let hloc_to_defs_uses = 
+    ((defs |> List.map (fun (loc, a, b) -> loc, Left (loc, a, b))) @
+     (uses |> List.map (fun (loc, a, b) -> loc, Right (loc, a, b)))
     ) |> Common.hash_of_list
   in
 
   (* step4: iterate over all LOC for a chunkid and accumulate the defs
    * and uses there
    *)
+  hchunkid_to_locs |> Hashtbl.iter (fun id _ ->
+    let locs = Hashtbl.find_all hchunkid_to_locs id in
+    let defs_uses = 
+      locs |> Common.map_filter (fun loc ->
+        Common2.hfind_option loc hloc_to_defs_uses
+      )
+    in
+    let defs, uses = Common.partition_either (fun x -> x) defs_uses in
+    Hashtbl.add hresult id (defs, uses)
+  );
   hresult
