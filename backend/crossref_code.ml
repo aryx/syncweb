@@ -56,4 +56,17 @@ let parse_defs_and_uses file =
 (* Chunkid -> defs * uses *)
 (*****************************************************************************)
 let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
+  let _h = Hashtbl.create 101 in
+  (* step1: get list of files mentioned in defs and uses, so we know
+   * all the toplevel file chunks
+   *)
+  (* step2: tangle the toplevel file chunks (e.g., mk/main.c) while
+   * remembering which LOC correspond to which chunkid
+   *)
+  (* step3: create hashtbl to go from file x LOC to defs and uses *)
+  (* step4: iterate over all LOC for a chunkid and accumulate the defs
+   * and uses there
+   *)
+  
+  
   raise Todo

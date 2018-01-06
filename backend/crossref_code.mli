@@ -1,12 +1,11 @@
 
-type loc = { 
+type loc = {
   file: Common.filename;
   line: int;
 }
 
 type def_kind =
   | Function
-
 type use_kind =
   | Call
 
