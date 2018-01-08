@@ -6,6 +6,9 @@ type loc = {
 
 type entity_kind =
   | Function
+  | Global
+  | Constant
+  | Macro
 
 type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list

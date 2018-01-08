@@ -4,31 +4,29 @@ module G = Graph_code
 module E = Entity_code
 module PI = Parse_info
 
+(* copy paste of pfff/main_codegraph.ml *)
+
 let verbose = ref false
-let output_dir = ref None
+(*let output_dir = ref None *)
 
 let dep_file_of_dir dir = 
   Filename.concat dir Graph_code.default_filename
 
+(* special hooks *)
 let hook_def_node_for_c node g =
   let info = Graph_code.nodeinfo node g in
+  let name = fst node in
   let loc = info.G.pos in
-  (match snd node with
-  | E.Function -> 
-    pr (spf "DEF:function:%s:%d:%s"
-          loc.PI.file loc.PI.line (fst node))
-  | _ -> ()
-  )
+  let kind = E.string_of_entity_kind (snd node) in
+  pr (spf "DEF:%s:%s:%d:%s" kind loc.PI.file loc.PI.line name)
+  
 
-let hook_use_edge_for_c src dst g loc =
-  (match snd src, snd dst with
-  | E.Function, E.Function ->
-    pr (spf "USE:function:%s:%d:%s"
-          loc.PI.file loc.PI.line
+let hook_use_edge_for_c _src dst g loc =
+  let name = fst dst in
+  let kind = E.string_of_entity_kind (snd dst) in
+  pr (spf "USE:%s:%s:%d:%s"  kind loc.PI.file loc.PI.line name)
           (*(fst src) not needed *)
-          (fst dst))
-  | _ -> ()
-  )
+
   
 
 
@@ -47,7 +45,7 @@ let build_graph_code lang xs =
   in
 
   let empty = Graph_code.empty_statistics () in
-  let g, stats =
+  let _g, _stats =
     try (
     match lang with
     | "ml"  -> 
@@ -77,7 +75,9 @@ let build_graph_code lang xs =
       pr2 (Graph_code.string_of_error err);
       raise (Graph_code.Error err)
   in
+(*
   let output_dir = !output_dir ||| (Sys.getcwd()) in
   Graph_code.save g (dep_file_of_dir output_dir);
-  (* Graph_code.print_statistics stats g; *)
+  Graph_code.print_statistics stats g;
+*)
   ()
