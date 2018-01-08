@@ -3,8 +3,6 @@ open Common
 
 open Web
 
-module CC = Crossref_chunk
-
 (*****************************************************************************)
 (* Prelude  *)
 (*****************************************************************************)
@@ -163,36 +161,39 @@ let ident2_of_entity s =
     | c -> (spf "%c" c)
   ) |> String.concat ""
 
-let nwixident_of_entity s suffix =
+
+(* todo: graph_code_c add some '__<int>' suffix for static functions *)
+let adjust_name s =
+  s
+
+let adjust_suffix = function
+  | Crossref_code.Function -> "()"
+  | _ -> ""
+
+let nwixident_of_entity s kind =
+  let suffix = adjust_suffix kind in
+  let s = adjust_name s in
+
   let s1 = ident1_of_entity s in
   let s2 = ident2_of_entity s in
   spf "{\\nwixident{%s%s}}{%s}" s1 suffix s2
   
 
+
 (* hack entity indexing based on pad's convention to name chunks *)
 let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
-(* old hack
-  match def.chunkdef_key with
-  (* todo: new format *)
-  (* | s when s =~ "function \\[\\[\\(.*\\)()\\]\\]" -> *)
-  | s when s =~ "\\(function\\|constructor\\|destructor\\|macro\\) \\[\\[\\(.*\\)\\]\\]" ->
-    let _, f = Common.matched2 s in
-    let nwident = nwixident_of_entity f "()" in
-    Hashtbl.replace hnwixident nwident true;
-    pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
-  | _ -> ()
-*)
   let (defs, uses) = 
     try Hashtbl.find hdefs_and_uses_of_chunkid def.chunkdef_id
     with Not_found -> [], []
   in
-  defs |> List.iter (fun ((s, _kind), _loc) ->
-    let nwident = nwixident_of_entity s "()" in
+  defs |> List.iter (fun ((s, kind), _loc) ->
+    let nwident = nwixident_of_entity s kind in
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
   );
-  uses |> List.iter (fun ((s, _kind), _loc) ->
-    let nwident = nwixident_of_entity s "()" in
+  uses |> List.map (fun (entity, _loc) -> entity) |> Common2.uniq |> List.iter
+   (fun (s, kind) ->
+    let nwident = nwixident_of_entity s kind in
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexuse%s{%s}" nwident (label_of_id def.chunkdef_id))
   );
@@ -335,25 +336,25 @@ let web_to_tex orig texfile (defs, uses) =
           error "{{ }} inside chunk definition is not allowed"
       );
       pr (spf "~{\\nwtagstyle{}\\subpageref{%s}}" (label_of_id def.chunkdef_id));
-      (match chunk_xref.CC.prev_def with
+      (match chunk_xref.Crossref_chunk.prev_def with
       | None -> pr "}\\endmoddef"
       | Some _ -> pr "}\\plusendmoddef"
       );
       pr "\\nwstartdeflinemarkup";
-      if chunk_xref.CC.chunk_users <> []
+      if chunk_xref.Crossref_chunk.chunk_users <> []
       then begin
         pr "\\nwusesondefline{";
-        chunk_xref.CC.chunk_users |> List.iter (fun id ->
+        chunk_xref.Crossref_chunk.chunk_users |> List.iter (fun id ->
           pr (spf "\\\\{%s}" (label_of_id id))
         );
         pr "}";
       end;
       pr (spf "\\nwprevnextdefs{%s}{%s}"
-            (match chunk_xref.CC.prev_def with
+            (match chunk_xref.Crossref_chunk.prev_def with
             | None -> "\\relax"
             | Some id -> label_of_id id
             )
-            (match chunk_xref.CC.next_def with
+            (match chunk_xref.Crossref_chunk.next_def with
             | None -> "\\relax"
             | Some id -> label_of_id id
             ));

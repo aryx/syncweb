@@ -7,8 +7,13 @@ type loc = {
 type entity_kind =
   | Function
   | Global
+
   | Constant
   | Macro
+  | Constructor
+
+  | Type (* include struct, union, enum *)
+  | Field
 
 type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list

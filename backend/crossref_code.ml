@@ -17,8 +17,13 @@ type loc = {
 type entity_kind =
   | Function
   | Global
+
   | Constant
   | Macro
+  | Constructor
+
+  | Type
+  | Field
 
 type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list
@@ -29,29 +34,32 @@ let debug = ref false
 (* Parsing  *)
 (*****************************************************************************)
 
-(* todo: graph_code_c add some '__<int>' suffix for static functions *)
-let adjust_name s =
-  s
-
 (* mostly copy-paste of Entity_code.entity_kind_of_string *)
 let kind_of_string_opt = function
   | "Function" -> Some Function
   | "Global" -> Some Global
+
   | "Constant" -> Some Constant
   | "Macro" -> Some Macro
+  | "Constructor" -> Some Constructor
+
+  | "Type" -> Some Type
+  | "Field" -> Some Field
+
+  | "Prototype" 
+  | "GlobalExtern"
+    -> None
+  | s -> failwith (spf "unsupported kind: %s" s)
 (*
   | "Class" -> Some Class
   | "Module" -> Some Module
-  | "Type" -> Some Type
   | "TopStmts" -> Some TopStmts
   | "Method" -> Some Method
-  | "Field" -> Some Field
   | "ClassConstant" -> Some ClassConstant
   | "File" -> Some File
   | "Dir" -> Some Dir
   | "MultiDirs" -> Some MultiDirs
   | "Exception" -> Some Exception
-  | "Constructor" -> Some Constructor
 *)
 (*
   | _ when s =~ "Other:\\(.*\\)" -> Other (Common.matched1 s)
@@ -68,13 +76,13 @@ let parse_defs_and_uses file =
     | ["DEF";kind_str;file;line;name] ->
       let kind_opt = kind_of_string_opt kind_str in
       kind_opt |> Common.do_option (fun kind ->
-        defs |> Common.push ((adjust_name name, kind),
+        defs |> Common.push ((name, kind),
                            {file;line = int_of_string line})
       )
     | ["USE";kind_str;file;line;name] ->
       let kind_opt = kind_of_string_opt kind_str in
       kind_opt |> Common.do_option (fun kind ->
-        uses |> Common.push ((adjust_name name, kind), 
+        uses |> Common.push ((name, kind), 
                            {file;line = int_of_string line})
       )
     | _ -> failwith (spf "unrecognized line in defs and uses file: %s" s)
