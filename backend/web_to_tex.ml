@@ -162,9 +162,12 @@ let ident2_of_entity s =
   ) |> String.concat ""
 
 
-(* todo: graph_code_c add some '__<int>' suffix for static functions *)
 let adjust_name s =
-  s
+  match s with
+  (* graph_code_c adds some '__<int>' suffix for static functions *)
+  | _ when s =~ "\\(.*\\)__[0-9]+" ->
+    Common.matched1 s ^ "<>"
+  | _ -> s
 
 let adjust_suffix = function
   | Crossref_code.Function -> "()"
@@ -276,41 +279,42 @@ let web_to_tex orig texfile (defs, uses) =
             pr_in_quote pr s;
             pr "}";
           | B s ->
-            (match s with
-            (* special case {{foo()}} *)
-            | _ when s =~ "^\\(.*\\)()$" ->
-              let f = Common.matched1 s in
-              (* todo: handle new format 'function [[foo()]]' *)
-              let name_candidates = 
-                [spf "function [[%s]]" f;
-                 spf "constructor [[%s]]" f;
-                 spf "destructor [[%s]]" f;
-                 spf "macro [[%s]]" f;
-                ]
-              in
-              let name = 
-                try 
-                  name_candidates |> List.find (fun x -> 
-                    Hashtbl.mem hkey_to_def x)
-                with Not_found -> 
-                  error (spf "could not find def for |%s|" f)
-              in
-              let def = Hashtbl.find hkey_to_def name in
-              pr "$\\texttt{";
-              pr_in_quote pr s;
-              pr "}";
-              (if Hashtbl.mem hreferenced_def_already_recently name
-              then ()
-              else begin
-                Hashtbl.add hreferenced_def_already_recently name true;
-                pr (spf "^{\\subpageref{%s}}" 
-                      (label_of_id def.chunkdef_id));
-              end);
-              pr "$";
-              
-            | _ -> error (spf "not handling yet {{}} format for: %s" s)
-            )
-           
+            let f, name_candidates =
+              match s with
+              (* special case {{foo()}} *)
+              | _ when s =~ "^\\(.*\\)()$" ->
+               let f = Common.matched1 s in
+               (* less: handle new format 'function [[foo()]]'? *)
+               let name_candidates = 
+                 [spf "function [[%s]]" f;
+                  spf "constructor [[%s]]" f;
+                  spf "destructor [[%s]]" f;
+                  spf "macro [[%s]]" f;
+                 ]
+               in
+               f, name_candidates
+              | _ -> error (spf "not handling yet {{}} format for: %s" s)
+            in
+            (* less: warning if ambiguity? *)
+            let name = 
+              try 
+                name_candidates |> List.find (fun x -> 
+                  Hashtbl.mem hkey_to_def x)
+              with Not_found -> 
+                error (spf "could not find def for |%s|" f)
+            in
+            let def = Hashtbl.find hkey_to_def name in
+            pr "$\\texttt{";
+            pr_in_quote pr s;
+            pr "}";
+            (if Hashtbl.mem hreferenced_def_already_recently name
+             then ()
+             else begin
+               Hashtbl.add hreferenced_def_already_recently name true;
+               pr (spf "^{\\subpageref{%s}}" 
+                     (label_of_id def.chunkdef_id));
+             end);
+            pr "$";
         );
         pr "\n";
         )
