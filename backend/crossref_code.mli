@@ -4,13 +4,11 @@ type loc = {
   line: int;
 }
 
-type def_kind =
+type entity_kind =
   | Function
-type use_kind =
-  | Call
 
-type defs = (loc * string * def_kind) list
-type uses = (loc * string * use_kind) list
+type defs = ((string * entity_kind) * loc) list
+type uses = ((string * entity_kind) * loc) list
 
 val parse_defs_and_uses: 
   Common.filename -> defs * uses

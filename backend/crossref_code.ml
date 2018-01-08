@@ -14,14 +14,13 @@ type loc = {
 }
 (* yet another Entity_code.t,
  * but I don't want to depend on pfff/h_program-lang *)
-type def_kind =
+type entity_kind =
   | Function
 
-type use_kind =
-  | Call
+type defs = ((string * entity_kind) * loc) list
+type uses = ((string * entity_kind) * loc) list
 
-type defs = (loc * string * def_kind) list
-type uses = (loc * string * use_kind) list
+let debug = ref false
 
 (*****************************************************************************)
 (* Parsing  *)
@@ -39,11 +38,11 @@ let parse_defs_and_uses file =
     let xs = Str.split_delim (Str.regexp ":") s in
     match xs with
     | ["DEF";"function";file;line;name] ->
-      defs |> Common.push ({file;line = int_of_string line},
-                           adjust_name name, Function)
-    | ["USE";"call";file;line;name] ->
-      uses |> Common.push ({file;line = int_of_string line},
-                           adjust_name name, Call)
+      defs |> Common.push ((adjust_name name, Function),
+                           {file;line = int_of_string line})
+    | ["USE";"function";file;line;name] ->
+      uses |> Common.push ((adjust_name name, Function), 
+                           {file;line = int_of_string line})
     | _ -> failwith (spf "unrecognized line in defs and uses file: %s" s)
   );
   !defs, !uses
@@ -64,8 +63,8 @@ let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
    * all the toplevel file chunks
    *)
   let files =
-    ((defs |> List.map (fun (x, _, _) -> x.file))@
-     (uses |> List.map (fun (x, _, _) -> x.file))) |> Common2.uniq
+    ((defs |> List.map (fun ((_, _), x) -> x.file))@
+     (uses |> List.map (fun ((_, _), x) -> x.file))) |> Common2.uniq
   in
 
   (* step2: tangle the toplevel file chunks (e.g., mk/main.c) while
@@ -85,8 +84,9 @@ let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
         body |> List.iter (function
           | Code _ -> 
             Hashtbl.add hchunkid_to_locs id ({ file; line = !loc});
-            pr (spf "id = %d (name = %s), loc = %s:%d"
-                  id key file !loc);
+            if !debug 
+            then pr (spf "id = %d (name = %s), loc = %s:%d"
+                       id key file !loc);
             incr loc
           | ChunkName (key, _indent) ->
             aux key
@@ -99,8 +99,8 @@ let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
 
   (* step3: create hashtbl to go from file x LOC to defs and uses *)
   let hloc_to_defs_uses = 
-    ((defs |> List.map (fun (loc, a, b) -> loc, Left (loc, a, b))) @
-     (uses |> List.map (fun (loc, a, b) -> loc, Right (loc, a, b)))
+    ((defs |> List.map (fun ((a, b), loc) -> loc, Left ((a, b), loc))) @
+     (uses |> List.map (fun ((a, b), loc) -> loc, Right ((a, b), loc)))
     ) |> Common.hash_of_list
   in
 

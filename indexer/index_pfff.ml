@@ -23,7 +23,7 @@ let hook_def_node_for_c node g =
 let hook_use_edge_for_c src dst g loc =
   (match snd src, snd dst with
   | E.Function, E.Function ->
-    pr (spf "USE:call:%s:%d:%s"
+    pr (spf "USE:function:%s:%d:%s"
           loc.PI.file loc.PI.line
           (*(fst src) not needed *)
           (fst dst))

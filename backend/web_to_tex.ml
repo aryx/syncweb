@@ -186,12 +186,12 @@ let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
     try Hashtbl.find hdefs_and_uses_of_chunkid def.chunkdef_id
     with Not_found -> [], []
   in
-  defs |> List.iter (fun (_loc, s, _kind) ->
+  defs |> List.iter (fun ((s, _kind), _loc) ->
     let nwident = nwixident_of_entity s "()" in
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
   );
-  uses |> List.iter (fun (_loc, s, _kind) ->
+  uses |> List.iter (fun ((s, _kind), _loc) ->
     let nwident = nwixident_of_entity s "()" in
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexuse%s{%s}" nwident (label_of_id def.chunkdef_id))
