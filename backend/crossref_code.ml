@@ -139,11 +139,21 @@ let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
     aux file
   );
 
-  (* step3: create hashtbl to go from file x LOC to defs and uses *)
+  (* step3: create hashtbl to go from file x LOC to defs and uses,
+   *)
   let hloc_to_defs_uses = 
     ((defs |> List.map (fun ((a, b), loc) -> loc, Left ((a, b), loc))) @
      (uses |> List.map (fun ((a, b), loc) -> loc, Right ((a, b), loc)))
-    ) |> Common.hash_of_list
+    ) 
+    (* bugfix: do not use '|> Common.hash_of_list' because it uses 
+     * Hashtbl.replace and we want Hashtbl.add (so that later we can 
+     * use Hashtbl.find_all). Indeed, the same LOC can contain multiple uses
+     *)
+    |> (fun xs ->
+      let h = Hashtbl.create 101 in
+      xs |> List.iter (fun (k, v) -> Hashtbl.add h k v);
+      h
+    )
   in
 
   (* step4: iterate over all LOC for a chunkid and accumulate the defs
@@ -153,8 +163,13 @@ let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
     let locs = Hashtbl.find_all hchunkid_to_locs id in
     let defs_uses = 
       locs |> Common.map_filter (fun loc ->
-        Common2.hfind_option loc hloc_to_defs_uses
-      )
+        try 
+          (* bugfix: use Hashtbl.find_all, cos the same LOC can contain
+           * multiple uses
+           *)
+          Some (Hashtbl.find_all hloc_to_defs_uses loc)
+        with Not_found -> None
+      ) |> List.flatten
     in
     let defs, uses = Common.partition_either (fun x -> x) defs_uses in
     Hashtbl.add hresult id (defs, uses)

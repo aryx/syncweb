@@ -196,6 +196,12 @@ let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
   let uses = uses |> List.map (fun (entity, _loc) -> entity) |> Common2.uniq in
 
   (* this is for the mini indexes *)
+
+  (* the mini index is useful mostly for the uses. The defs are useful only
+   * to double-check that the indexing code works, and anyway you can
+   * use the final index to see all the places using a certain entity.
+   *)
+  (*
   if defs <> []
   then begin
     pr ("\\nwidentdefs{");
@@ -205,6 +211,8 @@ let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
     );
     pr "}";
   end;
+  *)
+  (* this is more useful than the defs *)
   if uses <> []
   then begin
     pr ("\\nwidentuses{");
@@ -214,7 +222,9 @@ let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
     );
     pr "}";
   end;
+
   (* this is for the final index *)
+
   defs |> List.iter (fun ((s, kind), _loc) ->
     let nwident = nwixident_of_entity s kind in
     Hashtbl.replace hnwixident nwident true;
