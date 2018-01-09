@@ -165,9 +165,13 @@ let ident2_of_entity s =
 let adjust_name s =
   match s with
   (* graph_code_c adds some '__<int>' suffix for static functions *)
-  | _ when s =~ "\\(.*\\)__[0-9]+" ->
+  | _ when s =~ "^\\(.*\\)__[0-9]+$" ->
+  (* graph_code_c adds some 'S__' prefix to manage namespaces *)
     Common.matched1 s ^ "<>"
-  | _ -> s
+  | _ when s =~ "^[SEUT]__\\(.*\\)$" ->
+    Common.matched1 s
+  | _ -> 
+    s
 
 let adjust_suffix = function
   | Crossref_code.Function -> "()"
@@ -189,13 +193,34 @@ let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
     try Hashtbl.find hdefs_and_uses_of_chunkid def.chunkdef_id
     with Not_found -> [], []
   in
+  let uses = uses |> List.map (fun (entity, _loc) -> entity) |> Common2.uniq in
+
+  (* this is for the mini indexes *)
+  if defs <> []
+  then begin
+    pr ("\\nwidentdefs{");
+    defs |> List.iter (fun ((s, kind), _loc) ->
+      let nwident = nwixident_of_entity s kind in
+      pr (spf "\\\\{%s}" nwident)
+    );
+    pr "}";
+  end;
+  if uses <> []
+  then begin
+    pr ("\\nwidentuses{");
+    uses |> List.iter (fun ((s, kind)) ->
+      let nwident = nwixident_of_entity s kind in
+      pr (spf "\\\\{%s}" nwident)
+    );
+    pr "}";
+  end;
+  (* this is for the final index *)
   defs |> List.iter (fun ((s, kind), _loc) ->
     let nwident = nwixident_of_entity s kind in
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
   );
-  uses |> List.map (fun (entity, _loc) -> entity) |> Common2.uniq |> List.iter
-   (fun (s, kind) ->
+  uses|> List.iter (fun (s, kind) ->
     let nwident = nwixident_of_entity s kind in
     Hashtbl.replace hnwixident nwident true;
     pr (spf "\\nwindexuse%s{%s}" nwident (label_of_id def.chunkdef_id))
@@ -283,17 +308,35 @@ let web_to_tex orig texfile (defs, uses) =
               match s with
               (* special case {{foo()}} *)
               | _ when s =~ "^\\(.*\\)()$" ->
-               let f = Common.matched1 s in
+               let s = Common.matched1 s in
                (* less: handle new format 'function [[foo()]]'? *)
-               let name_candidates = 
-                 [spf "function [[%s]]" f;
-                  spf "constructor [[%s]]" f;
-                  spf "destructor [[%s]]" f;
-                  spf "macro [[%s]]" f;
-                 ]
+               let name_candidates = [
+                 spf "function [[%s]]" s;
+                 spf "constructor [[%s]]" s;
+                 spf "destructor [[%s]]" s;
+                 spf "macro [[%s]]" s;
+               ]
                in
-               f, name_candidates
-              | _ -> error (spf "not handling yet {{}} format for: %s" s)
+               s, name_candidates
+              | _ when s =~ "^\\(.*\\)\\.[ch]$" ->
+                let name_candidates = [
+                  spf "%s" s;
+                  (* UGLY *)
+                  spf "mk/%s" s;
+                ]
+                in
+                s, name_candidates
+
+              | _ -> 
+                let name_candidates = [
+                  spf "global [[%s]]" s;
+                  spf "struct [[%s]]" s;
+                ]
+                in
+                s, name_candidates
+                (*
+                  error (spf "not handling yet {{}} format for: %s" s)
+                *)
             in
             (* less: warning if ambiguity? *)
             let name = 
