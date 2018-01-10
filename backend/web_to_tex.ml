@@ -384,7 +384,18 @@ let web_to_tex orig texfile (defs, uses) =
       pr "\\moddef{";
       let elts = parse_string def.chunkdef_key in
       elts |> List.iter (function
-        | S s -> pr s
+        | S s ->
+
+          (* UGLY special code *)
+          if s =~ ".*\\.ml[i]?"
+          then begin
+          pr "\\code{}";
+          pr s;
+          pr "\\edoc{}";
+          end
+          else 
+
+          pr s
         | Q s -> 
           pr "\\code{}";
           pr s;

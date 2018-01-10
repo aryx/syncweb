@@ -9,6 +9,8 @@ open Common
 (* Flags *)
 (*****************************************************************************)
 
+let lang = ref "c"
+
 (* action mode *)
 let action = ref ""
 
@@ -30,7 +32,7 @@ let actions () = [
 let main_action xs =
   match xs with
   | [dir] ->
-    Index_pfff.build_graph_code "c" [dir]
+    Index_pfff.build_graph_code !lang [dir]
   | _ -> failwith "multiple dirs not supported yet"
 
 (*****************************************************************************)
@@ -42,6 +44,8 @@ let all_actions () =
   []
 
 let options () = [
+  "-lang", Arg.Set_string lang, 
+  (spf " <str> choose language (default = %s)" !lang);
   ] @
   Common2.cmdline_flags_devel () @
   Common.options_of_actions action (all_actions()) @

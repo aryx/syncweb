@@ -13,7 +13,7 @@ let dep_file_of_dir dir =
   Filename.concat dir Graph_code.default_filename
 
 (* special hooks *)
-let hook_def_node_for_c node g =
+let hook_def_node node g =
   let info = Graph_code.nodeinfo node g in
   let name = fst node in
   let loc = info.G.pos in
@@ -21,7 +21,7 @@ let hook_def_node_for_c node g =
   pr (spf "DEF:%s:%s:%d:%s" kind loc.PI.file loc.PI.line name)
   
 
-let hook_use_edge_for_c _src dst g loc =
+let hook_use_edge _src dst g loc =
   let name = fst dst in
   let kind = E.string_of_entity_kind (snd dst) in
   pr (spf "USE:%s:%s:%d:%s"  kind loc.PI.file loc.PI.line name)
@@ -50,22 +50,26 @@ let build_graph_code lang xs =
     match lang with
     | "ml"  -> 
       Graph_code_ml.build ~verbose:!verbose root files, empty
-(*
     | "cmt"  -> 
-          let ml_files = Find_source.files_of_root ~lang:"ml" root in
-          let cmt_files = files in
-          Graph_code_cmt.build ~verbose:!verbose ~root ~cmt_files ~ml_files, 
-          empty
-*)
+      let ml_files = Find_source.files_of_root ~lang:"ml" root in
+      let cmt_files = files in
+
+        Graph_code_cmt.hook_def_node := hook_def_node;
+        Graph_code_cmt.hook_use_edge := (fun (src, dst) g loc ->
+          hook_use_edge src dst g loc;
+        );
+
+      Graph_code_cmt.build ~verbose:!verbose ~root ~cmt_files ~ml_files, 
+      empty
     | "c" -> 
         Parse_cpp.init_defs !Flag_parsing_cpp.macros_h;
         let local = Filename.concat root "pfff_macros.h" in
         if Sys.file_exists local
         then Parse_cpp.add_defs local;
 
-        Graph_code_c.hook_def_node := hook_def_node_for_c;
+        Graph_code_c.hook_def_node := hook_def_node;
         Graph_code_c.hook_use_edge := (fun _ctx _in_assign (src, dst) g loc ->
-          hook_use_edge_for_c src dst g loc;
+          hook_use_edge src dst g loc;
         );
 
         Graph_code_c.build ~verbose:!verbose root files, empty

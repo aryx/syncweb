@@ -7,21 +7,27 @@ TARGET=indexer
 SRC= index_pfff.ml \
      main_indexer.ml
 
+OCAMLCOMPILERDIR=$(shell ocamlc -where)/compiler-libs
+OCAMLCOMPILERCMA=$(OCAMLCOMPILERDIR)/ocamlcommon.cma
+
 #todo: use $(TOP)/external/ at some point for that too
 PFFF=/home/pad/pfff
 INCLUDE_LIBS=commons \
   h_program-lang graph_code \
   lang_cpp/parsing lang_c/parsing lang_c/analyze \
   lang_ml/parsing lang_ml/analyze \
+  lang_cmt/parsing lang_cmt/analyze \
 
-LINK_LIBS=commons globals\
-  commons_wrappers/graph \
+LINK_LIBS=commons commons_wrappers/graph \
+  globals\
   h_program-lang graph_code matcher \
   lang_cpp/parsing  lang_c/parsing lang_c/analyze \
   lang_ml/parsing lang_ml/analyze \
+  lang_cmt/parsing lang_cmt/analyze \
 
-INCLUDEDIRS=$(INCLUDE_LIBS:%=$(PFFF)/%/) ../lpizer
-SYSLIBS=nums.cma bigarray.cma unix.cma str.cma
+
+INCLUDEDIRS=$(INCLUDE_LIBS:%=$(PFFF)/%/) ../lpizer $(OCAMLCOMPILERDIR)
+SYSLIBS=nums.cma bigarray.cma unix.cma str.cma $(OCAMLCOMPILERCMA)
 LIBS= $(PFFF)/external/ocamlgraph/ocamlgraph.cma \
       $(PFFF)/commons/lib.cma \
       $(PFFF)/commons_core/commons_core.cma \
