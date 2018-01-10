@@ -104,7 +104,11 @@ let hchunkid_info__from_orig orig =
       (* todo: should update the uses of all ids ... use a
        * Hashtbl.find_all? 
        *)
-      let def = Hashtbl.find hkey_to_def key in
+      let def = 
+        try 
+          Hashtbl.find hkey_to_def key 
+        with Not_found -> failwith (spf "could not find key for %s" key)
+      in
       let id = def.chunkdef_id in
       let info = Hashtbl.find hchunkid_info id in
       info.chunk_users <- id_enclosing_chunk::info.chunk_users
