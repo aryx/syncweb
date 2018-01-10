@@ -30,24 +30,30 @@ let count_dollar s =
 let rename_chunknames xs =
   let subst_maybe s =
     match s with
-    | _ when s =~ "^function \\([a-zA-Z0-9_]+\\)$" ->
+    | _ when s =~ "^function \\([a-zA-Z0-9_.]+\\)$" ->
       spf "function [[%s]]" (Common.matched1 s)
-    | _ when s =~ "^constructor \\([a-zA-Z0-9_]+\\)$" ->
+    | _ when s =~ "^signature \\([a-zA-Z0-9_.]+\\)$" ->
+      spf "signature [[%s]]" (Common.matched1 s)
+    | _ when s =~ "^exception \\([a-zA-Z0-9_.]+\\)$" ->
+      spf "exception [[%s]]" (Common.matched1 s)
+    | _ when s =~ "^constructor \\([a-zA-Z0-9_.]+\\)$" ->
       spf "constructor [[%s]]" (Common.matched1 s)
     | _ when s =~ "^destructor \\([a-zA-Z0-9_]+\\)$" ->
       spf "destructor [[%s]]" (Common.matched1 s)
-    | _ when s =~ "^global \\([a-zA-Z0-9_]+\\)$" ->
+    | _ when s =~ "^global \\([a-zA-Z0-9_.]+\\)$" ->
       spf "global [[%s]]" (Common.matched1 s)
-    | _ when s =~ "^enum \\([a-zA-Z0-9_]+\\)$" ->
+    | _ when s =~ "^enum \\([a-zA-Z0-9_.]+\\)$" ->
       spf "enum [[%s]]" (Common.matched1 s)
-    | _ when s =~ "^type \\([a-zA-Z0-9_]+\\)$" ->
+    | _ when s =~ "^type \\([a-zA-Z0-9_.]+\\)$" ->
       spf "type [[%s]]" (Common.matched1 s)
     | _ when s =~ "^struct \\([a-zA-Z0-9_]+\\)$" ->
       spf "struct [[%s]]" (Common.matched1 s)
     | _ when s =~ "^macro \\([a-zA-Z0-9_]+\\)$" ->
       spf "macro [[%s]]" (Common.matched1 s)
-    | _ when s =~ "^constant \\([a-zA-Z0-9_]+\\)$" ->
+    | _ when s =~ "^constant \\([a-zA-Z0-9_.]+\\)$" ->
       spf "constant [[%s]]" (Common.matched1 s)
+    | _ when s =~ "^toplevel \\([a-zA-Z0-9_.]+\\)$" ->
+      spf "toplevel [[%s]]" (Common.matched1 s)
     | _ -> s
   in
   xs |> List.iter (fun file ->
