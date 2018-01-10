@@ -15,6 +15,8 @@ type entity_kind =
   | Type (* include struct, union, enum *)
   | Field
 
+  | Exception
+
 type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list
 
