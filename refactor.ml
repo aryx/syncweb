@@ -29,6 +29,12 @@ let count_dollar s =
 (* less: could make this a generic mapper *)
 let rename_chunknames xs =
   let subst_maybe s =
+    let s, suffix =
+      if s =~ "^\\([^(]+\\)\\(([ax][r8][m6])\\)$"
+      then Common.matched2 s 
+      else s, ""
+    in
+    let res = 
     match s with
     | _ when s =~ "^function \\([a-zA-Z0-9_.]+\\)$" ->
       spf "function [[%s]]" (Common.matched1 s)
@@ -55,6 +61,8 @@ let rename_chunknames xs =
     | _ when s =~ "^toplevel \\([a-zA-Z0-9_.]+\\)$" ->
       spf "toplevel [[%s]]" (Common.matched1 s)
     | _ -> s
+    in
+    res ^ suffix
   in
   xs |> List.iter (fun file ->
     let orig = Web.parse file in
