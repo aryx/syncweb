@@ -168,24 +168,12 @@ let ident2_of_entity s =
   ) |> String.concat ""
 
 
-let adjust_name s =
-  match s with
-  (* graph_code_c adds some '__<int>' suffix for static functions *)
-  | _ when s =~ "^\\(.*\\)__[0-9]+$" ->
-  (* graph_code_c adds some 'S__' prefix to manage namespaces *)
-    Common.matched1 s ^ "<>"
-  | _ when s =~ "^[SEUT]__\\(.*\\)$" ->
-    Common.matched1 s
-  | _ -> 
-    s
-
 let adjust_suffix = function
   | Crossref_code.Function -> "()"
   | _ -> ""
 
 let nwixident_of_entity s kind =
   let suffix = adjust_suffix kind in
-  let s = adjust_name s in
 
   let s1 = ident1_of_entity s in
   let s2 = ident2_of_entity s in
@@ -193,13 +181,14 @@ let nwixident_of_entity s kind =
   
 
 
-(* hack entity indexing based on pad's convention to name chunks *)
 let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
   let (defs, uses) = 
     try Hashtbl.find hdefs_and_uses_of_chunkid def.chunkdef_id
     with Not_found -> [], []
   in
-  let uses = uses |> List.map (fun (entity, _loc) -> entity) |> Common2.uniq in
+  let uses = uses |> List.map (fun (entity, _loc) -> entity) |> Common2.uniq 
+  |> List.sort compare
+  in
 
   (* this is for the mini indexes *)
 
@@ -243,12 +232,91 @@ let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
   );
   ()
 
+(* the final index at the end of the document *)
 let pr_final_index pr hnwixident = 
   hnwixident |> Common.hash_to_list |> List.map (fun (k, _bool) ->
     String.lowercase k, k) |> Common.sort_by_key_lowfirst 
   |> List.iter (fun (_k, k) ->
     pr (spf "\\nwixlogsorted{i}{%s}%%\n" k);
   )
+
+(* for [< >] *)
+let chunkid_of_def hchunkid_of_def hkey_to_def s =
+  let s, _suffix =
+    if s =~ "\\(.*\\)()$"
+    then Common.matched1 s, "()"
+    else s, ""
+  in
+  (* first try definitions found by automatic indexing *)
+  let candidates = Hashtbl.find_all hchunkid_of_def s in
+  match candidates with
+  | [(_kind, _loc), id] -> id
+  | ((_, loc1), _)::((_, loc2), _)::_ ->
+    pr2_gen candidates;
+    failwith (spf "ambiguity for def of %s, at %s and %s" 
+                s (Crossref_code.string_of_loc loc1)
+                  (Crossref_code.string_of_loc loc2))
+  (* resort to chunkname convention to find a def *)
+  | [] ->
+    let f, name_candidates =
+      match s with
+      | _ when s =~ "^\\(.*\\)\\.[ch]$" ->
+        let name_candidates = [
+          spf "%s" s;
+          (* UGLY? should sed defs_and_uses.list *)
+          spf "mk/%s" s;
+        ]
+        in
+        s, name_candidates
+      | _ when s =~ "^\\(.*\\)\\.ml[i]?$" ->
+        let name_candidates = [
+          spf "%s" s;
+          (* UGLY? should sed defs_and_uses.list *)
+          spf "version_control/%s" s;
+        ]
+        in
+        s, name_candidates
+      | _ -> failwith (spf "entity %s not found in defs" s)
+(*
+      (* special case {{foo()}} *)
+      | _ when s =~ "^\\(.*\\)()$" ->
+        let s = Common.matched1 s in
+        (* less: handle new format 'function [[foo()]]'? *)
+        let name_candidates = [
+          spf "function [[%s]]" s;
+          spf "constructor [[%s]]" s;
+          spf "destructor [[%s]]" s;
+          spf "macro [[%s]]" s;
+        ] |> List.map (fun x -> [x; x ^ "(arm)"]) |> List.flatten
+        in
+        s, name_candidates
+          
+      | _ -> 
+        let name_candidates = [
+          spf "global [[%s]]" s;
+          spf "struct [[%s]]" s;
+          spf "enum [[%s]]" s;
+          spf "constant [[%s]]" s;
+          spf "type [[%s]]" s;
+        ] |> List.map (fun x -> [x; x ^ "(arm)"]) |> List.flatten
+        in
+        s, name_candidates
+            (*
+              error (spf "not handling yet {{}} format for: %s" s)
+            *)
+*)
+    in
+    (* less: warning if ambiguity? *)
+    let name = 
+      try 
+        name_candidates |> List.find (fun x -> 
+          Hashtbl.mem hkey_to_def x)
+      with Not_found -> 
+        error (spf "could not find def for |%s|" f)
+    in
+    let def = Hashtbl.find hkey_to_def name in
+    def.chunkdef_id
+
       
 (*****************************************************************************)
 (* Entry point  *)
@@ -260,6 +328,7 @@ let web_to_tex orig texfile (defs, uses) =
   let cnt = ref 0 in
   (* not sure it's needed *)
   let last = ref (spf "\\nwfilename{%s}" ("TODO.nw"))  in
+
   (* for referencing def of a chunkname *)
   let hkey_to_def = Crossref_chunk.hchunkname_to_def__from_orig orig in
   (* for prev/next def of chunkdefs *)
@@ -271,7 +340,9 @@ let web_to_tex orig texfile (defs, uses) =
   (* for crossref defs/uses of code entities (right now just functions) *)
   let hdefs_and_uses_of_chunkid = 
     Crossref_code.hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) in
-
+  (* for [< >] *)
+  let hchunkid_of_def =
+    Crossref_code.hchunkid_of_def__from_orig orig defs in
 
   let rec tex_or_chunkdef x =
     match x with
@@ -320,58 +391,17 @@ let web_to_tex orig texfile (defs, uses) =
             pr_in_quote pr s;
             pr "}";
           | B s ->
-            let f, name_candidates =
-              match s with
-              (* special case {{foo()}} *)
-              | _ when s =~ "^\\(.*\\)()$" ->
-               let s = Common.matched1 s in
-               (* less: handle new format 'function [[foo()]]'? *)
-               let name_candidates = [
-                 spf "function [[%s]]" s;
-                 spf "constructor [[%s]]" s;
-                 spf "destructor [[%s]]" s;
-                 spf "macro [[%s]]" s;
-               ]
-               in
-               s, name_candidates
-              | _ when s =~ "^\\(.*\\)\\.[ch]$" ->
-                let name_candidates = [
-                  spf "%s" s;
-                  (* UGLY *)
-                  spf "mk/%s" s;
-                ]
-                in
-                s, name_candidates
 
-              | _ -> 
-                let name_candidates = [
-                  spf "global [[%s]]" s;
-                  spf "struct [[%s]]" s;
-                ]
-                in
-                s, name_candidates
-                (*
-                  error (spf "not handling yet {{}} format for: %s" s)
-                *)
-            in
-            (* less: warning if ambiguity? *)
-            let name = 
-              try 
-                name_candidates |> List.find (fun x -> 
-                  Hashtbl.mem hkey_to_def x)
-              with Not_found -> 
-                error (spf "could not find def for |%s|" f)
-            in
-            let def = Hashtbl.find hkey_to_def name in
+            let chunkid = chunkid_of_def hchunkid_of_def hkey_to_def s in
             pr "$\\texttt{";
             pr_in_quote pr s;
             pr "}";
-            (if Hashtbl.mem hreferenced_def_already_recently name
+            (if Hashtbl.mem hreferenced_def_already_recently s
              then ()
              else begin
-               Hashtbl.add hreferenced_def_already_recently name true;
+               Hashtbl.add hreferenced_def_already_recently s true;
                pr (spf "^{\\subpageref{%s}}" 
-                     (label_of_id def.chunkdef_id));
+                     (label_of_id chunkid));
              end);
             pr "$";
         );
@@ -393,7 +423,8 @@ let web_to_tex orig texfile (defs, uses) =
         | S s ->
 
           (* UGLY special code *)
-          if s =~ ".*\\.ml[i]?"
+          if s =~ ".*\\.ml[i]?" ||
+             s =~ ".*\\.[chs]$"
           then begin
           pr "\\code{}";
           pr s;
