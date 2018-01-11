@@ -30,10 +30,7 @@ let actions () = [
 (*****************************************************************************)
 
 let main_action xs =
-  match xs with
-  | [dir] ->
-    Index_pfff.build_graph_code !lang [dir]
-  | _ -> failwith "multiple dirs not supported yet"
+  Index_pfff.build_graph_code !lang xs
 
 (*****************************************************************************)
 (* The options *)
