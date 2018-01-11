@@ -6,7 +6,7 @@ open Web
 (*****************************************************************************)
 (* Prelude  *)
 (*****************************************************************************)
-(* Getting the tex code from a noweb file, 
+(* Getting the tex file (.tex) from a noweb file (.nw), 
  * a.k.a 'weaving' in Knuth's and literate programming terminology.
  * I could call this file weave.ml, but I always found this terminology
  * confusing.
@@ -16,7 +16,8 @@ open Web
  *    applied before noweave (of noweb)
  *  - decide to replace completely noweave of noweb (I already do not
  *    use notangle, so really now I use only noweb.sty), so easier to plugin
- *    code to support accurate defs/uses from codegraph
+ *    code to support accurate defs/uses from codegraph (noweb support
+ *    for defs/uses is very fragile and hacky)
  * history:
  *  - basic tex output
  *  - support for left and right arrow and users of chunk
@@ -28,6 +29,9 @@ open Web
  *     appropriate tex command by looking at output of 
  *    ~/packages/MacOS/stow/noweb/bin/noweave -autodefs c -index wc.nw
  *  - support for accurate defs and uses using codegraph information
+ *  - support [< >] so even better than noweb (found idea while reading
+ *    'Tex for the Impatient' which has something similar: each use
+ *    of a tex function has its page where it's defined in parenthesis)
  * 
  * less:
  *  - generate prev/next that works in two column; need to
@@ -37,7 +41,8 @@ open Web
  *    contain some quote! need lexer functions? because recursive!
  *  - handle hreferenced_ref_already_recently via latex macro
  * later:
- *  - pretty printing? based again on pfff and codemap renderer?
+ *  - basic pretty printing of keywords?
+ *  - pretty printing based again on pfff and codemap renderer?
  *    no color, but can still do stuff probably?
  *)
 
@@ -145,6 +150,7 @@ let label_of_id = Crossref_chunk.label_of_id
 (*****************************************************************************)
 (* Entity crossrefs  *)
 (*****************************************************************************)
+
 let ident1_of_entity s =
   let xs = Common2.list_of_string s in
   xs |> List.map (fun c ->

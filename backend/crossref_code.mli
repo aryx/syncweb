@@ -1,8 +1,10 @@
 
 type loc = {
-  file: Common.filename;
+  file: Common.filename; (* a relative (readable) path usually *)
   line: int;
 }
+
+val string_of_loc: loc -> string
 
 type entity_kind =
   | Function

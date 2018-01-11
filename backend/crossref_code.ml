@@ -7,7 +7,9 @@ open Web
 (*****************************************************************************)
 
 (* yet another Parse_info.token_location, 
- * but I don't want to depend on pfff/h_program-lang *)
+ * but I don't want to depend on pfff/h_program-lang
+ * (I do depend on it for syncweb/indexer/ but I don't want for syncweb itself).
+ *)
 type loc = { 
   file: Common.filename;
   line: int;
@@ -16,7 +18,9 @@ type loc = {
  * but I don't want to depend on pfff/h_program-lang *)
 type entity_kind =
   | Function
+  (* less: FunctionPrivate *)
   | Global
+  (* less: GlobalPrivate *)
 
   | Constant
   | Macro
@@ -32,6 +36,9 @@ type uses = ((string * entity_kind) * loc) list
 
 let debug = ref false
 
+let string_of_loc { file; line } =
+  spf "%s:%d" file line
+  
 (*****************************************************************************)
 (* Parsing  *)
 (*****************************************************************************)
