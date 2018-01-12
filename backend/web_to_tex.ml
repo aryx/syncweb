@@ -245,11 +245,45 @@ let pr_indexing pr
   );
   ()
 
+let compare_character c1 c2 =
+  (* some ident are Adr\textrm{ (typedef)} and they should come
+   * before Adr.auto? maybe not actually
+  let code c =
+    match c with
+    | '\\' -> 0
+    | ' ' -> 1
+    |
+   *)
+  compare c1 c2
+
+let compare_string s1 s2 =
+  
+  let convert s = 
+    if s =~ "{\\\\nwixident{\\([^}]*\\)}"
+    then Common.matched1 s |> String.lowercase
+    else failwith (spf "wrong nwixident string: %s" s)
+  in
+  let s1 = convert s1 in
+  let s2 = convert s2 in
+  let rec aux xs ys =
+      match xs, ys with
+      | [], [] -> 0
+      (* a shorter ident should be before longer ident *)
+      | [], _ -> -1
+      | _, [] -> 1
+      | x::xs, y::ys ->
+        let res = compare_character x y in
+        if res = 0 
+        then aux xs ys
+        else res
+  in
+  aux (Common2.list_of_string s1) (Common2.list_of_string s2)
+
 (* the final index at the end of the document *)
 let pr_final_index pr hnwixident = 
-  hnwixident |> Common.hash_to_list |> List.map (fun (k, _bool) ->
-    String.lowercase k, k) |> Common.sort_by_key_lowfirst 
-  |> List.iter (fun (_k, k) ->
+  hnwixident |> Common.hash_to_list |> List.map fst 
+  |> List.sort compare_string
+  |> List.iter (fun (k) ->
     pr (spf "\\nwixlogsorted{i}{%s}%%\n" k);
   )
 
