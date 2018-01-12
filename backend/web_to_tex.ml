@@ -151,21 +151,30 @@ let label_of_id = Crossref_chunk.label_of_id
 (* Entity crossrefs  *)
 (*****************************************************************************)
 
-let ident1_of_entity s =
+let ident1_of_entity s kind =
   let xs = Common2.list_of_string s in
-  xs |> List.map (fun c ->
+  (xs |> List.map (fun c ->
     match c with
     | '_' -> "{\\_}"
     | c -> (spf "%c" c)
-  ) |> String.concat ""
+  ) |> String.concat "")
+  ^ (match kind with
+    | Crossref_code.Typedef -> "\\textrm{ (typedef)}"
+    | _ -> ""
+    )
 
-let ident2_of_entity s =
+let ident2_of_entity s kind =
   let xs = Common2.list_of_string s in
-  xs |> List.map (fun c ->
+  (xs |> List.map (fun c ->
     match c with
     | '_' -> ":un"
     | c -> (spf "%c" c)
-  ) |> String.concat ""
+  ) |> String.concat "")
+  ^ (match kind with
+    | Crossref_code.Typedef -> ":typedef"
+    | _ -> ""
+    )
+
 
 
 let adjust_suffix = function
@@ -175,13 +184,16 @@ let adjust_suffix = function
 let nwixident_of_entity s kind =
   let suffix = adjust_suffix kind in
 
-  let s1 = ident1_of_entity s in
-  let s2 = ident2_of_entity s in
+  let s1 = ident1_of_entity s kind in
+  let s2 = ident2_of_entity s kind in
   spf "{\\nwixident{%s%s}}{%s}" s1 suffix s2
   
 
 
-let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
+let pr_indexing pr 
+    hnwixident hdefs_and_uses_of_chunkid hreferenced_def_already_recently 
+    def =
+
   let (defs, uses) = 
     try Hashtbl.find hdefs_and_uses_of_chunkid def.chunkdef_id
     with Not_found -> [], []
@@ -223,6 +235,7 @@ let pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def =
   defs |> List.iter (fun ((s, kind), _loc) ->
     let nwident = nwixident_of_entity s kind in
     Hashtbl.replace hnwixident nwident true;
+    Hashtbl.add hreferenced_def_already_recently s true;
     pr (spf "\\nwindexdefn%s{%s}" nwident (label_of_id def.chunkdef_id))
   );
   uses|> List.iter (fun (s, kind) ->
@@ -242,10 +255,19 @@ let pr_final_index pr hnwixident =
 
 (* for [< >] *)
 let chunkid_of_def hchunkid_of_def hkey_to_def s =
-  let s, _suffix =
-    if s =~ "\\(.*\\)()$"
-    then Common.matched1 s, "()"
-    else s, ""
+  let s, suffix =
+    match s with
+    | _ when s =~ "\\(.*\\)()$" ->
+      Common.matched1 s, "()"
+    (* UGLY temporary hacks to remove once I refactored 5l *)
+    | _ when s =~ "^Instr\\(.*\\)" ->
+      "Prog" ^ Common.matched1 s, ""
+    | _ when s =~ "Operand_class" ->
+      "Operand_class", ""
+    | _ when s =~ "^Operand\\(.*\\)" ->
+      "Adr" ^ Common.matched1 s, ""
+    | _ ->
+      s, ""
   in
   (* first try definitions found by automatic indexing *)
   let candidates = Hashtbl.find_all hchunkid_of_def s in
@@ -276,11 +298,11 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
         ]
         in
         s, name_candidates
-      | _ -> failwith (spf "entity %s not found in defs" s)
-(*
+
       (* special case {{foo()}} *)
-      | _ when s =~ "^\\(.*\\)()$" ->
-        let s = Common.matched1 s in
+      | _ when suffix = "()" (* s =~ "^\\(.*\\)()$" *) ->
+        pr2 (spf "warning: not automatic index found for %s" s);
+
         (* less: handle new format 'function [[foo()]]'? *)
         let name_candidates = [
           spf "function [[%s]]" s;
@@ -292,6 +314,8 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
         s, name_candidates
           
       | _ -> 
+
+        pr2 (spf "warning: not automatic index found for %s" s);
         let name_candidates = [
           spf "global [[%s]]" s;
           spf "struct [[%s]]" s;
@@ -301,10 +325,10 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
         ] |> List.map (fun x -> [x; x ^ "(arm)"]) |> List.flatten
         in
         s, name_candidates
-            (*
-              error (spf "not handling yet {{}} format for: %s" s)
-            *)
+(*
+      | _ -> failwith (spf "entity %s not found in defs" s)
 *)
+
     in
     (* less: warning if ambiguity? *)
     let name = 
@@ -469,7 +493,10 @@ let web_to_tex orig texfile (defs, uses) =
       (* recurse *)
       ys |> List.iter code_or_chunk;
       (* entity indexing *)
-      pr_indexing pr hnwixident hdefs_and_uses_of_chunkid def;
+      pr_indexing pr hnwixident 
+        hdefs_and_uses_of_chunkid
+        hreferenced_def_already_recently
+        def;
 
       pr ("\\nwendcode{}");
       incr cnt;

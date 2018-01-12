@@ -75,11 +75,10 @@ let kind_of_string_opt = function
   | "File" -> Some File
   | "Dir" -> Some Dir
   | "MultiDirs" -> Some MultiDirs
-*)
-(*
+
   | _ when s =~ "Other:\\(.*\\)" -> Other (Common.matched1 s)
-*)
   | s -> None
+*)
 
 let adjust_file file =
   (* UGLY *)
@@ -96,6 +95,8 @@ let adjust_name_and_kind s kind =
   (* graph_code_c adds some 'S__' prefix to manage namespaces *)
   | _, Type when s =~ "^[SU]__\\(.*\\)$" ->
     Common.matched1 s, Structdef
+  | _, Field when s =~ "^[SU]__\\(.*\\)$" ->
+    Common.matched1 s, Field
   | _, Type when s =~ "^[T]__\\(.*\\)$" ->
     Common.matched1 s, Typedef
   | _, Type when s =~ "^[E]__\\(.*\\)$" ->
