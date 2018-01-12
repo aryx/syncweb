@@ -67,7 +67,7 @@ let hchunkname_to_def__from_orig orig =
 
 let hchunkid_info__from_orig orig =
   let hchunkid_info = Hashtbl.create 101 in
-  let hkey_to_def = hchunkname_to_def__from_orig orig in
+  let hkey_to_defs = hchunkname_to_defs__from_orig orig in
 
   (* first pass *)
   orig |> List.iter (function
@@ -104,14 +104,14 @@ let hchunkid_info__from_orig orig =
       (* todo: should update the uses of all ids ... use a
        * Hashtbl.find_all? 
        *)
-      let def = 
-        try 
-          Hashtbl.find hkey_to_def key 
-        with Not_found -> failwith (spf "could not find key for %s" key)
-      in
-      let id = def.chunkdef_id in
-      let info = Hashtbl.find hchunkid_info id in
-      info.chunk_users <- id_enclosing_chunk::info.chunk_users
+      let defs = Hashtbl.find_all hkey_to_defs key in
+      if defs = []
+      then failwith (spf "could not find key for %s" key);
+      defs |> List.iter (fun (def, _body) ->
+        let id = def.chunkdef_id in
+        let info = Hashtbl.find hchunkid_info id in
+        info.chunk_users <- id_enclosing_chunk::info.chunk_users
+      );
   in
   List.iter tex_or_chunkdef orig;
   hchunkid_info
