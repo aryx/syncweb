@@ -34,6 +34,8 @@ type entity_kind =
 
   | Exception
 
+  | Other of string
+
 type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list
 
@@ -224,9 +226,30 @@ let hs__from_orig orig (defs, uses) =
       (* UGLY skip those for now, to avoid some ambiguity *)
       if kind <> Typedef
       then 
-      Hashtbl.add hchunkid_of_def s ((kind, loc), id)
+        Hashtbl.add hchunkid_of_def s ((kind, loc), id)
     )
   );
+  
+  (* step5: adjust with adhoc definitions and uses found in .nw file *)
+  let last_chunkid = ref 0 in
+  let fake_loc = { file = "ADHOC DEF; no source file"; line = -1 } in
+  orig |> List.iter (function
+    | ChunkDef ({chunkdef_id = id }, _) ->
+      last_chunkid := id
+    | Tex xs ->
+      xs |> List.iter (fun s ->
+        match s with
+        | _ when s =~ "\\\\swdefs{\\(.*\\)}" ->
+          let str = Common.matched1 s in
+          let defs = Str.split (Str.regexp " *, *") str in
+          defs |> List.iter (fun adhoc_def ->
+            Hashtbl.add hchunkid_of_def adhoc_def 
+              ((Other "ADHOC DEF", fake_loc), !last_chunkid)
+          )
+        | _ -> ()
+      )
+  );
+
   hdefs_and_uses_of_chunkid,
   hchunkid_of_def
 

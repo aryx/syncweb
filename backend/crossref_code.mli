@@ -22,6 +22,8 @@ type entity_kind =
 
   | Exception
 
+  | Other of string (* e.g., token category, grammar rule, etc *)
+
 type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list
 

@@ -306,7 +306,8 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
   (* first try definitions found by automatic indexing *)
   let candidates = Hashtbl.find_all hchunkid_of_def s in
   match candidates with
-  | [(_kind, _loc), id] -> id
+  | [(_kind, _loc), id] -> 
+    id
   | ((_, loc1), _)::((_, loc2), _)::_ ->
     pr2_gen candidates;
     failwith (spf "ambiguity for def of %s, at %s and %s" 
@@ -382,6 +383,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
 
 let web_to_tex orig texfile (defs, uses) =
   Common.with_open_outfile texfile (fun (pr, _chan)  ->
+
   (* for nwbegincode{}, not sure it's needed *)
   let cnt = ref 0 in
   (* not sure it's needed *)
