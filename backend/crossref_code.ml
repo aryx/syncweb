@@ -6,7 +6,7 @@ open Web
 (* Types  *)
 (*****************************************************************************)
 
-(* yet another Parse_info.token_location, 
+(* Yet another Parse_info.token_location, 
  * but I don't want to depend on pfff/h_program-lang
  * (I do depend on it for syncweb/indexer/ but I don't want for syncweb itself).
  *)
@@ -14,7 +14,7 @@ type loc = {
   file: Common.filename;
   line: int;
 }
-(* yet another Entity_code.t,
+(* Yet another Entity_code.t,
  * but I don't want to depend on pfff/h_program-lang *)
 type entity_kind =
   | Function
@@ -82,12 +82,6 @@ let kind_of_string_opt = function
   | s -> None
 *)
 
-let adjust_file file =
-  (* UGLY *)
-(*
-  "version_control/" ^ file
-*)
-  file
 
 let adjust_name_and_kind s kind =
   match s, kind with
@@ -118,13 +112,13 @@ let parse_defs_and_uses file =
       let kind_opt = kind_of_string_opt kind_str in
       kind_opt |> Common.do_option (fun kind ->
         defs |> Common.push (adjust_name_and_kind name kind,
-                           {file = adjust_file file ;line = int_of_string line})
+                           {file = file ;line = int_of_string line})
       )
     | ["USE";kind_str;file;line;name] ->
       let kind_opt = kind_of_string_opt kind_str in
       kind_opt |> Common.do_option (fun kind ->
         uses |> Common.push (adjust_name_and_kind name kind, 
-                           {file = adjust_file file;line = int_of_string line})
+                           {file = file;line = int_of_string line})
       )
     | _ -> failwith (spf "unrecognized line in defs and uses file: %s" s)
   );
@@ -159,6 +153,8 @@ let hs__from_orig orig (defs, uses) =
   files |> List.iter (fun file ->
     let loc = ref 1 in
     (* similar to web_to_code.ml *)
+    if Hashtbl.find_all hchunkname_to_defs file = []
+    then failwith (spf "could not find defs for file %s" file);
     let rec aux key =
       let defs = Hashtbl.find_all hchunkname_to_defs key |> List.rev in
       incr loc (* the s: *);
