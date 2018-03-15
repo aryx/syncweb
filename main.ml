@@ -353,6 +353,9 @@ let options () =
     " ";
     "-less_marks", Arg.Set less_marks, 
     " ";
+    "-debug", Arg.Unit (fun () ->
+      Crossref_code.debug := true;
+    ), " ";
 
     "-version",   Arg.Unit (fun () -> 
       pr2 (spf "syncweb version: %s" Config.version);
