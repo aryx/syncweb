@@ -141,10 +141,10 @@ pr2 "";
 
 $error += check_config(
   "make -v 2>&1 |grep Make|",
-  "GNU Make 3\.[0-9]+", #version 3.81
+  "GNU Make [4]\.[0-9]+", #version 3.81
   "make (gnu version) is present.",
   "The program gnu make is missing or is not a good version.
-We need  3.XX",
+We need  4.XX",
 );
 
 
