@@ -32,7 +32,7 @@ let hook_use_edge _src dst g loc =
 
 (* copy paste of pfff/main_codegraph.ml *)
 let build_graph_code lang xs =
-  let xs = List.map Common.realpath xs in
+  let xs = List.map Common.fullpath xs in
   let root, files = 
     match xs with
     | [root] -> 
