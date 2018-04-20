@@ -30,9 +30,15 @@ let count_dollar s =
 let rename_chunknames xs =
   let subst_maybe s =
     let s, suffix =
-      if s =~ "^\\([^(]+\\)\\(([ax][r8][m6])\\)$"
-      then Common.matched2 s 
-      else s, ""
+      match s with
+      | _ when s =~ "^\\([^(]+\\)\\(([ax][r8][m6])\\)$" ->
+        Common.matched2 s 
+      | _ when s =~ "^\\([^(]+\\)\\((raspberry pi[12])(arm)\\)$" ->
+        Common.matched2 s 
+      | _ when s =~ "^\\([^(]+\\) \\(([a-z_0-9]+/.*)\\)$" ->
+        let (a, b) = Common.matched2 s in
+        a, spf "([[%s]])" b
+      | _ -> s, ""
     in
     let res = 
     match s with
@@ -60,6 +66,9 @@ let rename_chunknames xs =
       spf "constant [[%s]]" (Common.matched1 s)
     | _ when s =~ "^toplevel \\([a-zA-Z0-9_.]+\\)$" ->
       spf "toplevel [[%s]]" (Common.matched1 s)
+
+    | _ when s =~ "^enum _anon_ \\(.*\\)$" ->
+      spf "enum [[_anon_ %s]]" (Common.matched1 s)
     | _ -> s
     in
     res ^ suffix

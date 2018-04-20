@@ -15,7 +15,7 @@ let find_source xs =
   let root = Common2.common_prefix_of_files_or_dirs xs in
   let root = Common.fullpath root |> Common2.chop_dirsymbol in
   let files = 
-    Find_source.files_of_dir_or_files ~lang:!lang ~verbose:!verbose xs in
+    Find_source.files_of_dir_or_files ~lang:!lang xs in
   files |> List.iter (fun file ->
     pr (Common.readable root file)
   )

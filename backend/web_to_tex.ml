@@ -421,7 +421,7 @@ let web_to_tex orig texfile (defs, uses) =
     $line =~ s/^[ \t]*\\l (.*  )$/\\SaveVerb{Verb}+$1+\\less{\\UseVerb{Verb}}/;
     *)
           (* skip *)
-          pr "%SKIPPED\n"
+          pr ("%" ^ s ^ "\n")
             
         (* hack, should use latex macro to have the same effect with
          * page granularity

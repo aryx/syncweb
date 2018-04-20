@@ -41,3 +41,5 @@ val hchunkid_of_def__from_orig:
   Web.t -> defs ->
   (string, (entity_kind * loc) * Web.chunkid) Hashtbl.t
   
+
+val debug: bool ref
