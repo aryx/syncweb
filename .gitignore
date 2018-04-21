@@ -1,22 +1,28 @@
+# -*- sh -*-
+
+# ocaml objects
 *.cm*
 *.annot
-*.o
-*.a
-.depend
 *.opt
 
+# c objects
+*.o
+*.a
+
+# syncweb objects
+*.md5sum_*
+
+# make generated files
+.depend
 /Makefile.config
+
+# source generated files
 /globals/config.ml
 /tests/test.ml
 
-/PFFF_DB.marshall
-/graph_code.marshall
-/graph_code.marshall.opti
-
+# binaries
 /syncweb
 /demos/demo
-/demos/.md5sum_demo_ml
-/demos/.md5sum_demo_mli
 /lpize/lpize
 /codegraph/indexize
 /indexer/indexer
