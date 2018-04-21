@@ -1,5 +1,3 @@
-# -*- sh -*-
-
 # ocaml objects
 *.cm*
 *.annot
@@ -18,14 +16,9 @@
 
 # source generated files
 /globals/config.ml
-/tests/test.ml
 
 # binaries
 /syncweb
 /demos/demo
-/lpize/lpize
-/codegraph/indexize
 /indexer/indexer
-/indexer/indexize
-/lpizer/lpize
 /lpizer/lpizer
