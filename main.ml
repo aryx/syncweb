@@ -141,6 +141,17 @@ let actions () = [
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
 
+  (* duplicate of -view_of_orig *)
+  "-to_code", "   <file> <key>", 
+    Common.mk_action_2_arg (fun x key -> 
+      let orig = Web.parse x in
+      let view = Web_to_code.view_of_orig key orig in
+      let tmpfile = "/tmp/xxx" in
+      Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
+      tmpfile |> Common.cat |> List.iter pr;
+      (*Common.command2(spf "diff %s %s" x tmpfile); *)
+    );
+
   (* weaving *)
   "-to_tex", " <nw file> <defs and uses file>", 
   Common.mk_action_2_arg (fun origfile defs_and_uses_file -> 
