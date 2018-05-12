@@ -22,6 +22,9 @@ let count_dollar s =
   done;
   !cnt
 
+let trim s =
+  Str.global_replace (Str.regexp " +$") "" s
+
 (*****************************************************************************)
 (* Renaming chunks *)
 (*****************************************************************************)
@@ -35,11 +38,19 @@ let rename_chunknames xs =
         Common.matched2 s 
       | _ when s =~ "^\\([^(]+\\)\\((raspberry pi[12])(arm)\\)$" ->
         Common.matched2 s 
+
+      (* for CompilerGenerator.nw *)
+      | _ when s =~ "^\\([^(]+\\)\\((lex)\\)$" ->
+        Common.matched2 s 
+      | _ when s =~ "^\\([^(]+\\)\\((yacc)\\)$" ->
+        Common.matched2 s 
+
       | _ when s =~ "^\\([^(]+\\) \\(([a-z_0-9]+/.*)\\)$" ->
         let (a, b) = Common.matched2 s in
         a, spf "([[%s]])" b
       | _ -> s, ""
     in
+    let s = trim s in
     let res = 
     match s with
     | _ when s =~ "^function \\([a-zA-Z0-9_.]+\\)$" ->
