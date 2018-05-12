@@ -25,7 +25,7 @@ type t = codetree list
        chunk_key: string;
 
        (* advanced: md5sum corresponding code_or_chunk list in orig *)
-       chunk_md5sum: string option; 
+       chunk_md5sum: Signature.t option; 
 
        mutable pretty_print: position option;
      }
@@ -40,23 +40,6 @@ let generate_n_spaces i =
 
 let (==~) s re =
     Str.string_match re s 0
-
-(*****************************************************************************)
-(* md5sum  *)
-(*****************************************************************************)
-
-let md5sum_auxfile_of_file file = 
-  let (d,b) = Common2.db_of_filename file in
-  let oldformat = Common2.filename_of_db (d, ".md5sum_" ^ b) in
-  if Sys.file_exists oldformat
-  then oldformat
-  else 
-    let (d,b,e) = Common2.dbe_of_filename file in
-    (* works better with codemap, and also mkmany in plan9 *)
-    Common2.filename_of_dbe (d, spf ".md5sum_%s_%s" b e, "")
-
-let re_md5sum_in_aux_file = Str.regexp
-  "\\(.*\\) |\\(.*\\)$"
 
 (*****************************************************************************)
 (* Helpers parser  *)
@@ -114,12 +97,12 @@ let readjust_mark2_remove_indent i body =
 
 (* patch the Start2 with the md5sums information in the md5sum_aux file *)
 let readjust_start2_with_md5sums file xs = 
-  if Sys.file_exists (md5sum_auxfile_of_file file)
+  if Sys.file_exists (Signature.md5sum_auxfile_of_file file)
   then 
     let md5s = 
-      Common.cat (md5sum_auxfile_of_file file) |> 
+      Common.cat (Signature.md5sum_auxfile_of_file file) |> 
         List.map (fun s -> 
-          if s ==~ re_md5sum_in_aux_file
+          if s ==~ Signature.re_md5sum_in_aux_file
           then Common.matched2 s
           else failwith ("wrong format in md5sum_auxfile: " ^ s)
         )
@@ -300,7 +283,8 @@ let unparse
       let md5sum = 
         if md5sum_in_auxfile 
         then begin 
-          Common.push (spf "%s |%s" key (Common2.some x.chunk_md5sum))
+          Common.push (spf "%s |%s" key 
+                         (Signature.to_hex (Common2.some x.chunk_md5sum)))
             md5sums;
           None
         end
@@ -355,7 +339,7 @@ let unparse
   );
 
   if md5sum_in_auxfile then begin
-    Common.write_file ~file:(md5sum_auxfile_of_file filename)
+    Common.write_file ~file:(Signature.md5sum_auxfile_of_file filename)
       (!md5sums |> List.rev |> Common.join "\n");
   end;
   ()

@@ -137,8 +137,8 @@ let candidates_against_orig body_orig view_elems orig_elems =
   view_elems
 
 
-(* Pierce with his lenses takes also the original view, but we instead use the
- * md5sum in the view as a way to access to the original version of orig.
+(* Pierce with his lenses takes also the original view, but I instead use the
+ * md5sum in the view as a way to access the original version of orig.
  *)
 let sync2 ~lang orig views = 
 
@@ -204,7 +204,6 @@ let sync2 ~lang orig views =
                     ChunkDef (def, body_orig)
                   
                  with Not_found -> 
-                   
                    (* maybe someone inserted a new append-chunk, and we
                     * would not like that with a simple shift the user 
                     * could be forced to resynchronize and confirm for all the
@@ -221,8 +220,7 @@ let sync2 ~lang orig views =
                         ChunkDef (def, body_orig)
 
                     | elem_view::_xs -> 
-                        (* case4: multiple possible reasons.
-                        *)
+                        (* case4: multiple possible reasons. *)
 
                         aref_orig := Common2.remove_first body_orig !aref_orig;
                         aref_view := Common2.remove_first elem_view !aref_view;
@@ -240,8 +238,8 @@ let sync2 ~lang orig views =
                         let s_orig = Web_to_code.s_of_chunkdef_body body_orig in
                         let s_view = Web_to_code.s_of_chunkdef_body body_view in
 
-                        let md5sum_orig = Common2.md5sum_of_string s_orig in
-                        let md5sum_view = Common2.md5sum_of_string s_view in
+                        let md5sum_orig = Signature.md5sum_of_string s_orig in
+                        let md5sum_view = Signature.md5sum_of_string s_view in
 
                         show_orig_view key s_orig s_view;
 

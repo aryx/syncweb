@@ -5,7 +5,7 @@ TOP=..
 ##############################################################################
 TARGET=lib
 
-SRC= lang.ml web.ml code.ml
+SRC= lang.ml signature.ml web.ml code.ml
 INCLUDEDIRS=$(TOP)/external/commons
 
 ##############################################################################

@@ -1,5 +1,5 @@
 
-(* usually a .ml or .mli file *)
+(* a .c, .h, .ml, .mli, ... *)
 type t = codetree list
   and codetree = 
     | RegularCode of string

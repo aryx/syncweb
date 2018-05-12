@@ -288,16 +288,18 @@ let main_action xs =
         (* pr2 (spf "syncing %s and %s with key %s" origf viewf topkey);  *)
         let view = Code.parse ~lang viewf in 
         let orig' = Sync.sync ~lang   orig view in
-        let view' = Web_to_code.view_of_orig ~topkey orig' in
-        (* regenerate orig and view *)
-        if orig <> orig' then begin
-          pr2 "orig has been updated";
-          Web.unparse orig' origf;
-        end;
-        if view <> view' then begin
-          pr2 "view has been regenerated";
-          Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
-        end;
+        begin
+          let view' = Web_to_code.view_of_orig ~topkey orig' in
+          (* regenerate orig and view *)
+          if orig <> orig' then begin
+            pr2 "orig has been updated";
+            Web.unparse orig' origf;
+          end;
+          if view <> view' then begin
+            pr2 "view has been regenerated";
+            Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
+          end;
+        end
       end
 
   (* many .tex.nw, one view (to be called repeatedely for each view) *)
@@ -327,22 +329,23 @@ let main_action xs =
 
         let view = Code.parse ~lang viewf in 
         let orig' = Sync.sync ~lang  orig view in
-
-        let view' = Web_to_code.view_of_orig  ~topkey orig' in
-
-        Common.profile_code "Main.regenerate if needed" (fun () ->
-        (* regenerate orig and view *)
-        if view <> view' then begin
-          pr2 "view has been regenerated";
-          Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
-        end;
-        let origs' = Web.unpack_multi orig' in
-        Common2.zip origs origs' |> List.iter (fun ((f1, orig), (f2, orig')) ->
-          if orig <> orig' then begin
-            pr2 (spf "orig %s has been updated" f1);
-            Web.unparse orig' f1;
-          end;
-        )))
+        begin
+          let view' = Web_to_code.view_of_orig  ~topkey orig' in
+          Common.profile_code "Main.regenerate" (fun () ->
+            (* regenerate orig and view *)
+            if view <> view' then begin
+              pr2 "view has been regenerated";
+              Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
+            end;
+            let origs' = Web.unpack_multi orig' in
+            Common2.zip origs origs' |> List.iter (fun ((f1,orig),(f2,orig'))->
+              if orig <> orig' then begin
+                pr2 (spf "orig %s has been updated" f1);
+                Web.unparse orig' f1;
+              end;
+            ))
+        end
+        )
       end
 
   | _ -> failwith "need the name of the orig file and name of view file"

@@ -9,10 +9,10 @@ type t = tex_or_chunkdef list
     and chunkdef = {
       chunkdef_key: chunkname;
       chunkdef_end: string; (* usually just '@' *)
-    (* this is used in web_to_tex to store in external hashtbl additional
-     * information about a chunk
-     *)
-    chunkdef_id: chunkid;
+      (* this is used in web_to_tex to store in external hashtbl additional
+       * information about a chunk
+       *)
+      chunkdef_id: chunkid;
     }
     and code_or_chunk =
       | Code of string
@@ -31,6 +31,7 @@ val unparse: t -> Common.filename -> unit
 (* multi file support for weaving *)
 val expand_sharp_include: 
   t -> t
+
 (* multi file support for sync *)
 val pack_multi: 
   (Common.filename * t) list -> t

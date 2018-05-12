@@ -42,7 +42,7 @@ let s_of_chunkdef_body xs =
 let web_to_code ~topkey orig = 
   let h = Crossref_chunk.hchunkname_to_body__from_orig orig in
 
-  let rec aux (key,i) = 
+  let rec aux (key, i) = 
     let bodys = 
       try 
         Hashtbl.find h key 
@@ -53,7 +53,7 @@ let web_to_code ~topkey orig =
     bodys |> List.map (fun body -> 
 
       let s = s_of_chunkdef_body body in
-      let md5sum = Common2.md5sum_of_string s in
+      let md5sum = Signature.md5sum_of_string s in
 
       let body' = 
         body |> List.map (function
