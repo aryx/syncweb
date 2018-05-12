@@ -72,4 +72,5 @@ let web_to_code ~topkey orig =
   in
   aux (topkey, 0)
 
-let view_of_orig = web_to_code
+let view_of_orig ~topkey a = 
+  Common.profile_code "view_of_orig" (fun () -> web_to_code ~topkey a)

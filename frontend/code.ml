@@ -171,7 +171,7 @@ let readjust_start2_with_md5sums file xs =
 (* old: was computing a first "implicit" chunk corresponding to the name if
  * the file, but not worth the extra complexity.
  *)
-let parse ~lang file = 
+let parse2 ~lang file = 
   let xs = Common.cat file in 
 
   let xs' = xs |> Common.index_list_1 |> List.map (fun (s, line) -> 
@@ -234,6 +234,9 @@ let parse ~lang file =
   in
   let codetrees = aux xs' in
   codetrees
+
+let parse ~lang a = 
+  Common.profile_code "Code.parse" (fun () -> parse2 ~lang a)
 
 (*****************************************************************************)
 (* Unparser *)

@@ -114,7 +114,7 @@ let thd3 = Common2.thd3
 
 let cnt_id = ref 0
 
-let parse file = 
+let parse2 file = 
   let xs = Common.cat file in 
   let xs' = xs |> Common.index_list_1 |> List.map (fun (s, i) -> 
     s, i,
@@ -172,11 +172,14 @@ let parse file =
   in
   agglomerate xs'
 
+let parse a = 
+  Common.profile_code "Web.parse" (fun () -> parse2 a)
+
 (*****************************************************************************)
 (* Unparser *)
 (*****************************************************************************)
 
-let unparse orig filename =
+let unparse2 orig filename =
   Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     orig |> List.iter (function
@@ -197,6 +200,10 @@ let unparse orig filename =
         pr end_mark;
     );
   )
+
+let unparse a = 
+  Common.profile_code "Web.unparse" (fun () -> unparse2 a)
+
 
 (*****************************************************************************)
 (* Multi file support *)

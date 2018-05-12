@@ -140,7 +140,7 @@ let candidates_against_orig body_orig view_elems orig_elems =
 (* Pierce with his lenses takes also the original view, but we instead use the
  * md5sum in the view as a way to access to the original version of orig.
  *)
-let sync ~lang orig views = 
+let sync2 ~lang orig views = 
 
   let h = build_chunk_hash_from_views views in
   let chunks = h |> Common.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
@@ -311,3 +311,7 @@ let sync ~lang orig views =
   );
 
   orig'
+
+let sync ~lang a b = 
+  Common.profile_code "Sync.sync" (fun () -> sync2 ~lang a b)
+

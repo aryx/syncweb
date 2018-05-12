@@ -1,18 +1,16 @@
-(* Copyright 2009-2017 Yoann Padioleau, see copyright.txt *)
+(* Copyright 2009-2018 Yoann Padioleau, see copyright.txt *)
 open Common
 
 (*****************************************************************************)
 (* Purpose *)
 (*****************************************************************************)
 
-(* syncweb is a command line tool enabling programmers to use the
- * literate programming[1] development methodology, using the noweb[2]
- * tool, while still being able to modify the generated files
- * from the literate document.
+(* syncweb is a command-line tool enabling programmers to use the
+ * literate programming[1] development methodology while still being able
+ * to modify the generated files from the literate document.
  * dup: readme.txt
  * 
  * [1] http://en.wikipedia.org/wiki/Literate_programming
- * [2] http://www.cs.tufts.edu/~nr/noweb/
  * 
  * todo: 
  *  - bug: if have a chunkname that is used two times (so it factorizes
@@ -326,9 +324,13 @@ let main_action xs =
         (* pr2 (spf "syncing %s" viewf); *)
 
         with_error viewf (fun () ->
+
         let view = Code.parse ~lang viewf in 
         let orig' = Sync.sync ~lang  orig view in
+
         let view' = Web_to_code.view_of_orig  ~topkey orig' in
+
+        Common.profile_code "Main.regenerate if needed" (fun () ->
         (* regenerate orig and view *)
         if view <> view' then begin
           pr2 "view has been regenerated";
@@ -340,8 +342,7 @@ let main_action xs =
             pr2 (spf "orig %s has been updated" f1);
             Web.unparse orig' f1;
           end;
-        );
-        )
+        )))
       end
 
   | _ -> failwith "need the name of the orig file and name of view file"
