@@ -1,11 +1,12 @@
 
-type t = Digest.t
+type t
 
 val to_hex: t -> string
+val from_hex: string -> t
 
-val md5sum_auxfile_of_file: Common.filename -> Common.filename
+val signature_of_string: string -> t
 
-val re_md5sum_in_aux_file: Str.regexp
+val signaturefile_of_file: Common.filename -> Common.filename
+val parse_signaturefile: Common.filename -> (string (* key *) * t) list
 
-val md5sum_of_string: string -> t
 

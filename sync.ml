@@ -238,8 +238,8 @@ let sync2 ~lang orig views =
                         let s_orig = Web_to_code.s_of_chunkdef_body body_orig in
                         let s_view = Web_to_code.s_of_chunkdef_body body_view in
 
-                        let md5sum_orig = Signature.md5sum_of_string s_orig in
-                        let md5sum_view = Signature.md5sum_of_string s_view in
+                        let md5sum_orig= Signature.signature_of_string s_orig in
+                        let md5sum_view= Signature.signature_of_string s_view in
 
                         show_orig_view key s_orig s_view;
 
@@ -248,14 +248,14 @@ let sync2 ~lang orig views =
 
                         let first_heuristic = 
                           match () with
-                          | _ when md5sum_past =$= md5sum_orig -> 
+                          | _ when md5sum_past = md5sum_orig -> 
                               show_diff s_orig s_view;
                               if (Common2.y_or_no 
                                     "        <---- changed?")
                               then Some body_view
                               else None
                                 
-                          | _ when md5sum_past =$= md5sum_view -> 
+                          | _ when md5sum_past = md5sum_view -> 
                               show_diff s_view s_orig;
                               if (Common2.y_or_no 
                                     "changed  ---->        ?")

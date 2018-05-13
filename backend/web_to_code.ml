@@ -53,7 +53,7 @@ let web_to_code ~topkey orig =
     bodys |> List.map (fun body -> 
 
       let s = s_of_chunkdef_body body in
-      let md5sum = Signature.md5sum_of_string s in
+      let md5sum = Signature.signature_of_string s in
 
       let body' = 
         body |> List.map (function

@@ -11,7 +11,7 @@ type t = codetree list
      and chunk_info = { 
        chunk_key: string;
        (* the md5sum can be in the view or in .md5sum_... aux file *)
-       chunk_md5sum: string option;
+       chunk_md5sum: Signature.t option;
        mutable pretty_print: position option;
      }
      (* work with the -less_marks flag *)

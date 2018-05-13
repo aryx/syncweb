@@ -1,5 +1,7 @@
 (* Copyright 2009-2016 Yoann Padioleau, see copyright.txt *)
 open Common
+
+module S = Signature
  
 (*****************************************************************************)
 (* Prelude *)
@@ -10,16 +12,17 @@ open Common
 (*****************************************************************************)
 
 type mark_language = {
-  (* return (space, key, md5sum) *)
-  parse_mark_start: string -> (string * string * string option) option;
+  (* 's:' return (space, key, signature option) *)
+  parse_mark_start: string -> (string * string * Signature.t option) option;
+  (* 'e:' return (space, key option) *)
   parse_mark_end: string -> (string * string option) option;
 
-  unparse_mark_start: key:string -> md5:string option -> string;
+  unparse_mark_start: key:string -> md5:Signature.t option -> string;
   unparse_mark_end: key:string -> string;
 
-  (* for -less_marks, the x: mark *)
-  parse_mark_startend: string -> (string * string * string option) option;
-  unparse_mark_startend: key:string -> md5:string option -> string;
+  (* 'x:' works with less_marks flag *)
+  parse_mark_startend: string -> (string * string * Signature.t option) option;
+  unparse_mark_startend: key:string -> md5:Signature.t option -> string;
 }
 
 (* from common2.ml *)
@@ -93,7 +96,7 @@ let mark_ocaml =
       if s ==~ re_start
       then 
         let (a,b,c) = Common.matched3 s in
-        Some (a, b, Some c)
+        Some (a, b, Some (S.from_hex c))
       else 
         None
     );
@@ -107,7 +110,8 @@ let mark_ocaml =
     );
 
     unparse_mark_start = (fun ~key ~md5 -> 
-      spf "(* nw_s: %s |%s*)" key (match md5 with None -> "" | Some s -> s));
+      spf "(* nw_s: %s |%s*)" key 
+        (match md5 with None -> "" | Some s -> S.to_hex s));
     unparse_mark_end   = (fun ~key ->      
       spf "(* nw_e: %s *)" key);
 
@@ -129,7 +133,7 @@ let mark_shell =
       if s ==~ re_start
       then
         let (a,b,c) = Common.matched3 s in
-        Some (a, b, if c = "" then None else Some c)
+        Some (a, b, if c = "" then None else Some (S.from_hex c))
       else None
     );
     parse_mark_end = (fun s -> 
@@ -140,7 +144,8 @@ let mark_shell =
       else None
     );
     unparse_mark_start = (fun ~key ~md5 -> 
-      spf "# nw_s: %s |%s#" key (match md5 with None -> "" | Some s -> s));
+      spf "# nw_s: %s |%s#" key 
+        (match md5 with None -> "" | Some s -> S.to_hex s));
     unparse_mark_end   = (fun ~key ->      
       spf "# nw_e: %s #" key);
 
@@ -209,7 +214,7 @@ let mark_C =
       if s ==~ re_start
       then
         let (a,b,c) = Common.matched3 s in
-        Some (a, b, if c = "" then None else Some c)
+        Some (a, b, if c = "" then None else Some (S.from_hex c))
       else None
     );
     parse_mark_end = (fun s -> 
@@ -220,7 +225,8 @@ let mark_C =
       else None
     );
     unparse_mark_start = (fun ~key ~md5 -> 
-      spf "/* nw_s: %s |%s*/" key (match md5 with None -> "" | Some s -> s));
+      spf "/* nw_s: %s |%s*/" key 
+        (match md5 with None -> "" | Some s -> S.to_hex s));
     unparse_mark_end   = (fun ~key ->      
       spf "/* nw_e: %s */" key);
   

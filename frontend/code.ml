@@ -38,9 +38,6 @@ type t = codetree list
 let generate_n_spaces i =
   Common2.repeat " " i |> Common.join ""
 
-let (==~) s re =
-    Str.string_match re s 0
-
 (*****************************************************************************)
 (* Helpers parser  *)
 (*****************************************************************************)
@@ -65,7 +62,7 @@ let mkp file line =
 
 type mark2 = 
   | Regular2 of string * pinfo
-  | Start2 of string * int * string option (* md5sum *) * pinfo
+  | Start2 of string * int * Signature.t option * pinfo
   | End2 of string option * int * pinfo
 
 let readjust_mark2_remove_indent i body = 
@@ -95,18 +92,12 @@ let readjust_mark2_remove_indent i body =
       End2 (x, i, pinfo) 
   )
 
-(* patch the Start2 with the md5sums information in the md5sum_aux file *)
-let readjust_start2_with_md5sums file xs = 
-  if Sys.file_exists (Signature.md5sum_auxfile_of_file file)
+(* patch the Start2 with the signature information in the md5sum_aux file *)
+let readjust_start2_with_signatures file xs = 
+  let sigfile = Signature.signaturefile_of_file file in
+  if Sys.file_exists sigfile
   then 
-    let md5s = 
-      Common.cat (Signature.md5sum_auxfile_of_file file) |> 
-        List.map (fun s -> 
-          if s ==~ Signature.re_md5sum_in_aux_file
-          then Common.matched2 s
-          else failwith ("wrong format in md5sum_auxfile: " ^ s)
-        )
-    in
+    let md5s = Signature.parse_signaturefile sigfile in
     let rec aux mark2s md5sums = 
       match mark2s, md5sums with
       | [], [] -> []
@@ -175,7 +166,7 @@ let parse2 ~lang file =
                 [Regular2 (s, mkp file line)]
             )
         )
-  ) |> List.flatten |> readjust_start2_with_md5sums file
+  ) |> List.flatten |> readjust_start2_with_signatures file
   in
 
   (* the view does not need to contain the key at the end mark; it's
@@ -339,7 +330,7 @@ let unparse
   );
 
   if md5sum_in_auxfile then begin
-    Common.write_file ~file:(Signature.md5sum_auxfile_of_file filename)
+    Common.write_file ~file:(Signature.signaturefile_of_file filename)
       (!md5sums |> List.rev |> Common.join "\n");
   end;
   ()
