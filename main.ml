@@ -110,6 +110,39 @@ let find_topkey_corresponding_to_file orig viewf =
     aux revdir candidates
   )
 
+(* opti: mostly copy paste and adaptation of Common2.cache_computation *)
+let parse_origs2 origfs =
+  let orig1 = List.hd origfs in
+  let cachefile = "." ^ orig1 ^ "cache" in
+  let f () = 
+    origfs |> List.map (fun file -> 
+      with_error file (fun () -> file, Web.parse file)
+    )
+  in
+  origfs |> List.iter (fun file -> 
+    if not (Sys.file_exists file)
+    then failwith (spf "parse_origs: file %s does not exist" file)
+  );
+  if Sys.file_exists cachefile && 
+    origfs |> List.for_all (fun file -> 
+      Common2.filemtime cachefile >= Common2.filemtime file)
+  then begin
+    pr2 ("using cache: " ^ cachefile);
+    (* todo: use versioning *)
+    Common2.get_value cachefile
+  end else begin
+    let res = f () in
+    Common2.write_value res cachefile;
+    res
+  end
+
+
+  
+
+
+let parse_origs a =
+  Common.profile_code "Main.parse_origs" (fun () -> parse_origs2 a)
+
 (*****************************************************************************)
 (* Actions *)
 (*****************************************************************************)
@@ -309,9 +342,7 @@ let main_action xs =
         | x::xs -> List.rev xs, x
         | _ -> raise Impossible
       in
-      let origs = origfs |> List.map (fun f -> 
-        with_error f (fun () -> f, Web.parse f)
-      ) in
+      let origs = parse_origs origfs in
       let orig = Web.pack_multi origs in
       let topkey = 
         (* old: Filename.basename viewf *)
