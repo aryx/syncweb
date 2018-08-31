@@ -1,6 +1,6 @@
--*- org -*-
+# -*- org -*-
 
-* TODO 0.4
+* 0.4 (Q1 2018)
 
 ** Features:
 - automatic indexing provided by codegraph!
