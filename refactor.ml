@@ -77,6 +77,8 @@ let rename_chunknames xs =
       spf "constant [[%s]]" (Common.matched1 s)
     | _ when s =~ "^toplevel \\([a-zA-Z0-9_.]+\\)$" ->
       spf "toplevel [[%s]]" (Common.matched1 s)
+    | _ when s =~ "^typedef \\([a-zA-Z0-9_.]+\\)$" ->
+      spf "typedef [[%s]]" (Common.matched1 s)
 
     | _ when s =~ "^enum _anon_ \\(.*\\)$" ->
       spf "enum [[_anon_ %s]]" (Common.matched1 s)
