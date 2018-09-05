@@ -18,7 +18,6 @@ INCLUDES?=$(INCLUDEDIRS:%=-I %)
 OBJS?=    $(SRC:.ml=.cmo)
 OPTOBJS?= $(SRC:.ml=.cmx)
 
-
 ##############################################################################
 # Generic ocaml variables
 ##############################################################################
@@ -29,12 +28,11 @@ OCAMLCFLAGS?=-g -dtypes -bin-annot # -w A
 # This flag is also used in subdirectories so don't change its name here.
 OPTFLAGS?=
 
-
 OCAMLC=ocamlc$(OPTBIN) $(OCAMLCFLAGS)  $(INCLUDES) -thread
 OCAMLOPT=ocamlopt$(OPTBIN) $(OPTFLAGS) $(INCLUDES) -thread
 OCAMLLEX=ocamllex #-ml # -ml for debugging lexer, but slightly slower
 OCAMLYACC=ocamlyacc -v
-OCAMLDEP=ocamldep $(INCLUDES)
+OCAMLDEP=ocamldep
 OCAMLMKTOP=ocamlmktop -g -custom $(INCLUDES) -thread
 
 # can also be set via 'make static'
@@ -52,6 +50,7 @@ all::
 # Developer rules
 ##############################################################################
 
+#obsolete: use merlin under efuns
 tags:
 	otags -no-mli-tags -r  .
 
@@ -84,6 +83,6 @@ distclean::
 beforedepend::
 
 depend:: beforedepend
-	$(OCAMLDEP) *.mli *.ml > .depend
+	$(OCAMLDEP) $(DEPEND_INCLUDES) *.mli *.ml > .depend
 
 -include .depend

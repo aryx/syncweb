@@ -41,7 +41,7 @@ SUBDIRS=globals frontend backend
 
 MAKESUBDIRS= $(XXXDIR) $(SUBDIRS)
 INCLUDEDIRS=external/commons $(SUBDIRS)
-LIBS= external/commons/commons.cma $(SUBDIRS:%=%/lib.cma)
+LIBS= external/commons/lib.cma $(SUBDIRS:%=%/lib.cma)
 
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
 
