@@ -1,2 +1,24 @@
+# -*- sh -*-
+
+# to focus only on pfff code in codemap
 #dir: commons
 dir: demos/mapreduce
+
+# -------------------------------------------------------------------------
+# cmt, for codegraph to skip
+# -------------------------------------------------------------------------
+
+dir: external/OPAM_DIR
+
+#dir: external/FOR_MERLIN
+# I uppercased below the first letter of directories I don't want to skip 
+# (e.g., we want json-wheel, and ocaml hence JLO uppercase below)
+dir: external/FOR_MERLIN/[abcdefghiJklmnOpqrstuvwxyz]
+# We skip cairo2 above because the external/ contains the .cmt (good citizen)
+# We want stdlib and otherlibs (unix/str)
+dir: external/FOR_MERLIN/ocaml-base-compiler.4.07.1/[abcdefghijklmnOpqrStuvwxyz]
+dir: external/FOR_MERLIN/ocaml-base-compiler.4.07.1/otherlibs/dynlink
+dir: external/FOR_MERLIN/ocaml-base-compiler.4.07.1/otherlibs/threads
+dir: external/FOR_MERLIN/ocaml-base-compiler.4.07.1/ocamldoc
+dir: external/FOR_MERLIN/ocaml-migrate-parsetree
+dir: external/FOR_MERLIN/ocaml[abcdefghijklmnopqrstuvwxyz]
