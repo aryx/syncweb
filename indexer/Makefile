@@ -49,3 +49,6 @@ $(TARGET): $(LIBS) ../lpizer/find_source.cmo $(OBJS)
 
 $(TARGET).opt: $(LIBS:.cma=.cmxa) $(OPTOBJS) 
 	$(OCAMLOPT) -o $@ $^
+
+clean::
+	rm -f $(TARGET)

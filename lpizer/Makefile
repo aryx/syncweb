@@ -15,14 +15,21 @@ INCLUDE_LIBS=commons \
   lang_c/parsing lang_cpp/parsing \
   lang_ml/parsing lang_ml/analyze \
 
-LINK_LIBS=commons globals\
-  h_program-lang graph_code matcher \
+LINK_LIBS=commons commons_core commons_wrappers/graph globals\
+  h_program-lang graph_code \
   lang_c/parsing lang_cpp/parsing \
   lang_ml/parsing lang_ml/analyze \
 
-INCLUDEDIRS=$(INCLUDE_LIBS:%=$(PFFF)/%/)
+INCLUDEDIRS=$(INCLUDE_LIBS:%=$(PFFF)/%/) \
+  $(shell ocamlfind query dyp) \
+  $(shell ocamlfind query ocamlgraph) \
+
 SYSLIBS=nums.cma bigarray.cma unix.cma str.cma
-LIBS=$(LINK_LIBS:%=$(PFFF)/%/lib.cma) 
+
+LIBS=\
+  $(shell ocamlfind query dyp)/dyp.cma \
+  $(shell ocamlfind query ocamlgraph)/graph.cma \
+  $(LINK_LIBS:%=$(PFFF)/%/lib.cma) \
 
 ##############################################################################
 # Generic

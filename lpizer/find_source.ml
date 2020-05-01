@@ -19,7 +19,7 @@ let skip_file dir =
 let files_of_dir_or_files ~lang xs =
   let finder = finder lang in
   let xs = List.map Common.fullpath xs in
-  finder xs +> Skip_code.filter_files_if_skip_list
+  finder xs |> Skip_code.filter_files_if_skip_list ~root:xs
 
 (* todo: factorize with filter_files_if_skip_list? *)
 let files_of_root ~lang root =
@@ -87,8 +87,8 @@ let files_of_root ~lang root =
         let root = Common.realpath dir in
         let files = 
           Lib_parsing_php.find_php_files_of_dir_or_files [root]
-          +> Skip_code.filter_files skip_list root
-          +> Skip_code.reorder_files_skip_errors_last skip_list root
+          |> Skip_code.filter_files skip_list root
+          |> Skip_code.reorder_files_skip_errors_last skip_list root
         in
         root, files
     (* useful when build codegraph from test code *)

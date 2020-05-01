@@ -1,6 +1,7 @@
 open Common
 
-let lang = ref "c"
+(* CONFIG *)
+let lang = ref "ml"
 let verbose = ref false
 
 (*****************************************************************************)
@@ -73,8 +74,8 @@ let count_dollar s =
 (*--------------------------------------------------*)
 (* C *)
 (*--------------------------------------------------*)
-open Ast_cpp
-module Ast = Ast_cpp
+open Cst_cpp
+module Ast = Cst_cpp
 module E = Entity_code
 module PI = Parse_info
 
@@ -137,12 +138,12 @@ let extract_entities_cpp env xs =
               (match x with
               (* prototype, don't care *)
               | { v_namei = Some (_name, None);
-                  v_type = (_, (FunctionType _, _)); _
+                  v_type = (_, (FunctionType _)); _
                 } -> None
 
               (* typedef struct X { } X *)
               | { v_namei = _;
-                  v_type = (_, (StructDef { c_name = Some name; _}, _)); 
+                  v_type = (_, (StructDef { c_name = Some name; _})); 
                   v_storage = StoTypedef _; _
                 } -> 
                 Some { 
@@ -172,7 +173,7 @@ let extract_entities_cpp env xs =
                 }
               (* struct def *)
               | { v_namei = _;
-                  v_type = (_, (StructDef { c_name = Some name; _}, _)); _
+                  v_type = (_, (StructDef { c_name = Some name; _})); _
                 } -> 
                 Some { 
                   name = Ast.string_of_name_tmp name |> uniquify env E.Class;
@@ -181,7 +182,7 @@ let extract_entities_cpp env xs =
                 }
               (* enum def *)
               | { v_namei = _;
-                  v_type = (_, (EnumDef (_, Some ident, _), _));
+                  v_type = (_, (EnumDef (_, Some ident, _)));
                   _
                 } -> 
                 Some { 
@@ -194,7 +195,7 @@ let extract_entities_cpp env xs =
 
               (* enum anon *)
               | { v_namei = _;
-                  v_type = (_, (EnumDef (_, None, _), _));
+                  v_type = (_, (EnumDef (_, None, _)));
                   _
                 } -> 
                 Some { 
@@ -222,18 +223,29 @@ let hooks_for_comment_ml = { Comment_code.
     tokf = Token_helpers_ml.info_of_tok;
     }
 
+let is_estet_comment ii =
+  let s = PI.str_of_info ii in
+  (s =~ ".*\\*\\*\\*\\*") ||
+  (s =~ ".*------") ||
+  (s =~ ".*####")
+
 let range_of_any_with_comment_ml any toks =
   let ii = Lib_parsing_ml.ii_of_any any in
   let (min, max) = PI.min_max_ii_by_pos ii in
+  let if_not_estet_comment ii otherwise =
+    if (not (is_estet_comment ii))
+    then ii else otherwise
+  in
   match Comment_code.comment_before hooks_for_comment_ml min toks,
         Comment_code.comment_after hooks_for_comment_ml max toks
   with
   | None, None -> min, max
-  | Some ii, None -> ii, max
-  | None, Some ii -> min, ii
-  | Some i1, Some i2 -> i1, i2
+  | Some ii, None -> if_not_estet_comment ii min, max
+  | None, Some ii -> min, if_not_estet_comment ii max
+  | Some i1, Some i2 -> 
+          if_not_estet_comment i1 min, if_not_estet_comment i2 max
 
-open Ast_ml
+open Cst_ml
 
 let nb_newlines info =
   let str = PI.str_of_info info in
