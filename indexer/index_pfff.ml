@@ -6,6 +6,19 @@ module PI = Parse_info
 
 (* copy paste of pfff/main_codegraph.ml *)
 
+let find_source__files_of_dir_or_files ~lang xs = 
+  match lang with
+  | "cmt"  -> 
+    Lib_parsing_ml.find_cmt_files_of_dir_or_files xs
+  | _ -> Find_source.files_of_dir_or_files ~lang xs
+
+let find_source__files_of_root ~lang root = 
+  match lang with
+  | "cmt"  -> 
+    Lib_parsing_ml.find_cmt_files_of_dir_or_files [root]
+  | _ -> Find_source.files_of_root ~lang root
+
+
 let verbose = ref false
 (*let output_dir = ref None *)
 
@@ -21,7 +34,7 @@ let hook_def_node node g =
   pr (spf "DEF:%s:%s:%d:%s" kind loc.PI.file loc.PI.line name)
   
 
-let hook_use_edge _src dst g loc =
+let hook_use_edge _src dst _g loc =
   let name = fst dst in
   let kind = E.string_of_entity_kind (snd dst) in
   pr (spf "USE:%s:%s:%d:%s"  kind loc.PI.file loc.PI.line name)
@@ -36,11 +49,11 @@ let build_graph_code lang xs =
   let root, files = 
     match xs with
     | [root] -> 
-        root, Find_source.files_of_root ~lang root
+        root, find_source__files_of_root ~lang root
     | _ ->
         let root = Common2.common_prefix_of_files_or_dirs xs in
         let files = 
-          Find_source.files_of_dir_or_files ~lang xs in
+          find_source__files_of_dir_or_files ~lang xs in
         root, files
   in
 
