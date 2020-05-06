@@ -1,3 +1,6 @@
+_build
+.merlin
+
 # ocaml objects
 *.cm*
 *.annot
