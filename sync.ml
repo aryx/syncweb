@@ -230,6 +230,13 @@ let sync2 ~lang orig views =
                         let md5sum_past = 
                           match md5sum_orig_in_view_opt with
                           | None -> 
+                            (* TODO: probably a chunk got deleted in view file
+                             * one trick to fix this is to:
+                             *  - delete the view, make sync, look in the
+                             *    diff which chunk got deleted 
+                             *  - git reset --hard; put empty chunk in the view
+                             *  - make sync should now work
+                             *)
                               failwith (spf "TODO: didnt find the md5sum in %s"
                                           (Common.dump elem_view))
                           | Some s -> s
