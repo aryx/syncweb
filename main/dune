@@ -1,0 +1,17 @@
+(executables
+ (names Main)
+ (libraries
+    commons
+    frontend
+    backend
+ )
+ (preprocess (pps ppx_deriving.show )) ; LATER: ppx_profiling
+ ; byte for ocamldebug
+ (modes native byte)
+)
+
+(install
+ (package syncweb)
+ (section bin)
+ (files (Main.exe as syncweb))
+)

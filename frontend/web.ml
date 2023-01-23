@@ -114,7 +114,7 @@ let thd3 = Common2.thd3
 
 let cnt_id = ref 0
 
-let parse2 file = 
+let parse file = 
   let xs = Common.cat file in 
   let xs' = xs |> Common.index_list_1 |> List.map (fun (s, i) -> 
     s, i,
@@ -126,7 +126,7 @@ let parse2 file =
   )
   in
   (* todo: more flexible *)
-  let rec process_body ys =
+  let process_body ys =
     ys |> List.map (fun s -> 
       if s ==~ regexp_chunk_ref
       then
@@ -143,15 +143,15 @@ let parse2 file =
 
         (match thd3 x with
         | Regular1 -> 
-            let (regs, rest) = Common.span (fun x -> thd3 x = Regular1) xs in
+            let (regs, rest) = Common.span (fun x -> thd3 x =*= Regular1) xs in
             let item = Tex (fst3 x::(List.map fst3 regs)) in
             item::agglomerate rest
         | Start1 -> 
             (try 
               let (body, endmark, rest) = 
-                Common2.split_when (fun x -> thd3 x = End1) xs
+                Common2.split_when (fun x -> thd3 x =*= End1) xs
               in
-              if (not (body |> List.for_all (fun x -> thd3 x = Regular1)))
+              if (not (body |> List.for_all (fun x -> thd3 x =*= Regular1)))
               then failwith 
                 (spf "line %d: body of chunkdef contains other chunkdef" line);
 
@@ -171,15 +171,13 @@ let parse2 file =
         )
   in
   agglomerate xs'
-
-let parse a = 
-  Common.profile_code "Web.parse" (fun () -> parse2 a)
+[@@profiling]
 
 (*****************************************************************************)
 (* Unparser *)
 (*****************************************************************************)
 
-let unparse2 orig filename =
+let unparse orig filename =
   Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     orig |> List.iter (function
@@ -200,10 +198,7 @@ let unparse2 orig filename =
         pr end_mark;
     );
   )
-
-let unparse a = 
-  Common.profile_code "Web.unparse" (fun () -> unparse2 a)
-
+[@@profiling]
 
 (*****************************************************************************)
 (* Multi file support *)
@@ -246,7 +241,7 @@ let pack_multi xs =
   ) |> List.flatten
 
 
-let rec unpack_multi orig =
+let unpack_multi orig =
   let (pre, groups) = 
     Common2.group_by_pre (fun x ->
       match x with

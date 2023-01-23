@@ -1,10 +1,10 @@
-           syncweb, literate programming meets unison
+           Syncweb, Literate Programming meets Unison
 
 
 Introduction
 ----------------
 
-syncweb is a command line tool enabling programmers to use the
+Syncweb is a command-line tool enabling programmers to use the
 literate programming[1] development methodology, using the noweb[2]
 tool, while still being able to modify the generated files
 from the literate document. syncweb provides a way to

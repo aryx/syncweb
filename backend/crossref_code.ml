@@ -110,13 +110,13 @@ let parse_defs_and_uses file =
     match xs with
     | ["DEF";kind_str;file;line;name] ->
       let kind_opt = kind_of_string_opt kind_str in
-      kind_opt |> Common.do_option (fun kind ->
+      kind_opt |> Option.iter (fun kind ->
         defs |> Common.push (adjust_name_and_kind name kind,
                            {file = file ;line = int_of_string line})
       )
     | ["USE";kind_str;file;line;name] ->
       let kind_opt = kind_of_string_opt kind_str in
-      kind_opt |> Common.do_option (fun kind ->
+      kind_opt |> Option.iter (fun kind ->
         uses |> Common.push (adjust_name_and_kind name kind, 
                            {file = file;line = int_of_string line})
       )
@@ -153,7 +153,7 @@ let hs__from_orig orig (defs, uses) =
   files |> List.iter (fun file ->
     let loc = ref 1 in
     (* similar to web_to_code.ml *)
-    if Hashtbl.find_all hchunkname_to_defs file = []
+    if Hashtbl.find_all hchunkname_to_defs file =*= []
     then failwith (spf "could not find defs for file %s" file);
     let rec aux key =
       let defs = Hashtbl.find_all hchunkname_to_defs key |> List.rev in
@@ -230,7 +230,7 @@ let hs__from_orig orig (defs, uses) =
   let last_chunkid = ref 0 in
   let fake_loc = { file = "ADHOC DEF; no source file"; line = -1 } in
   orig |> List.iter (function
-    | ChunkDef ({chunkdef_id = id }, _) ->
+    | ChunkDef ({chunkdef_id = id; _ }, _) ->
       last_chunkid := id
     | Tex xs ->
       xs |> List.iter (fun s ->

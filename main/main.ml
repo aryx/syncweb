@@ -111,7 +111,7 @@ let find_topkey_corresponding_to_file orig viewf =
   )
 
 (* opti: mostly copy paste and adaptation of Common2.cache_computation *)
-let parse_origs2 origfs =
+let parse_origs origfs =
   let orig1 = List.hd origfs in
   let cachefile = "." ^ orig1 ^ "cache" in
   let f () = 
@@ -135,13 +135,7 @@ let parse_origs2 origfs =
     Common2.write_value res cachefile;
     res
   end
-
-
-  
-
-
-let parse_origs a =
-  Common.profile_code "Main.parse_origs" (fun () -> parse_origs2 a)
+[@@profiling]
 
 (*****************************************************************************)
 (* Actions *)
@@ -150,20 +144,20 @@ let parse_origs a =
 let actions () = [
   (* testing *)
   "-parse_orig", "   <file>",
-    Common.mk_action_1_arg (fun x -> 
+    Arg_helpers.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
       let orig = Web.parse x in
       Web.unparse orig tmpfile;
-      Common.command2(spf "diff %s %s" x tmpfile);
+      Sys.command(spf "diff %s %s" x tmpfile) |> ignore;
     );
   "-parse_view", "   <file>", 
-    Common.mk_action_1_arg (fun x -> 
+    Arg_helpers.mk_action_1_arg (fun x -> 
       ignore(Code.parse ~lang:Lang.mark_ocaml_short x);
     );
 
   (* tangling *)
   "-view_of_orig", "   <file> <key>", 
-    Common.mk_action_2_arg (fun x key -> 
+    Arg_helpers.mk_action_2_arg (fun x key -> 
       let orig = Web.parse x in
       let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
@@ -174,7 +168,7 @@ let actions () = [
 
   (* duplicate of -view_of_orig *)
   "-to_code", "   <file> <key>", 
-    Common.mk_action_2_arg (fun x key -> 
+    Arg_helpers.mk_action_2_arg (fun x key -> 
       let orig = Web.parse x in
       let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
@@ -185,7 +179,7 @@ let actions () = [
 
   (* weaving *)
   "-to_tex", " <nw file> <defs and uses file>", 
-  Common.mk_action_2_arg (fun origfile defs_and_uses_file -> 
+  Arg_helpers.mk_action_2_arg (fun origfile defs_and_uses_file -> 
     (* todo: parse .aux? *)
     let (d,b,e) = Common2.dbe_of_filename origfile in
     if (e <> "nw")
@@ -200,7 +194,7 @@ let actions () = [
 
   (* superseded by Main.main_action now *)
   "-sync", "   <orig> <view>", 
-    Common.mk_action_2_arg (fun origf viewf -> 
+    Arg_helpers.mk_action_2_arg (fun origf viewf -> 
       let orig = Web.parse origf in
       let views = Code.parse ~lang:Lang.mark_ocaml viewf in
 
@@ -208,10 +202,10 @@ let actions () = [
 
       let tmpfile = "/tmp/xxx" in
       Web.unparse orig' tmpfile;
-      Common.command2(spf "diff %s %s" origf tmpfile);
+      Sys.command(spf "diff %s %s" origf tmpfile) |> ignore;
     );
   "-unmark", "   <file>", 
-    Common.mk_action_1_arg (fun file -> 
+    Arg_helpers.mk_action_1_arg (fun file -> 
 
       let xs = Common.cat file in
       let xs = xs |> Common.exclude (fun s ->
@@ -221,7 +215,7 @@ let actions () = [
       let tmpfile = "/tmp/xxx" in
       let s = Common2.unlines xs in
       Common.write_file tmpfile s;
-      Common.command2(spf "diff -u %s %s" file tmpfile);
+      Sys.command(spf "diff -u %s %s" file tmpfile) |> ignore;
       if Common2.y_or_no "apply modif?"
       then Common.write_file file s
       else failwith "ok, skipping"
@@ -229,15 +223,15 @@ let actions () = [
 
 
   "-rename_chunknames", " <origs>", 
-  Common.mk_action_n_arg Refactor.rename_chunknames;
+  Arg_helpers.mk_action_n_arg Refactor.rename_chunknames;
   "-rename_chunknames_archi", " <origs and views>", 
-  Common.mk_action_n_arg Refactor.rename_chunknames_archi;
+  Arg_helpers.mk_action_n_arg Refactor.rename_chunknames_archi;
   "-merge_files", " <origs>", 
-  Common.mk_action_n_arg Refactor.merge_files;
+  Arg_helpers.mk_action_n_arg Refactor.merge_files;
 
   (* pad's hacks *)
   "-to_noweb", " <orig>", 
-  Common.mk_action_1_arg (fun file -> 
+  Arg_helpers.mk_action_1_arg (fun file -> 
     let orig = Web.parse file in
     let orig =
       orig |> List.map (function 
@@ -256,7 +250,7 @@ let actions () = [
   );
 
   "-to_web", " <orig>", 
-  Common.mk_action_1_arg (fun file -> 
+  Arg_helpers.mk_action_1_arg (fun file -> 
 
 let unparse_orig_web orig filename =
   Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
@@ -282,7 +276,7 @@ let unparse_orig_web orig filename =
 in
 
     let orig = Web.parse file in
-    let (d,b,e) = Common2.dbe_of_filename file in
+    let (d,b,_e) = Common2.dbe_of_filename file in
     let file2 = Common2.filename_of_dbe (d,b,"w") in
     unparse_orig_web orig file2
   );
@@ -362,19 +356,20 @@ let main_action xs =
         let orig' = Sync.sync ~lang  orig view in
         begin
           let view' = Web_to_code.view_of_orig  ~topkey orig' in
-          Common.profile_code "Main.regenerate" (fun () ->
+(*          Profiling.profile_code "Main.regenerate" (fun () -> *)
             (* regenerate orig and view *)
             if view <> view' then begin
               pr2 "view has been regenerated";
               Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
             end;
             let origs' = Web.unpack_multi orig' in
-            Common2.zip origs origs' |> List.iter (fun ((f1,orig),(f2,orig'))->
+            Common2.zip origs origs' |> List.iter (fun ((f1,orig),(_f2,orig'))->
               if orig <> orig' then begin
                 pr2 (spf "orig %s has been updated" f1);
                 Web.unparse orig' f1;
               end;
-            ))
+            )
+(* ) *)
         end
         )
       end
@@ -410,7 +405,7 @@ let options () =
     "  guess what";
   ] @
   Common2.cmdline_flags_devel () @
-  Common.options_of_actions action (all_actions()) @
+  Arg_helpers.options_of_actions action (all_actions()) @
   []
 
 (*****************************************************************************)
@@ -424,18 +419,18 @@ let main () =
       " [options] <orig> <view> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
-  let args = Common.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_helpers.parse_options (options()) usage_msg Sys.argv in
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
-  Common.profile_code "Main total" (fun () -> 
+(*  Profiling.profile_code "Main total" (fun () ->  *)
     
     (match args with
     
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Common.action_list (all_actions())) -> 
-        Common.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_helpers.action_list (all_actions())) -> 
+        Arg_helpers.do_action !action xs (all_actions())
 
     | _ when not (Common.null_string !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
@@ -449,9 +444,9 @@ let main () =
     (* empty entry *)
     (* --------------------------------------------------------- *)
     | [] -> 
-        Common.usage usage_msg (options()); 
+        Arg_helpers.usage usage_msg (options()); 
         failwith "too few arguments"
-    )
+(*    ) *)
   )
 
 (*****************************************************************************)

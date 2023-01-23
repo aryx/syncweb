@@ -1,5 +1,10 @@
 # -*- org -*-
 
+* 0.5 (Q1 2023)
+
+** Internals:
+- switch to dune
+
 * 0.4 (Q1 2018)
 
 ** Features:

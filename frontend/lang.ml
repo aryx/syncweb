@@ -59,7 +59,7 @@ let mark_ocaml_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "(*s: %s *)" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _ -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
@@ -78,7 +78,7 @@ let mark_ocaml_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "(*x: %s *)" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _ -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
@@ -115,8 +115,9 @@ let mark_ocaml =
     unparse_mark_end   = (fun ~key ->      
       spf "(* nw_e: %s *)" key);
 
-    parse_mark_startend = (fun s -> None);
-    unparse_mark_startend = (fun ~key ~md5 -> 
+    parse_mark_startend = (fun _ -> None);
+    unparse_mark_startend = (fun ~key ~md5 ->
+      ignore(key, md5);
       failwith "-less_marks is not supported for this language"
     );
   }
@@ -149,9 +150,10 @@ let mark_shell =
     unparse_mark_end   = (fun ~key ->      
       spf "# nw_e: %s #" key);
 
-    parse_mark_startend = (fun s -> 
+    parse_mark_startend = (fun _ -> 
       None);
     unparse_mark_startend = (fun ~key ~md5 -> 
+      ignore(key, md5);
       failwith "-less_marks is not supported for this language"
     );
   }
@@ -176,7 +178,7 @@ let mark_ocamlyacc_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "/*(*s: %s *)*/" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _ -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
@@ -196,7 +198,7 @@ let mark_ocamlyacc_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "/*(*x: %s *)*/" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _ -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
@@ -230,8 +232,9 @@ let mark_C =
     unparse_mark_end   = (fun ~key ->      
       spf "/* nw_e: %s */" key);
   
-    parse_mark_startend = (fun s -> None);
+    parse_mark_startend = (fun _ -> None);
     unparse_mark_startend = (fun ~key ~md5 -> 
+      ignore(key, md5);
       failwith "-less_marks is not supported for this language"
     );
   }
@@ -256,7 +259,7 @@ let mark_C_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "/*s: %s */" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
@@ -276,7 +279,7 @@ let mark_C_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "/*x: %s */" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
@@ -301,7 +304,7 @@ let mark_haskell_short =
     unparse_mark_start = (fun ~key ~md5 -> 
       (match md5 with 
       | None -> spf "{-s: %s -}" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
     unparse_mark_end   = (fun ~key ->
@@ -321,12 +324,10 @@ let mark_haskell_short =
     unparse_mark_startend = (fun ~key ~md5 ->
       (match md5 with
       | None -> spf "{-x: %s -}" key;
-      | Some s -> failwith "this language works only with -md5sum_in_auxfile"
+      | Some _s -> failwith "this language works only with -md5sum_in_auxfile"
       )
     );
   }
-
-
 
 (*****************************************************************************)
 (* Final table  *)

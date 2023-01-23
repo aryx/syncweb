@@ -17,7 +17,7 @@ open Code
 let count_dollar s =
   let cnt = ref 0 in
   for i = 0 to String.length s - 1 do
-    if String.get s i = '$'
+    if String.get s i =$= '$'
     then incr cnt
   done;
   !cnt
@@ -184,7 +184,7 @@ let merge_files xs =
 
     let rec tex_or_chunkdef x =
       match x with
-      | Tex xs -> ()
+      | Tex _xs -> ()
       | ChunkDef (def, ys) ->
         let key = def.chunkdef_key in
         let hfiles_of_key = 
@@ -209,8 +209,8 @@ let merge_files xs =
         ys |> List.iter code_or_chunk
     and code_or_chunk x =
       match x with
-      | Code s -> ()
-      | ChunkName (s, i) -> ()
+      | Code _s -> ()
+      | ChunkName (_s, _i) -> ()
     in
     List.iter tex_or_chunkdef orig
   );
@@ -272,7 +272,7 @@ let merge_files xs =
           ) |> Common2.sum
           in
           [ChunkDef (def, ys |> List.map code_or_chunk)] @
-          (if nbdollars mod 2 = 1
+          (if nbdollars mod 2 =|= 1
            then [Tex ["%$"]]
            else []
           )
@@ -285,9 +285,9 @@ let merge_files xs =
     Web.unparse orig2 file;
 
     Common.cat file |> List.iter pr; 
-    Common.command2 (spf "rm -f %s" file);
+    Sys.command (spf "rm -f %s" file) |> ignore;
 
     Hashtbl.find_all hfile_to_topkeys file |> List.iter (fun topkey ->
-      Common.command2 (spf "rm -f %s/%s" dir topkey);
+      Sys.command (spf "rm -f %s/%s" dir topkey) |> ignore;
     )
   )

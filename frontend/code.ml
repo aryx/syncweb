@@ -112,21 +112,21 @@ let readjust_start2_with_signatures file xs =
             
           end
           else 
-            if md5sum = None
+            if md5sum =*= None
             then
               (Start2(s, j, Some md5sum2, pinfo))::aux xs ys
             else
             failwith "md5sums present in view file"
       | ((End2 _|Regular2 _) as x)::xs, ys ->
           x::aux xs ys
-      | (Start2(s, j, md5sum, pinfo) as x)::xs, [] ->
+      | (Start2(_, _j, _md5sum, _pinfo) as x)::xs, [] ->
           pr2 "more marks in view file than md5sums in md5sum_auxfile";
           if (Common2.y_or_no 
                 "This may be because you moved entities. Continue?")
           then x::xs
           else failwith "Stop here"
           
-      | [], y::ys ->
+      | [], _y::_ys ->
           pr2 "more md5sums in md5sum_auxfile than start marks in view file";
           if (Common2.y_or_no 
                 "This may be because you moved entities. Continue?")
@@ -181,10 +181,10 @@ let parse2 ~lang file =
     | x::xs -> 
         (match x with
         | Start2 (s, i, md5sum, pinfo) -> 
-            let (body, endmark, rest) = 
+            let (body, _endmark, rest) = 
              try 
               Common2.split_when (fun x -> match x with 
-              | End2 (s2,_, pinfo2) -> 
+              | End2 (s2,_, _pinfo2) -> 
                   (match s2 with
                   | None -> raise Todo
                   | Some s2 -> s = s2 
@@ -200,9 +200,9 @@ let parse2 ~lang file =
               chunk_md5sum = md5sum;
               pretty_print = None;
             }, body', i)::aux rest
-        | End2 (s, i, pinfo) -> 
+        | End2 (_s, _i, pinfo) -> 
             failwith (s_of_pinfo pinfo ^ " a end mark without a start at")
-        | Regular2 (s, pinfo) -> 
+        | Regular2 (s, _pinfo) -> 
             RegularCode s::aux xs
         )
   in
@@ -210,7 +210,9 @@ let parse2 ~lang file =
   codetrees
 
 let parse ~lang a = 
-  Common.profile_code "Code.parse" (fun () -> parse2 ~lang a)
+(*  Common.profile_code "Code.parse" (fun () ->  *)
+      parse2 ~lang a
+(* ) *)
 
 (*****************************************************************************)
 (* Unparser *)
@@ -229,14 +231,14 @@ let rec adjust_pretty_print_field view =
               match y with
               | ChunkCode (info2, _, indent2) ->
                   info.chunk_key = info2.chunk_key &&
-                  indent = indent2 (* always the same ? *)
+                  indent =|= indent2 (* always the same ? *)
               | _ -> false
             ) (x::xs)
           in
           (* recurse *)
           adjust_pretty_print_field rest;
           same_key |> List.iter (function
-          | ChunkCode (_info, xs, i) ->
+          | ChunkCode (_info, xs, _i) ->
               adjust_pretty_print_field xs
           | _ -> raise Impossible
           );
@@ -323,7 +325,7 @@ let unparse
     views |> List.iter (function
     | ChunkCode (chunkcode, body, i) -> 
         aux (chunkcode, body, i)
-    | RegularCode s -> 
+    | RegularCode _s -> 
         failwith "no chunk at toplevel"
     );
     ()

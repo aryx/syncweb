@@ -7,11 +7,10 @@ let to_hex   a = Digest.to_hex a
 let from_hex a = Digest.from_hex a
 
 let signature_of_string a =
-  Common.profile_code "Signature.signature_of_string" (fun () ->
     (* old: Common2.md5sum_of_string a
      * but really slower than Digest because it forks a process *)
     Digest.string a
-  )
+[@@profiling]
 
 
 let signaturefile_of_file file = 

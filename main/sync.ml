@@ -41,7 +41,7 @@ let rec uniq_agglomerate_chunkname xs =
       | ChunkName (k1, i1), ChunkName(k2, i2) -> 
           if k1 = k2
           then begin
-            assert (i1 = i2);
+            assert (i1 =|= i2);
             uniq_agglomerate_chunkname (y::xs);
           end else
             x::(uniq_agglomerate_chunkname (y::xs))
@@ -55,7 +55,7 @@ let build_chunk_hash_from_views views =
   let h = Hashtbl.create 101 in
   let rec aux view = 
     match view with
-    | ChunkCode (x, body, i) -> 
+    | ChunkCode (x, body, _i) -> 
         let key = x.chunk_key in
         let md5sum = x.chunk_md5sum in
         
@@ -114,7 +114,7 @@ let show_diff stra strb =
   let tmpb = "/tmp/b" in
   Common.write_file ~file:tmpa stra;
   Common.write_file ~file:tmpb strb;
-  Common.command2 (spf "diff -u %s %s" tmpa tmpb);
+  Sys.command (spf "diff -u %s %s" tmpa tmpb) |> ignore;
   ()
 
 (*****************************************************************************)
@@ -133,7 +133,7 @@ let show_diff stra strb =
  * pre: body_orig can not be in view_elems. but it should be the
  * first in orig_elems.
  *)
-let candidates_against_orig body_orig view_elems orig_elems =
+let candidates_against_orig _body_orig view_elems _orig_elems =
   view_elems
 
 
@@ -141,6 +141,7 @@ let candidates_against_orig body_orig view_elems orig_elems =
  * md5sum in the view as a way to access the original version of orig.
  *)
 let sync2 ~lang orig views = 
+  ignore(lang);
 
   let h = build_chunk_hash_from_views views in
   let chunks = h |> Common.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
@@ -184,7 +185,7 @@ let sync2 ~lang orig views =
                 then ChunkDef (def, body_orig)
                 else failwith "stopped"
                 
-            | x::xs -> 
+            | _x::_xs -> 
 
                 (* no need try here *)
                 let aref_orig = Hashtbl.find h_orig key in 
@@ -192,11 +193,11 @@ let sync2 ~lang orig views =
                 (try 
                     (* Case3: equal chunk *)
                     let elem_view = 
-                      !aref_view |> List.find (fun (md5, body_view) -> 
+                      !aref_view |> List.find (fun (_md5, body_view) -> 
                         (* bugfix: have written body_view = body_view :) 
                          * type system can not catch such bugs :( 
                          *)
-                        body_orig = body_view
+                        body_orig =*= body_view
                       )
                     in
                     aref_orig := Common2.remove_first body_orig !aref_orig;
@@ -238,7 +239,7 @@ let sync2 ~lang orig views =
                              *  - make sync should now work
                              *)
                               failwith (spf "TODO: didnt find the md5sum in %s"
-                                          (Common.dump elem_view))
+                                          (Dumper.dump elem_view))
                           | Some s -> s
                         in
 
@@ -255,14 +256,14 @@ let sync2 ~lang orig views =
 
                         let first_heuristic = 
                           match () with
-                          | _ when md5sum_past = md5sum_orig -> 
+                          | _ when md5sum_past =*= md5sum_orig -> 
                               show_diff s_orig s_view;
                               if (Common2.y_or_no 
                                     "        <---- changed?")
                               then Some body_view
                               else None
                                 
-                          | _ when md5sum_past = md5sum_view -> 
+                          | _ when md5sum_past =*= md5sum_view -> 
                               show_diff s_view s_orig;
                               if (Common2.y_or_no 
                                     "changed  ---->        ?")
@@ -318,5 +319,7 @@ let sync2 ~lang orig views =
   orig'
 
 let sync ~lang a b = 
-  Common.profile_code "Sync.sync" (fun () -> sync2 ~lang a b)
+(*  Common.profile_code "Sync.sync" (fun () ->  *)
+      sync2 ~lang a b
+(* ) *)
 

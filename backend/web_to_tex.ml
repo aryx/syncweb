@@ -104,7 +104,7 @@ let (parse_string: string -> tex_string) = fun s ->
     | x::xs ->
       aux_brace (x::acc) xs
   and s_of_acc acc =
-    if acc = []
+    if acc =*= []
     then []
     else [S (Common2.string_of_chars (List.rev acc))]
   in
@@ -260,7 +260,7 @@ let compare_string s1 s2 =
   
   let convert s = 
     if s =~ "{\\\\nwixident{\\([^}]*\\)}"
-    then Common.matched1 s |> String.lowercase
+    then Common.matched1 s |> String.lowercase_ascii
     else failwith (spf "wrong nwixident string: %s" s)
   in
   let s1 = convert s1 in
@@ -273,7 +273,7 @@ let compare_string s1 s2 =
       | _, [] -> 1
       | x::xs, y::ys ->
         let res = compare_character x y in
-        if res = 0 
+        if res =|= 0 
         then aux xs ys
         else res
   in
@@ -497,7 +497,7 @@ let web_to_tex orig texfile (defs, uses) =
           pr "\\code{}";
           pr s;
           pr "\\edoc{}";
-        | B s ->
+        | B _s ->
           error "{{ }} inside chunk definition is not allowed"
       );
       pr (spf "~{\\nwtagstyle{}\\subpageref{%s}}" (label_of_id def.chunkdef_id));
@@ -554,7 +554,7 @@ let web_to_tex orig texfile (defs, uses) =
           pr "\\code{}";
           pr s;
           pr "\\edoc{}";
-        | B s ->
+        | B _s ->
           error "{{ }} inside a chunk name is not allowed"
 
       );

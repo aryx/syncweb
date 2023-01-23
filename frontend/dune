@@ -1,0 +1,11 @@
+(library
+ (name frontend)
+ (wrapped false)
+ (libraries
+   commons
+ )
+ (preprocess
+   (pps ppx_deriving.show) ; ppx_profiling
+ )
+)
+

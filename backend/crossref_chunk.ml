@@ -22,7 +22,7 @@ type chunk_xref = {
 let hchunkname_to_body__from_orig orig = 
   let h = Hashtbl.create 101 in
     orig |> List.iter (function
-    | Tex xs -> ()
+    | Tex _xs -> ()
     | ChunkDef (def, body) -> 
         let key = def.chunkdef_key in
         Common2.hupdate_default key (fun x -> x @ [body]) (fun()->[]) h;
@@ -33,9 +33,9 @@ let hchunkname_to_body__from_orig orig =
 let hchunkname_to_defs__from_orig orig =
   (* use the Hashtbl.find_all *)
   let h = Hashtbl.create 101 in
-  let rec aux orig = 
+  let aux orig = 
     orig |> List.iter (function
-      | Tex xs -> ()
+      | Tex _xs -> ()
       | ChunkDef (def, body) -> 
         let key = def.chunkdef_key in
         Hashtbl.add h key (def, body)
@@ -47,10 +47,10 @@ let hchunkname_to_defs__from_orig orig =
 (* for web_to_tex.ml *)
 let hchunkname_to_def__from_orig orig =
   let h = Hashtbl.create 101 in
-  let rec aux orig = 
+  let aux orig = 
     orig |> List.iter (function
-      | Tex xs -> ()
-      | ChunkDef (def, body) -> 
+      | Tex _xs -> ()
+      | ChunkDef (def, _body) -> 
         let key = def.chunkdef_key in
         (* we refer to the first one *)
         if Hashtbl.mem h key
@@ -72,7 +72,7 @@ let hchunkid_info__from_orig orig =
   (* first pass *)
   orig |> List.iter (function
     | Tex _ -> ()
-    | ChunkDef (def, body) ->
+    | ChunkDef (def, _body) ->
       let info = {
         prev_def = None;
         next_def = None;
@@ -92,7 +92,7 @@ let hchunkid_info__from_orig orig =
       let prev_opt = Common2.hfind_option key hlast_key_to_chunk in
       Hashtbl.replace hlast_key_to_chunk key id;
       info.prev_def <- prev_opt;
-      prev_opt |> Common.do_option (fun previd ->
+      prev_opt |> Option.iter (fun previd ->
         let info_prev = Hashtbl.find hchunkid_info previd in
         info_prev.next_def <- Some id
       );
@@ -105,7 +105,7 @@ let hchunkid_info__from_orig orig =
        * Hashtbl.find_all? 
        *)
       let defs = Hashtbl.find_all hkey_to_defs key in
-      if defs = []
+      if defs =*= []
       then failwith (spf "could not find key for %s" key);
       defs |> List.iter (fun (def, _body) ->
         let id = def.chunkdef_id in
