@@ -41,7 +41,15 @@ SUBDIRS=globals frontend backend
 
 MAKESUBDIRS= $(XXXDIR) $(SUBDIRS)
 INCLUDEDIRS=external/commons $(SUBDIRS)
-LIBS= external/commons/lib.cma $(SUBDIRS:%=%/lib.cma)
+
+# commons.cma now depends on multiple libs :(
+COMMONLIBS=external/calendar/calendarLib.cma external/easy-format/easy_format.cma \
+  external/ppx_deriving/runtime/ppx_deriving_runtime.cma external/ppx_deriving_yojson/runtime/ppx_deriving_yojson_runtime.cma \
+  external/biniou/biniou.cma external/yojson/yojson.cma \
+  external/easy_logging/easy_logging.cma external/easy_logging_yojson/easy_logging_yojson.cma \
+  external/commons/commons.cma
+
+LIBS= $(COMMONLIBS) $(SUBDIRS:%=%/lib.cma)
 
 SYSLIBS=str.cma unix.cma bigarray.cma $(XXXSYSCMA)
 
