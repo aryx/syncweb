@@ -5,6 +5,9 @@
 *** restore some elements from the deleted Makefile in
 https://github.com/aryx/syncweb/commit/8cc3f10599bf65ab57947950f30cb6b18d83db14
 
+*** once graph_code, codegraph, the parser_xxx are added to OPAM,
+can start to also package the indexer and lpizer
+
 ** last
 
 *** see autodefs.ocaml script in fork-tiger/old/
