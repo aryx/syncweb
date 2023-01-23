@@ -1,5 +1,10 @@
 # -*- org -*-
 
+** Last
+
+*** restore some elements from the deleted Makefile in
+https://github.com/aryx/syncweb/commit/8cc3f10599bf65ab57947950f30cb6b18d83db14
+
 ** last
 
 *** see autodefs.ocaml script in fork-tiger/old/
