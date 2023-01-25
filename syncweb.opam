@@ -19,7 +19,7 @@ computing and storing md5sum of the different chunks.
 
 maintainer: "Yoann Padioleau <yoann.padioleau@gmail.com>"
 authors: [ "Yoann Padioleau <yoann.padioleau@gmail.com>" ]
-license: "GPL-2.0-or-later"
+license: "GPL-2.0-only"
 homepage: "https://github.com/aryx/syncweb"
 dev-repo: "git+https://github.com/aryx/syncweb"
 bug-reports: "https://github.com/aryx/syncweb/issues"
