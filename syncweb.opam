@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "syncweb"
-version: "0.5"
+version: "0.5.1"
 synopsis: "Syncweb, Literate Programming meets Unison"
 description: """
 Syncweb is a command-line tool enabling programmers to use the
