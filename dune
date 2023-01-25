@@ -1,9 +1,7 @@
 ; copy-pasted from from semgrep/dune
 (env
-  (dev
-    (flags (:standard  -w -52-6)))
-  (release
-    (flags (:standard -O3))))
+  (_
+    (flags (:standard  -w -52-6))))
 
 (dirs
   main
