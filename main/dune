@@ -6,8 +6,9 @@
     backend
  )
  (preprocess (pps ppx_deriving.show )) ; LATER: ppx_profiling
- ; byte for ocamldebug
- (modes native byte)
+ ; 'byte' is useful for ocamldebug
+ ; 'best' is 'native' with a fallback to 'byte' when native compilation isn’t available.
+ (modes (best exe) byte)
 )
 
 (install
