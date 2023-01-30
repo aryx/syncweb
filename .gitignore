@@ -30,3 +30,6 @@ _build
 /graph_code.marshall
 /graph_code.marshall.opti
 /syncweb.install
+/demos/demo.ml
+t
+/demos/demo.mli
