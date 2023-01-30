@@ -1,13 +1,14 @@
 You must first install a recent version of 
- - OCaml (at least 4.00.1), 
-   see http://caml.inria.fr/download.en.html
+ - OPAM and OCaml (at least OCaml 4.12.0),
+   see https://opam.ocaml.org/doc/Install.html
  - Noweb 
    see http://www.cs.tufts.edu/~nr/noweb/
  - TeX/LaTeX
    see http://www.tug.org/texlive/
 
 Then simply type 
-  $ ./configure
-  $ make depend
+  $ make setup
   $ make
   $ make install
+
+The 'syncweb' binary should then be in your PATH.
