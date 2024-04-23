@@ -1,6 +1,6 @@
 
 type loc = {
-  file: Common.filename; (* a relative (readable) path usually *)
+  file: string (* Common.filename *); (* a relative (readable) path usually *)
   line: int;
 }
 
@@ -28,7 +28,7 @@ type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list
 
 val parse_defs_and_uses: 
-  Common.filename -> defs * uses
+  string (* Common.filename *) -> defs * uses
 
 val hdefs_and_uses_of_chunkid__from_orig:
   Web.t -> (defs * uses) ->

@@ -1,7 +1,11 @@
 (executables
  (names Main)
  (libraries
+    ; external libs
+    fpath
     commons
+
+    ; internal
     frontend
     backend
  )

@@ -1,4 +1,5 @@
 open Common
+open Either
 
 open Web
 
@@ -11,7 +12,7 @@ open Web
  * (I do depend on it for syncweb/indexer/ but I don't want for syncweb itself).
  *)
 type loc = { 
-  file: Common.filename;
+  file: string (* Common.filename *);
   line: int;
 }
 (* Yet another Entity_code.t,
@@ -105,19 +106,19 @@ let adjust_name_and_kind s kind =
 let parse_defs_and_uses file =
   let defs = ref [] in
   let uses = ref [] in
-  Common.cat file |> List.iter (fun s ->
+  UFile.Legacy.cat file |> List.iter (fun s ->
     let xs = Str.split_delim (Str.regexp ":") s in
     match xs with
     | ["DEF";kind_str;file;line;name] ->
       let kind_opt = kind_of_string_opt kind_str in
       kind_opt |> Option.iter (fun kind ->
-        defs |> Common.push (adjust_name_and_kind name kind,
+        defs |> Stack_.push (adjust_name_and_kind name kind,
                            {file = file ;line = int_of_string line})
       )
     | ["USE";kind_str;file;line;name] ->
       let kind_opt = kind_of_string_opt kind_str in
       kind_opt |> Option.iter (fun kind ->
-        uses |> Common.push (adjust_name_and_kind name kind, 
+        uses |> Stack_.push (adjust_name_and_kind name kind, 
                            {file = file;line = int_of_string line})
       )
     | _ -> failwith (spf "unrecognized line in defs and uses file: %s" s)
@@ -165,7 +166,7 @@ let hs__from_orig orig (defs, uses) =
           | Code _ -> 
             Hashtbl.add hchunkid_to_locs id ({ file; line = !loc});
             if !debug 
-            then pr (spf "id = %d (name = %s), loc = %s:%d"
+            then UCommon.pr (spf "id = %d (name = %s), loc = %s:%d"
                        id key file !loc);
             incr loc
           | ChunkName (key, _indent) ->
@@ -201,7 +202,7 @@ let hs__from_orig orig (defs, uses) =
   hchunkid_to_locs |> Common2.hkeys |> List.iter (fun id ->
     let locs = Hashtbl.find_all hchunkid_to_locs id in
     let defs_uses = 
-      locs |> Common.map_filter (fun loc ->
+      locs |> List_.map_filter (fun loc ->
         try 
           (* bugfix: use Hashtbl.find_all, cos the same LOC can contain
            * multiple uses
@@ -210,7 +211,7 @@ let hs__from_orig orig (defs, uses) =
         with Not_found -> None
       ) |> List.flatten
     in
-    let defs, uses = Common.partition_either (fun x -> x) defs_uses in
+    let defs, uses = Either_.partition_either (fun x -> x) defs_uses in
     Hashtbl.add hdefs_and_uses_of_chunkid id (defs, uses);
     defs |> List.iter (fun ((s, kind), loc) ->
       let s =

@@ -96,24 +96,24 @@ let build_chunk_hash_from_views views =
 (*****************************************************************************)
 
 let show_orig_view ?(force_display=false)key s_orig s_view = 
-  pr2 ("DIFF for: " ^ key);
+  UCommon.pr2 ("DIFF for: " ^ key);
   if (Common2.nblines s_orig > 5 || Common2.nblines s_view > 5) && 
      not force_display 
   then 
     ()
   else begin
-    pr2 "<<<<<<< orig <<<<<<<<";
+    UCommon.pr2 "<<<<<<< orig <<<<<<<<";
     Common2.pr2_no_nl s_orig;
-    pr2 "====================";
+    UCommon.pr2 "====================";
     Common2.pr2_no_nl s_view;
-    pr2 ">>>>>>> view >>>>>>>>";
+    UCommon.pr2 ">>>>>>> view >>>>>>>>";
   end
  
 let show_diff stra strb = 
   let tmpa = "/tmp/a" in
   let tmpb = "/tmp/b" in
-  Common.write_file ~file:tmpa stra;
-  Common.write_file ~file:tmpb strb;
+  UFile.Legacy.write_file ~file:tmpa stra;
+  UFile.Legacy.write_file ~file:tmpb strb;
   Sys.command (spf "diff -u %s %s" tmpa tmpb) |> ignore;
   ()
 
@@ -144,13 +144,13 @@ let sync2 ~lang orig views =
   ignore(lang);
 
   let h = build_chunk_hash_from_views views in
-  let chunks = h |> Common.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
-  let h_view = Common.hash_of_list chunks in
+  let chunks = h |> Hashtbl_.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
+  let h_view = Hashtbl_.hash_of_list chunks in
 
 
   let h = Crossref_chunk.hchunkname_to_body__from_orig orig in
-  let chunks = h |> Common.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
-  let h_orig = Common.hash_of_list chunks in
+  let chunks = h |> Hashtbl_.hash_to_list |> List.map (fun (k, v) -> k, ref v) in
+  let h_orig = Hashtbl_.hash_of_list chunks in
 
   (* we explore the orig in the original order *)
   let orig' = 
@@ -177,10 +177,10 @@ let sync2 ~lang orig views =
                 (* Case2: old chunk in orig deleted *)
                 let s_orig = Web_to_code.s_of_chunkdef_body body_orig in
                 
-                pr2 ("a chunk has been deleted or moved for: " ^ key);
-                pr2 "<<<<<<< orig <<<<<<<<";
+                UCommon.pr2 ("a chunk has been deleted or moved for: " ^ key);
+                UCommon.pr2 "<<<<<<< orig <<<<<<<<";
                 Common2.pr2_no_nl s_orig;
-                pr2 "====================";
+                UCommon.pr2 "====================";
                 if (Common2.y_or_no "keep the one in orig?")
                 then ChunkDef (def, body_orig)
                 else failwith "stopped"
@@ -251,7 +251,7 @@ let sync2 ~lang orig views =
 
                         show_orig_view key s_orig s_view;
 
-                        pr2 "orig          view";
+                        UCommon.pr2 "orig          view";
                         (* ask choice or merge *)
 
                         let first_heuristic = 
@@ -281,7 +281,7 @@ let sync2 ~lang orig views =
 
 
                               show_diff s_orig s_view;
-                              pr2 "who is right ? orig ? view ? both ?  o/v/b ? ";
+                              UCommon.pr2 "who is right ? orig ? view ? both ?  o/v/b ? ";
                               
                               let answer = read_line() in
                               (match answer with
@@ -304,16 +304,16 @@ let sync2 ~lang orig views =
   in
 
   (* check if have consumed every elements in the view *)
-  h_view |> Common.hash_to_list |> List.iter (fun (k,v) -> 
+  h_view |> Hashtbl_.hash_to_list |> List.iter (fun (k,v) -> 
     match !v with
     | [] -> ()
     | x::xs -> 
-        pr2 ("Not consumed: " ^ k);
-        pr2 ("<<<<<<<<<<<<<<<<");
+        UCommon.pr2 ("Not consumed: " ^ k);
+        UCommon.pr2 ("<<<<<<<<<<<<<<<<");
         let strs = (x::xs) |> List.map snd |> List.map 
           Web_to_code.s_of_chunkdef_body in
         strs |> List.iter Common2.pr2_no_nl;
-        pr2 (">>>>>>>>>>>>>>>>");
+        UCommon.pr2 (">>>>>>>>>>>>>>>>");
   );
 
   orig'

@@ -1,5 +1,10 @@
 # -*- org -*-
 
+* 0.6 (Q2 2024)
+
+** Internals:
+- update to latest commons in semgrep 1.70.0
+
 * 0.5 (Q1 2023)
 
 ** Internals:

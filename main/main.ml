@@ -31,6 +31,9 @@ open Common
  *  - http://www.t3x.org/s9fes/edoc.html?
  *)
 
+(* coupling: changes.txt *)
+let version = "0.6"
+
 (*****************************************************************************)
 (* Flags *)
 (*****************************************************************************)
@@ -48,10 +51,10 @@ let less_marks = ref false
 
 let with_error file f = 
   try
-    pr2 (spf "processing %s" file);
+    UCommon.pr2 (spf "processing %s" file);
     f ()
   with e ->
-    pr2 (spf "Problem found while was processing %s" file);
+    UCommon.pr2 (spf "Problem found while was processing %s" file);
     raise e
 
 (*****************************************************************************)
@@ -65,7 +68,7 @@ open Web
 let find_topkey_corresponding_to_file orig viewf =
   (* old: Filename.basename viewf *)
   let base = Filename.basename viewf in
-  let defs = orig |> Common.map_filter (function
+  let defs = orig |> List_.map_filter (function
     | Tex _ -> None
     | ChunkDef (def, _xs) -> 
       let s = def.chunkdef_key in
@@ -79,23 +82,23 @@ let find_topkey_corresponding_to_file orig viewf =
   | [x] -> x
   | x::y::ys ->
     (* same basenames, need to use the directory as a discriminator *)
-    let revdir = Filename.dirname viewf |> Common.split "/" |> List.rev in
+    let revdir = Filename.dirname viewf |> String_.split ~sep:"/" |> List.rev in
     let candidates = 
       (x::y::ys) |> List.map (fun file ->
-        Filename.dirname file |> Common.split "/" |> List.rev,
+        Filename.dirname file |> String_.split ~sep:"/" |> List.rev,
         file
        )
     in
     let err () = 
       failwith (spf "too many matching topkeys for %s (%s)" viewf
-                  ((x::y::ys) |> Common.join ", "))
+                  ((x::y::ys) |> String.concat ", "))
     in
     let rec aux revdir candidates =
       match revdir with
       | [] -> err ()
       | x::xs ->
         let same_top_revdir_candidates =
-          candidates |> Common.map_filter (fun (revdir, fullfile) ->
+          candidates |> List_.map_filter (fun (revdir, fullfile) ->
             match revdir with
             | [] -> None
             | y::ys -> if y = x then Some (ys, fullfile) else None
@@ -125,9 +128,9 @@ let parse_origs origfs =
   );
   if Sys.file_exists cachefile && 
     origfs |> List.for_all (fun file -> 
-      Common2.filemtime cachefile >= Common2.filemtime file)
+      UFile.filemtime (Fpath.v cachefile) >= UFile.filemtime (Fpath.v file))
   then begin
-    pr2 ("using cache: " ^ cachefile);
+    UCommon.pr2 ("using cache: " ^ cachefile);
     (* todo: use versioning *)
     Common2.get_value cachefile
   end else begin
@@ -144,57 +147,57 @@ let parse_origs origfs =
 let actions () = [
   (* testing *)
   "-parse_orig", "   <file>",
-    Arg_helpers.mk_action_1_arg (fun x -> 
+    Arg_.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
       let orig = Web.parse x in
       Web.unparse orig tmpfile;
       Sys.command(spf "diff %s %s" x tmpfile) |> ignore;
     );
   "-parse_view", "   <file>", 
-    Arg_helpers.mk_action_1_arg (fun x -> 
+    Arg_.mk_action_1_arg (fun x -> 
       ignore(Code.parse ~lang:Lang.mark_ocaml_short x);
     );
 
   (* tangling *)
   "-view_of_orig", "   <file> <key>", 
-    Arg_helpers.mk_action_2_arg (fun x key -> 
+    Arg_.mk_action_2_arg (fun x key -> 
       let orig = Web.parse x in
       let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
       Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
-      tmpfile |> Common.cat |> List.iter pr;
+      tmpfile |> UFile.Legacy.cat |> List.iter UCommon.pr;
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
 
   (* duplicate of -view_of_orig *)
   "-to_code", "   <file> <key>", 
-    Arg_helpers.mk_action_2_arg (fun x key -> 
+    Arg_.mk_action_2_arg (fun x key -> 
       let orig = Web.parse x in
       let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
       Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
-      tmpfile |> Common.cat |> List.iter pr;
+      tmpfile |> UFile.Legacy.cat |> List.iter UCommon.pr;
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
 
   (* weaving *)
   "-to_tex", " <nw file> <defs and uses file>", 
-  Arg_helpers.mk_action_2_arg (fun origfile defs_and_uses_file -> 
+  Arg_.mk_action_2_arg (fun origfile defs_and_uses_file -> 
     (* todo: parse .aux? *)
-    let (d,b,e) = Common2.dbe_of_filename origfile in
+    let (d,b,e) = Filename_.dbe_of_filename origfile in
     if (e <> "nw")
     then failwith (spf "expect a .nw file not a .%s" e);
     let orig = Web.parse origfile in
     let (defs, uses) = Crossref_code.parse_defs_and_uses defs_and_uses_file in
     (* multi-file support *)
     let orig = Web.expand_sharp_include orig in
-    let texfile = Common2.filename_of_dbe (d,b,"tex") in
+    let texfile = Filename_.filename_of_dbe (d,b,"tex") in
     Web_to_tex.web_to_tex orig texfile (defs, uses);
   );
 
   (* superseded by Main.main_action now *)
   "-sync", "   <orig> <view>", 
-    Arg_helpers.mk_action_2_arg (fun origf viewf -> 
+    Arg_.mk_action_2_arg (fun origf viewf -> 
       let orig = Web.parse origf in
       let views = Code.parse ~lang:Lang.mark_ocaml viewf in
 
@@ -205,33 +208,33 @@ let actions () = [
       Sys.command(spf "diff %s %s" origf tmpfile) |> ignore;
     );
   "-unmark", "   <file>", 
-    Arg_helpers.mk_action_1_arg (fun file -> 
+    Arg_.mk_action_1_arg (fun file -> 
 
-      let xs = Common.cat file in
-      let xs = xs |> Common.exclude (fun s ->
+      let xs = UFile.Legacy.cat file in
+      let xs = xs |> List_.exclude (fun s ->
         s =~ "^[ \t]*(\\*[sex]:"
       )
       in
       let tmpfile = "/tmp/xxx" in
       let s = Common2.unlines xs in
-      Common.write_file tmpfile s;
+      UFile.Legacy.write_file tmpfile s;
       Sys.command(spf "diff -u %s %s" file tmpfile) |> ignore;
       if Common2.y_or_no "apply modif?"
-      then Common.write_file file s
+      then UFile.Legacy.write_file file s
       else failwith "ok, skipping"
     );
 
 
   "-rename_chunknames", " <origs>", 
-  Arg_helpers.mk_action_n_arg Refactor.rename_chunknames;
+  Arg_.mk_action_n_arg Refactor.rename_chunknames;
   "-rename_chunknames_archi", " <origs and views>", 
-  Arg_helpers.mk_action_n_arg Refactor.rename_chunknames_archi;
+  Arg_.mk_action_n_arg Refactor.rename_chunknames_archi;
   "-merge_files", " <origs>", 
-  Arg_helpers.mk_action_n_arg Refactor.merge_files;
+  Arg_.mk_action_n_arg Refactor.merge_files;
 
   (* pad's hacks *)
   "-to_noweb", " <orig>", 
-  Arg_helpers.mk_action_1_arg (fun file -> 
+  Arg_.mk_action_1_arg (fun file -> 
     let orig = Web.parse file in
     let orig =
       orig |> List.map (function 
@@ -250,10 +253,10 @@ let actions () = [
   );
 
   "-to_web", " <orig>", 
-  Arg_helpers.mk_action_1_arg (fun file -> 
+  Arg_.mk_action_1_arg (fun file -> 
 
 let unparse_orig_web orig filename =
-  Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
+  UFile.Legacy.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     orig |> List.iter (function
     | Tex xs -> 
@@ -276,8 +279,8 @@ let unparse_orig_web orig filename =
 in
 
     let orig = Web.parse file in
-    let (d,b,_e) = Common2.dbe_of_filename file in
-    let file2 = Common2.filename_of_dbe (d,b,"w") in
+    let (d,b,_e) = Filename_.dbe_of_filename file in
+    let file2 = Filename_.filename_of_dbe (d,b,"w") in
     unparse_orig_web orig file2
   );
 
@@ -319,11 +322,11 @@ let main_action xs =
           let view' = Web_to_code.view_of_orig ~topkey orig' in
           (* regenerate orig and view *)
           if orig <> orig' then begin
-            pr2 "orig has been updated";
+            UCommon.pr2 "orig has been updated";
             Web.unparse orig' origf;
           end;
           if view <> view' then begin
-            pr2 "view has been regenerated";
+            UCommon.pr2 "view has been regenerated";
             Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
           end;
         end
@@ -348,7 +351,7 @@ let main_action xs =
         let view = Web_to_code.view_of_orig ~topkey orig in
         Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view viewf
       else begin
-        (* pr2 (spf "syncing %s" viewf); *)
+        (* UCommon.pr2 (spf "syncing %s" viewf); *)
 
         with_error viewf (fun () ->
 
@@ -359,13 +362,13 @@ let main_action xs =
 (*          Profiling.profile_code "Main.regenerate" (fun () -> *)
             (* regenerate orig and view *)
             if view <> view' then begin
-              pr2 "view has been regenerated";
+              UCommon.pr2 "view has been regenerated";
               Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view' viewf;
             end;
             let origs' = Web.unpack_multi orig' in
             Common2.zip origs origs' |> List.iter (fun ((f1,orig),(_f2,orig'))->
               if orig <> orig' then begin
-                pr2 (spf "orig %s has been updated" f1);
+                UCommon.pr2 (spf "orig %s has been updated" f1);
                 Web.unparse orig' f1;
               end;
             )
@@ -388,7 +391,7 @@ let options () =
   [
     "-lang", Arg.Set_string lang, 
     (spf " <lang> (default=%s, choices=%s)" !lang 
-        (Common.join "|" (List.map fst (Lang.lang_table true))));
+        (String.concat "|" (List.map fst (Lang.lang_table true))));
 
     "-md5sum_in_auxfile", Arg.Set md5sum_in_auxfile, 
     " ";
@@ -399,13 +402,13 @@ let options () =
     ), " ";
 
     "-version",   Arg.Unit (fun () -> 
-      pr2 (spf "syncweb version: %s" Config.version);
+      UCommon.pr2 (spf "syncweb version: %s" version);
       exit 0;
     ), 
     "  guess what";
   ] @
   Common2.cmdline_flags_devel () @
-  Arg_helpers.options_of_actions action (all_actions()) @
+  Arg_.options_of_actions action (all_actions()) @
   []
 
 (*****************************************************************************)
@@ -419,7 +422,7 @@ let main () =
       " [options] <orig> <view> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
-  let args = Arg_helpers.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
 (*  Profiling.profile_code "Main total" (fun () ->  *)
@@ -429,10 +432,10 @@ let main () =
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Arg_helpers.action_list (all_actions())) -> 
-        Arg_helpers.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
+        Arg_.do_action !action xs (all_actions())
 
-    | _ when not (Common.null_string !action) -> 
+    | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
 
     (* --------------------------------------------------------- *)
@@ -444,13 +447,13 @@ let main () =
     (* empty entry *)
     (* --------------------------------------------------------- *)
     | [] -> 
-        Arg_helpers.usage usage_msg (options()); 
+        Arg_.usage usage_msg (options()); 
         failwith "too few arguments"
 (*    ) *)
   )
 
 (*****************************************************************************)
 let _ =
-  Common.main_boilerplate (fun () -> 
+  UCommon.main_boilerplate (fun () -> 
     main ();
   )

@@ -24,9 +24,9 @@ type t = tex_or_chunkdef list
   and chunkname = tex_string
   and chunkid = int
 
-val parse: Common.filename -> t
+val parse: string (* Common.filename *) -> t
 
-val unparse: t -> Common.filename -> unit
+val unparse: t -> string (* Common.filename *) -> unit
 
 (* multi file support for weaving *)
 val expand_sharp_include: 
@@ -34,6 +34,6 @@ val expand_sharp_include:
 
 (* multi file support for sync *)
 val pack_multi: 
-  (Common.filename * t) list -> t
+  (string (* Common.filename *) * t) list -> t
 val unpack_multi: 
-  t -> (Common.filename * t) list
+  t -> (string (* Common.filename *) * t) list

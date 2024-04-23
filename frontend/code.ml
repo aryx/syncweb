@@ -36,7 +36,7 @@ type t = codetree list
 (* Helpers  *)
 (*****************************************************************************)
 let generate_n_spaces i =
-  Common2.repeat " " i |> Common.join ""
+  Common2.repeat " " i |> String.concat ""
 
 (*****************************************************************************)
 (* Helpers parser  *)
@@ -52,7 +52,7 @@ let generate_n_spaces i =
 
 (* for better error reporting *)
 type pinfo = {
-  file: filename;
+  file: string (* filename *);
   line: int;
 }
 let s_of_pinfo pinfo = 
@@ -104,7 +104,7 @@ let readjust_start2_with_signatures file xs =
       | (Start2(s, j, md5sum, pinfo) as x)::xs, (s2, md5sum2)::ys ->
           if s <> s2 
           then begin 
-            pr2 (spf "not same key in view and md5sum_auxfile: %s VS %s" s s2);
+            UCommon.pr2 (spf "not same key in view and md5sum_auxfile: %s VS %s" s s2);
             if (Common2.y_or_no 
                   "This may be because you moved entities. Continue?")
             then x::xs
@@ -120,14 +120,14 @@ let readjust_start2_with_signatures file xs =
       | ((End2 _|Regular2 _) as x)::xs, ys ->
           x::aux xs ys
       | (Start2(_, _j, _md5sum, _pinfo) as x)::xs, [] ->
-          pr2 "more marks in view file than md5sums in md5sum_auxfile";
+          UCommon.pr2 "more marks in view file than md5sums in md5sum_auxfile";
           if (Common2.y_or_no 
                 "This may be because you moved entities. Continue?")
           then x::xs
           else failwith "Stop here"
           
       | [], _y::_ys ->
-          pr2 "more md5sums in md5sum_auxfile than start marks in view file";
+          UCommon.pr2 "more md5sums in md5sum_auxfile than start marks in view file";
           if (Common2.y_or_no 
                 "This may be because you moved entities. Continue?")
           then []
@@ -146,9 +146,9 @@ let readjust_start2_with_signatures file xs =
  * the file, but not worth the extra complexity.
  *)
 let parse2 ~lang file = 
-  let xs = Common.cat file in 
+  let xs = UFile.Legacy.cat file in 
 
-  let xs' = xs |> Common.index_list_1 |> List.map (fun (s, line) -> 
+  let xs' = xs |> List_.index_list_1 |> List.map (fun (s, line) -> 
     match lang.Lang.parse_mark_startend s with
     | Some (tabs, key,  md5) -> 
         [End2 (Some key, String.length tabs, mkp file line);
@@ -227,7 +227,7 @@ let rec adjust_pretty_print_field view =
           adjust_pretty_print_field xs
       | ChunkCode (info, _, indent) ->
           let same_key, rest = 
-            Common.span (fun y -> 
+            List_.span (fun y -> 
               match y with
               | ChunkCode (info2, _, indent2) ->
                   info.chunk_key = info2.chunk_key &&
@@ -267,7 +267,7 @@ let unparse
   if less_marks 
   then adjust_pretty_print_field views;
 
-  Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
+  UFile.Legacy.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     let pr_indent indent = Common2.do_n indent (fun () -> pr_no_nl " ") in
 
@@ -276,7 +276,7 @@ let unparse
       let md5sum = 
         if md5sum_in_auxfile 
         then begin 
-          Common.push (spf "%s |%s" key 
+          Stack_.push (spf "%s |%s" key 
                          (Signature.to_hex (Common2.some x.chunk_md5sum)))
             md5sums;
           None
@@ -332,7 +332,7 @@ let unparse
   );
 
   if md5sum_in_auxfile then begin
-    Common.write_file ~file:(Signature.signaturefile_of_file filename)
-      (!md5sums |> List.rev |> Common.join "\n");
+    UFile.Legacy.write_file ~file:(Signature.signaturefile_of_file filename)
+      (!md5sums |> List.rev |> String.concat "\n");
   end;
   ()

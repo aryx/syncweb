@@ -14,14 +14,14 @@ let signature_of_string a =
 
 
 let signaturefile_of_file file = 
-  let (d,b) = Common2.db_of_filename file in
-  let oldformat = Common2.filename_of_db (d, ".md5sum_" ^ b) in
+  let (d,b) = Filename_.db_of_filename file in
+  let oldformat = Filename_.filename_of_db (d, ".md5sum_" ^ b) in
   if Sys.file_exists oldformat
   then oldformat
   else 
-    let (d,b,e) = Common2.dbe_of_filename file in
+    let (d,b,e) = Filename_.dbe_of_filename file in
     (* works better with codemap, and also mkmany in plan9 *)
-    Common2.filename_of_dbe (d, spf ".md5sum_%s_%s" b e, "")
+    Filename_.filename_of_dbe (d, spf ".md5sum_%s_%s" b e, "")
 
 let re_signature_in_signaturefile = Str.regexp
   "\\(.*\\) |\\(.*\\)$"
@@ -30,7 +30,7 @@ let (==~) s re =
     Str.string_match re s 0
 
 let parse_signaturefile sigfile =
-  Common.cat sigfile |> List.map (fun s -> 
+  UFile.Legacy.cat sigfile |> List.map (fun s -> 
     if s ==~ re_signature_in_signaturefile
     then 
       let (a,b) = Common.matched2 s in

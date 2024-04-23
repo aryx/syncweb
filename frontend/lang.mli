@@ -14,7 +14,7 @@ type mark_language = {
 }
 
 val lang_table : 
-  bool (* use md5sum auxfile *) -> (string, mark_language) Common.assoc
+  bool (* use md5sum auxfile *) -> (string, mark_language) Assoc.t
 
 (* for testing *)
 

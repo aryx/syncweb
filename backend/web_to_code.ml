@@ -22,7 +22,7 @@ open Code
 (* Helpers  *)
 (*****************************************************************************)
 let generate_n_spaces i =
-  Common2.repeat " " i |> Common.join ""
+  Common2.repeat " " i |> String.concat ""
 
 let s_of_chunkdef_body xs = 
   xs |> List.map (function 

@@ -109,7 +109,7 @@ let rename_chunknames xs =
 (*****************************************************************************)
 
 let rename_chunknames_archi xs =
-  let origs, views = xs |> Common.partition_either (fun file ->
+  let origs, views = xs |> Either_.partition_either (fun file ->
     if file =~ ".*.nw$"
     then Left file
     else Right file
@@ -129,8 +129,8 @@ let rename_chunknames_archi xs =
         xs |> List.iter codetree
     in
     List.iter codetree view;
-    hchunks |> Common.hash_to_list |> List.iter (fun (k, _) -> 
-      pr k
+    hchunks |> Hashtbl_.hash_to_list |> List.iter (fun (k, _) -> 
+      UCommon.pr k
     );
   );
   let subst_maybe s =
@@ -222,21 +222,21 @@ let merge_files xs =
     let dir = Filename.dirname file in
     (* let pr _ = () in (* TODO *)   *)
     if dir <> !lastdir then begin
-      pr "";
-      pr (spf "\\chapter{[[%s]]}" dir);
-      pr "";
+      UCommon.pr "";
+      UCommon.pr (spf "\\chapter{[[%s]]}" dir);
+      UCommon.pr "";
       lastdir := dir
     end;
 
-    pr (spf "\\section{[[%s]]}" file);
+    UCommon.pr (spf "\\section{[[%s]]}" file);
 
     (* to have a single topkey entry *)
     let xs = Hashtbl.find_all hfile_to_topkeys file in
     xs |> List.iter (fun topkey ->
-      pr (spf "<<%s/%s>>=" dir topkey);
-      pr (spf "<<%s>>" topkey);
-      pr "@";
-      pr ""
+      UCommon.pr (spf "<<%s/%s>>=" dir topkey);
+      UCommon.pr (spf "<<%s>>" topkey);
+      UCommon.pr "@";
+      UCommon.pr ""
     );
     
     let orig = Web.parse file in
@@ -244,7 +244,7 @@ let merge_files xs =
     let subst_maybe key =
       try 
         let h = Hashtbl.find hchunkkey_to_files key in
-        let files = Common.hashset_to_list h in
+        let files = Hashtbl_.hashset_to_list h in
         if List.length files > 1
         then key ^ (spf "(%s)" (Filename.basename file))
         else key
@@ -284,7 +284,7 @@ let merge_files xs =
     let orig2 = List.map tex_or_chunkdef orig |> List.flatten in
     Web.unparse orig2 file;
 
-    Common.cat file |> List.iter pr; 
+    UFile.Legacy.cat file |> List.iter UCommon.pr; 
     Sys.command (spf "rm -f %s" file) |> ignore;
 
     Hashtbl.find_all hfile_to_topkeys file |> List.iter (fun topkey ->

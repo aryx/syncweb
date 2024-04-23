@@ -108,15 +108,15 @@ let key_of_chunckdef_string s =
   else failwith "not a chunkdef string"
 
 
-let fst3 = Common2.fst3
-let snd3 = Common2.snd3
-let thd3 = Common2.thd3
+let fst3 (x, _, _) = x
+let snd3 (_, y, _) = y
+let thd3 (_, _, z) = z
 
 let cnt_id = ref 0
 
 let parse file = 
-  let xs = Common.cat file in 
-  let xs' = xs |> Common.index_list_1 |> List.map (fun (s, i) -> 
+  let xs = UFile.Legacy.cat file in 
+  let xs' = xs |> List_.index_list_1 |> List.map (fun (s, i) -> 
     s, i,
     (match s with
     | _ when s ==~ regexp_chunkdef_end -> End1
@@ -143,7 +143,7 @@ let parse file =
 
         (match thd3 x with
         | Regular1 -> 
-            let (regs, rest) = Common.span (fun x -> thd3 x =*= Regular1) xs in
+            let (regs, rest) = List_.span (fun x -> thd3 x =*= Regular1) xs in
             let item = Tex (fst3 x::(List.map fst3 regs)) in
             item::agglomerate rest
         | Start1 -> 
@@ -178,7 +178,7 @@ let parse file =
 (*****************************************************************************)
 
 let unparse orig filename =
-  Common.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
+  UFile.Legacy.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     orig |> List.iter (function
     | Tex xs -> 
@@ -249,7 +249,7 @@ let unpack_multi orig =
       | _ -> false
     ) orig
   in
-  if not (null pre)
+  if not (List_.null pre)
   then failwith "could not find a MULTIFILE mark in packed orig, weird";
 
   groups |> List.map (fun (x, xs) ->

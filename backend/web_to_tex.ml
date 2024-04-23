@@ -69,7 +69,7 @@ type tex_string = elt list
 (* todo: ugly, should have file x loc information in Web.t *)
 let last_chunkdef = ref ""
 let error s =
-  pr2 (spf "near:|%s|" !last_chunkdef);
+  UCommon.pr2 (spf "near:|%s|" !last_chunkdef);
   failwith s
 
 (*****************************************************************************)
@@ -115,7 +115,7 @@ let (parse_string: string -> tex_string) = fun s ->
 (*****************************************************************************)
 
 let generate_n_spaces i =
-  Common2.repeat " " i |> Common.join ""
+  Common2.repeat " " i |> String.concat ""
 
 let pr_in_quote pr s =
   let xs = Common2.list_of_string s in
@@ -281,7 +281,7 @@ let compare_string s1 s2 =
 
 (* the final index at the end of the document *)
 let pr_final_index pr hnwixident = 
-  hnwixident |> Common.hash_to_list |> List.map fst 
+  hnwixident |> Hashtbl_.hash_to_list |> List.map fst 
   |> List.sort compare_string
   |> List.iter (fun (k) ->
     pr (spf "\\nwixlogsorted{i}{%s}%%\n" k);
@@ -309,7 +309,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
   | [(_kind, _loc), id] -> 
     id
   | ((_, loc1), _)::((_, loc2), _)::_ ->
-    pr2_gen candidates;
+    UCommon.pr2_gen candidates;
     failwith (spf "ambiguity for def of %s, at %s and %s" 
                 s (Crossref_code.string_of_loc loc1)
                   (Crossref_code.string_of_loc loc2))
@@ -336,7 +336,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
 
       (* special case {{foo()}} *)
       | _ when suffix = "()" (* s =~ "^\\(.*\\)()$" *) ->
-        pr2 (spf "warning: not automatic index found for %s" s);
+        UCommon.pr2 (spf "warning: not automatic index found for %s" s);
 
         (* less: handle new format 'function [[foo()]]'? *)
         let name_candidates = [
@@ -350,7 +350,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
           
       | _ -> 
 
-        pr2 (spf "warning: not automatic index found for %s" s);
+        UCommon.pr2 (spf "warning: not automatic index found for %s" s);
         let name_candidates = [
           spf "global [[%s]]" s;
           spf "struct [[%s]]" s;
@@ -382,7 +382,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
 (*****************************************************************************)
 
 let web_to_tex orig texfile (defs, uses) =
-  Common.with_open_outfile texfile (fun (pr, _chan)  ->
+  UFile.Legacy.with_open_outfile texfile (fun (pr, _chan)  ->
 
   (* for nwbegincode{}, not sure it's needed *)
   let cnt = ref 0 in
