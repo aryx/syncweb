@@ -2,6 +2,16 @@
 
 * Last
 
+** Last3
+
+*** TODO Why lost all indentations in the generated pdf????
+need to patch locally my latex?? syncweb? Config.tex? syncweb.sty?
+noweb.sty?
+
+*** compile and install indexer as syncweb-indexer
+depends on pfff/semgrep though
+
+
 ** Last2
 
 *** answer Ben about his markdown idea? meh
