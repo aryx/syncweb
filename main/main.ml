@@ -68,7 +68,7 @@ open Web
 let find_topkey_corresponding_to_file orig viewf =
   (* old: Filename.basename viewf *)
   let base = Filename.basename viewf in
-  let defs = orig |> List_.map_filter (function
+  let defs = orig |> List_.filter_map (function
     | Tex _ -> None
     | ChunkDef (def, _xs) -> 
       let s = def.chunkdef_key in
@@ -98,7 +98,7 @@ let find_topkey_corresponding_to_file orig viewf =
       | [] -> err ()
       | x::xs ->
         let same_top_revdir_candidates =
-          candidates |> List_.map_filter (fun (revdir, fullfile) ->
+          candidates |> List_.filter_map (fun (revdir, fullfile) ->
             match revdir with
             | [] -> None
             | y::ys -> if y = x then Some (ys, fullfile) else None
@@ -132,10 +132,10 @@ let parse_origs origfs =
   then begin
     UCommon.pr2 ("using cache: " ^ cachefile);
     (* todo: use versioning *)
-    Common2.get_value cachefile
+    Common2_.get_value cachefile
   end else begin
     let res = f () in
-    Common2.write_value res cachefile;
+    Common2_.write_value res cachefile;
     res
   end
 [@@profiling]
@@ -216,10 +216,10 @@ let actions () = [
       )
       in
       let tmpfile = "/tmp/xxx" in
-      let s = Common2.unlines xs in
+      let s = Common2_.unlines xs in
       UFile.Legacy.write_file tmpfile s;
       Sys.command(spf "diff -u %s %s" file tmpfile) |> ignore;
-      if Common2.y_or_no "apply modif?"
+      if Common2_.y_or_no "apply modif?"
       then UFile.Legacy.write_file file s
       else failwith "ok, skipping"
     );
@@ -269,7 +269,7 @@ let unparse_orig_web orig filename =
         | Code s -> 
             pr s
         | ChunkName (s, indent) -> 
-            Common2.do_n indent (fun () -> pr_no_nl " ");
+            Common2_.do_n indent (fun () -> pr_no_nl " ");
             let item = spf "<<%s>>" s in
             pr item;
         );
@@ -407,7 +407,7 @@ let options () =
     ), 
     "  guess what";
   ] @
-  Common2.cmdline_flags_devel () @
+  Common2_.cmdline_flags_devel () @
   Arg_.options_of_actions action (all_actions()) @
   []
 

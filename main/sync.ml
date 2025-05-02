@@ -82,7 +82,7 @@ let build_chunk_hash_from_views views =
          *)
         let body'' = uniq_agglomerate_chunkname body' in
 
-        Common2.hupdate_default key (fun x -> x @ [md5sum, body'']) 
+        Common2_.hupdate_default key (fun x -> x @ [md5sum, body'']) 
           (fun()->[]) h;
         
     | RegularCode s -> 
@@ -97,15 +97,15 @@ let build_chunk_hash_from_views views =
 
 let show_orig_view ?(force_display=false)key s_orig s_view = 
   UCommon.pr2 ("DIFF for: " ^ key);
-  if (Common2.nblines s_orig > 5 || Common2.nblines s_view > 5) && 
+  if (Common2_.nblines s_orig > 5 || Common2_.nblines s_view > 5) && 
      not force_display 
   then 
     ()
   else begin
     UCommon.pr2 "<<<<<<< orig <<<<<<<<";
-    Common2.pr2_no_nl s_orig;
+    Common2_.pr2_no_nl s_orig;
     UCommon.pr2 "====================";
-    Common2.pr2_no_nl s_view;
+    Common2_.pr2_no_nl s_view;
     UCommon.pr2 ">>>>>>> view >>>>>>>>";
   end
  
@@ -160,7 +160,7 @@ let sync2 ~lang orig views =
     | ChunkDef (def, body_orig) -> 
         let key = def.chunkdef_key in
         
-        (match Common2.hfind_option key h_view with
+        (match Common2_.hfind_option key h_view with
         | None -> 
             (* Case1: new chunk in orig *)
             ChunkDef (def, body_orig)
@@ -179,9 +179,9 @@ let sync2 ~lang orig views =
                 
                 UCommon.pr2 ("a chunk has been deleted or moved for: " ^ key);
                 UCommon.pr2 "<<<<<<< orig <<<<<<<<";
-                Common2.pr2_no_nl s_orig;
+                Common2_.pr2_no_nl s_orig;
                 UCommon.pr2 "====================";
-                if (Common2.y_or_no "keep the one in orig?")
+                if (Common2_.y_or_no "keep the one in orig?")
                 then ChunkDef (def, body_orig)
                 else failwith "stopped"
                 
@@ -200,8 +200,8 @@ let sync2 ~lang orig views =
                         body_orig =*= body_view
                       )
                     in
-                    aref_orig := Common2.remove_first body_orig !aref_orig;
-                    aref_view := Common2.remove_first elem_view !aref_view;
+                    aref_orig := Common2_.remove_first body_orig !aref_orig;
+                    aref_view := Common2_.remove_first elem_view !aref_view;
                     ChunkDef (def, body_orig)
                   
                  with Not_found -> 
@@ -217,14 +217,14 @@ let sync2 ~lang orig views =
                     (match candidates with
                     | [] -> 
                         (* Case1bis: new chunk in orig ? *)
-                        aref_orig := Common2.remove_first body_orig !aref_orig;
+                        aref_orig := Common2_.remove_first body_orig !aref_orig;
                         ChunkDef (def, body_orig)
 
                     | elem_view::_xs -> 
                         (* case4: multiple possible reasons. *)
 
-                        aref_orig := Common2.remove_first body_orig !aref_orig;
-                        aref_view := Common2.remove_first elem_view !aref_view;
+                        aref_orig := Common2_.remove_first body_orig !aref_orig;
+                        aref_view := Common2_.remove_first elem_view !aref_view;
                     
                         let (md5sum_orig_in_view_opt, body_view) = elem_view in
 
@@ -258,14 +258,14 @@ let sync2 ~lang orig views =
                           match () with
                           | _ when md5sum_past =*= md5sum_orig -> 
                               show_diff s_orig s_view;
-                              if (Common2.y_or_no 
+                              if (Common2_.y_or_no 
                                     "        <---- changed?")
                               then Some body_view
                               else None
                                 
                           | _ when md5sum_past =*= md5sum_view -> 
                               show_diff s_view s_orig;
-                              if (Common2.y_or_no 
+                              if (Common2_.y_or_no 
                                     "changed  ---->        ?")
                               then Some body_orig
                               else None
@@ -312,7 +312,7 @@ let sync2 ~lang orig views =
         UCommon.pr2 ("<<<<<<<<<<<<<<<<");
         let strs = (x::xs) |> List.map snd |> List.map 
           Web_to_code.s_of_chunkdef_body in
-        strs |> List.iter Common2.pr2_no_nl;
+        strs |> List.iter Common2_.pr2_no_nl;
         UCommon.pr2 (">>>>>>>>>>>>>>>>");
   );
 

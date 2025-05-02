@@ -109,7 +109,7 @@ let rename_chunknames xs =
 (*****************************************************************************)
 
 let rename_chunknames_archi xs =
-  let origs, views = xs |> Either_.partition_either (fun file ->
+  let origs, views = xs |> Either_.partition (fun file ->
     if file =~ ".*.nw$"
     then Left file
     else Right file
@@ -269,7 +269,7 @@ let merge_files xs =
           let nbdollars = ys |> List.map (function
             | Code s -> count_dollar s
             | ChunkName (s, _) -> count_dollar s
-          ) |> Common2.sum
+          ) |> Common2_.sum
           in
           [ChunkDef (def, ys |> List.map code_or_chunk)] @
           (if nbdollars mod 2 =|= 1

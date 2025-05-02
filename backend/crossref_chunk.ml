@@ -25,7 +25,7 @@ let hchunkname_to_body__from_orig orig =
     | Tex _xs -> ()
     | ChunkDef (def, body) -> 
         let key = def.chunkdef_key in
-        Common2.hupdate_default key (fun x -> x @ [body]) (fun()->[]) h;
+        Common2_.hupdate_default key (fun x -> x @ [body]) (fun()->[]) h;
     );
   h
 
@@ -89,7 +89,7 @@ let hchunkid_info__from_orig orig =
       let key = def.chunkdef_key in
       let id = def.chunkdef_id in
       let info = Hashtbl.find hchunkid_info id in
-      let prev_opt = Common2.hfind_option key hlast_key_to_chunk in
+      let prev_opt = Common2_.hfind_option key hlast_key_to_chunk in
       Hashtbl.replace hlast_key_to_chunk key id;
       info.prev_def <- prev_opt;
       prev_opt |> Option.iter (fun previd ->

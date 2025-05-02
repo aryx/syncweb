@@ -3,6 +3,7 @@
  (wrapped false)
  (libraries
    commons
+   commons2_
    frontend
  )
  (preprocess

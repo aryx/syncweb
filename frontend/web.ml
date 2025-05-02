@@ -191,7 +191,7 @@ let unparse orig filename =
         | Code s -> 
             pr s
         | ChunkName (s, indent) -> 
-            Common2.do_n indent (fun () -> pr_no_nl " ");
+            Common2_.do_n indent (fun () -> pr_no_nl " ");
             let item = spf "<<%s>>" s in
             pr item;
         );
@@ -243,7 +243,7 @@ let pack_multi xs =
 
 let unpack_multi orig =
   let (pre, groups) = 
-    Common2.group_by_pre (fun x ->
+    Common2_.group_by_pre (fun x ->
       match x with
       | Tex [s] when s =~ "MULTIFILE:.*" -> true
       | _ -> false

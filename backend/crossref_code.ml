@@ -199,10 +199,10 @@ let hs__from_orig orig (defs, uses) =
    * bugfix: use Common2.hkeys not Hashtbl.iter, otherwise will get
    * get defs multiple time for each loc of id.
    *)
-  hchunkid_to_locs |> Common2.hkeys |> List.iter (fun id ->
+  hchunkid_to_locs |> Common2_.hkeys |> List.iter (fun id ->
     let locs = Hashtbl.find_all hchunkid_to_locs id in
     let defs_uses = 
-      locs |> List_.map_filter (fun loc ->
+      locs |> List_.filter_map (fun loc ->
         try 
           (* bugfix: use Hashtbl.find_all, cos the same LOC can contain
            * multiple uses
@@ -211,7 +211,7 @@ let hs__from_orig orig (defs, uses) =
         with Not_found -> None
       ) |> List.flatten
     in
-    let defs, uses = Either_.partition_either (fun x -> x) defs_uses in
+    let defs, uses = Either_.partition (fun x -> x) defs_uses in
     Hashtbl.add hdefs_and_uses_of_chunkid id (defs, uses);
     defs |> List.iter (fun ((s, kind), loc) ->
       let s =

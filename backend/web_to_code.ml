@@ -30,7 +30,7 @@ let s_of_chunkdef_body xs =
   | ChunkName (s, i) -> 
       let spaces = generate_n_spaces i in
       spaces ^ (spf "<<%s>>" s)
-  ) |> Common2.unlines
+  ) |> Common2_.unlines
 
 
 (*****************************************************************************)
