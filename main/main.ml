@@ -1,4 +1,4 @@
-(* Copyright 2009-2018 Yoann Padioleau, see copyright.txt *)
+(* Copyright 2009-2018, 2025 Yoann Padioleau, see copyright.txt *)
 open Common
 
 (*****************************************************************************)
@@ -38,12 +38,14 @@ let version = "0.6"
 (* Flags *)
 (*****************************************************************************)
 
-(* action mode *)
-let action = ref ""
-
 let lang = ref "ocaml"
 let md5sum_in_auxfile = ref false
 let less_marks = ref false
+
+(* for -debug, -verbose, -quiet *)
+let logs_level = ref (Some Logs.Warning)
+(* action mode *)
+let action = ref ""
 
 (*****************************************************************************)
 (* Debugging helpers *)
@@ -51,10 +53,10 @@ let less_marks = ref false
 
 let with_error file f = 
   try
-    UCommon.pr2 (spf "processing %s" file);
+    Logs.info (fun m -> m "processing %s" file);
     f ()
   with e ->
-    UCommon.pr2 (spf "Problem found while was processing %s" file);
+    Logs.err (fun m -> m "Problem found while was processing %s" file);
     raise e
 
 (*****************************************************************************)
@@ -130,7 +132,7 @@ let parse_origs origfs =
     origfs |> List.for_all (fun file -> 
       UFile.filemtime (Fpath.v cachefile) >= UFile.filemtime (Fpath.v file))
   then begin
-    UCommon.pr2 ("using cache: " ^ cachefile);
+    Logs.info (fun m -> m "using cache: %s" cachefile);
     (* todo: use versioning *)
     Common2_.get_value cachefile
   end else begin
@@ -397,7 +399,15 @@ let options () =
     " ";
     "-less_marks", Arg.Set less_marks, 
     " ";
+    (* TODO: move in a CLI_common.ml *)
+    "-v", Arg.Unit (fun () -> logs_level := Some Logs.Info),
+     " verbose mode";
+    "-verbose", Arg.Unit (fun () -> logs_level := Some Logs.Info),
+    " verbose mode";
+    "-quiet", Arg.Unit (fun () -> logs_level := None),
+    " ";
     "-debug", Arg.Unit (fun () ->
+     logs_level := Some Logs.Debug;
       Crossref_code.debug := true;
     ), " ";
 
@@ -423,6 +433,10 @@ let main () =
   in
   (* does side effect on many global flags *)
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
+
+  
+  Logs_.setup ~level:!logs_level ();
+  Logs.info (fun m -> m "ran from %s" (Sys.getcwd ()));
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
 (*  Profiling.profile_code "Main total" (fun () ->  *)

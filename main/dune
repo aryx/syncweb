@@ -2,6 +2,7 @@
  (names Main)
  (libraries
     ; external libs
+    logs
     fpath
     commons
 

@@ -308,12 +308,10 @@ let sync2 ~lang orig views =
     match !v with
     | [] -> ()
     | x::xs -> 
-        UCommon.pr2 ("Not consumed: " ^ k);
-        UCommon.pr2 ("<<<<<<<<<<<<<<<<");
+        Logs.warn (fun m -> m "Not consumed: %s" k);
         let strs = (x::xs) |> List.map snd |> List.map 
           Web_to_code.s_of_chunkdef_body in
         strs |> List.iter Common2_.pr2_no_nl;
-        UCommon.pr2 (">>>>>>>>>>>>>>>>");
   );
 
   orig'
