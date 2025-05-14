@@ -2,28 +2,15 @@
 
 * Last
 
-** Last3
-
-*** TODO Why lost all indentations in the generated pdf????
-need to patch locally my latex?? syncweb? Config.tex? syncweb.sty?
-noweb.sty?
-
-*** compile and install indexer as syncweb-indexer
-depends on pfff/semgrep though
-
-
-** Last2
+** Last
 
 *** answer Ben about his markdown idea? meh
-
 
 *** restore some elements from the deleted Makefile in
 https://github.com/aryx/syncweb/commit/8cc3f10599bf65ab57947950f30cb6b18d83db14
 
 *** once graph_code, codegraph, the parser_xxx are added to OPAM,
 can start to also package the indexer and lpizer
-
-** last1
 
 *** see autodefs.ocaml script in fork-tiger/old/
 to pretty print better ocaml code.
