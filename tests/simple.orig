@@ -52,15 +52,17 @@ let y = 2
 
 Here are a set of definitions.
 
+% was += before
 <<defSet>>=
 let z = 1
 @
 
-<<defSet>>+=
+% was += before
+<<defSet>>=
 let z = 2
 @
 
-<<defSet>>+=
+<<defSet>>=
 let z = 3
 @
 
