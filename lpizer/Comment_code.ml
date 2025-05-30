@@ -45,6 +45,20 @@ type 'tok hooks = {
 }
 
 (*****************************************************************************)
+(* Helpers *)
+(*****************************************************************************)
+
+let drop_space_and_newline hooks toks =
+  toks |> Common2.drop_while (fun t ->
+      let kind = hooks.kind t in
+      match kind with
+      | PI.Esthet PI.Newline
+      | PI.Esthet PI.Space ->
+          true
+      | _ -> false
+  )
+
+(*****************************************************************************)
 (* Functions *)
 (*****************************************************************************)
 
@@ -58,14 +72,7 @@ let comment_before hooks tok all_toks =
            pos2 < pos)
   in
   let first_non_space =
-    List.rev before
-    |> Common2.drop_while (fun t ->
-           let kind = hooks.kind t in
-           match kind with
-           | PI.Esthet PI.Newline
-           | PI.Esthet PI.Space ->
-               true
-           | _ -> false)
+    List.rev before |> drop_space_and_newline hooks
   in
   match first_non_space with
   | x :: _xs when hooks.kind x =*= PI.Esthet PI.Comment ->
@@ -83,16 +90,7 @@ let comment_after hooks tok all_toks =
            let pos2 = Tok.bytepos_of_tok info in
            pos2 <= pos)
   in
-  let first_non_space =
-    after
-    |> Common2.drop_while (fun t ->
-           let kind = hooks.kind t in
-           match kind with
-           | PI.Esthet PI.Newline
-           | PI.Esthet PI.Space ->
-               true
-           | _ -> false)
-  in
+  let first_non_space = after |> drop_space_and_newline hooks in
   match first_non_space with
   | x :: _xs when hooks.kind x =*= PI.Esthet PI.Comment ->
       let info = hooks.tokf x in
