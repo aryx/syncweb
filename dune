@@ -7,5 +7,6 @@
   main
   frontend
   backend
-  ;TODO: indexer lpizer
+  lpizer
+  ;TODO: lpizer
 )

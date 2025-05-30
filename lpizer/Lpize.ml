@@ -1,11 +1,14 @@
 open Common
+module E = Entity_code
 
+(* TODO: move to Main.ml? make lang (and use Lang.t?) a parameter of lpize! 
+ * instead of all those hardcoded CONFIG in this file.
+*)
 (* CONFIG *)
 let lang = ref "ml"
-let verbose = ref false
 
 (*****************************************************************************)
-(* LPizer *)
+(* Helpers *)
 (*****************************************************************************)
 (* In this file because it can't be put in syncweb/ (it uses graph_code_c),
  * and it's a form of code slicing ...
@@ -13,12 +16,14 @@ let verbose = ref false
 
 (* for lpification, to get a list of files and handling the skip list *)
 let find_source xs =
-  let root = Common2.common_prefix_of_files_or_dirs xs in
-  let root = Common.fullpath root |> Common2.chop_dirsymbol in
+  let root = Common2_.common_prefix_of_files_or_dirs xs in
+  let root = Unix.realpath root |> Common2_.chop_dirsymbol in
   let files = 
-    Find_source.files_of_dir_or_files ~lang:!lang xs in
+    failwith "TODO: find_source use Find_generic in codegraph"
+  in
+    (* Find_source.files_of_dir_or_files ~lang:!lang xs in *)
   files |> List.iter (fun file ->
-    pr (Common.readable root file)
+    Logs.info (fun m -> m "processing: %s" (Filename_.readable root file))
   )
 
 (* syncweb does not like tabs *)
@@ -26,7 +31,7 @@ let untabify s =
   Str.global_substitute (Str.regexp "^\\([\t]+\\)") (fun _wholestr ->
     let substr = Str.matched_string s in
     let n = String.length substr in
-    Common2.n_space (4 * n)
+    Common2_.n_space (4 * n)
   ) s
 
 (* todo: could generalize this in graph_code.ml! have a range
@@ -34,12 +39,12 @@ let untabify s =
  *)
 type entity = {
   name: string;
-  kind: Entity_code.entity_kind;
+  kind: Entity_code.kind;
   range: int * int;
 }
 
 type env = {
-  current_file: Common.filename;
+  current_file: string;
   cnt: int ref;
   hentities: (Graph_code.node, bool) Hashtbl.t;
 }
@@ -66,7 +71,7 @@ let uniquify env kind s =
 let count_dollar s =
   let cnt = ref 0 in
   for i = 0 to String.length s - 1 do
-    if String.get s i = '$'
+    if String.get s i =$= '$'
     then incr cnt
   done;
   !cnt
@@ -74,11 +79,14 @@ let count_dollar s =
 (*--------------------------------------------------*)
 (* C *)
 (*--------------------------------------------------*)
-open Cst_cpp
-module Ast = Cst_cpp
-module E = Entity_code
-module PI = Parse_info
 
+(*
+module Ast = Ast_cpp
+open Ast_cpp
+module E = Entity_code
+
+(*
+module PI = Parse_info
 let hooks_for_comment_cpp = { Comment_code.
     kind = Token_helpers_cpp.token_kind_of_tok;
     tokf = Token_helpers_cpp.info_of_tok;
@@ -90,6 +98,7 @@ let range_of_any_with_comment_cpp any toks =
   match Comment_code.comment_before hooks_for_comment_cpp min toks with
   | None -> min, max
   | Some ii -> ii, max
+*)
  
 
 (* todo: 
@@ -103,7 +112,7 @@ let range_of_any_with_comment_cpp any toks =
  *   at the top of the file.
  *)
 let extract_entities_cpp env xs =
-  xs |> Common.map_filter (fun (top, toks) ->
+  xs |> List.filter_map (fun (top, toks) ->
     match top with
     | CppDirectiveDecl decl ->
       (match decl with
@@ -214,21 +223,28 @@ let extract_entities_cpp env xs =
     | _ -> None
   )
 
+*)
 (*--------------------------------------------------*)
 (* OCaml *)
 (*--------------------------------------------------*)
 
+(*
 let hooks_for_comment_ml = { Comment_code.
     kind = Token_helpers_ml.token_kind_of_tok;
     tokf = Token_helpers_ml.info_of_tok;
     }
+*)
 
-let is_estet_comment ii =
-  let s = PI.str_of_info ii in
+let is_estet_comment (ii : Tok.t) =
+  let s = Tok.content_of_tok ii in
   (s =~ ".*\\*\\*\\*\\*") ||
   (s =~ ".*------") ||
   (s =~ ".*####")
 
+let range_of_any_with_comment_ml _any _toks =
+  failwith "TODO: range_of_any_with_comment_ml"
+
+(*
 let range_of_any_with_comment_ml any toks =
   let ii = Lib_parsing_ml.ii_of_any any in
   let (min, max) = PI.min_max_ii_by_pos ii in
@@ -244,11 +260,12 @@ let range_of_any_with_comment_ml any toks =
   | None, Some ii -> min, if_not_estet_comment ii max
   | Some i1, Some i2 -> 
           if_not_estet_comment i1 min, if_not_estet_comment i2 max
+*)
 
-open Cst_ml
+open AST_ocaml
 
-let nb_newlines info =
-  let str = PI.str_of_info info in
+let nb_newlines (info : Tok.t) =
+  let str = Tok.content_of_tok info in
   if str =~ ".*\n"
   then (Str.split_delim (Str.regexp "\n") str |> List.length) - 1
   else 0
@@ -256,88 +273,84 @@ let nb_newlines info =
 (* TODO: 
  * - let f = function ... leads to constant!! should be function! 
  *)
-let (extract_entities_ml: env -> Parse_ml.program_and_tokens -> entity list) =
- fun env (top_opt, toks) ->
+let extract_entities_ml (env : env) (ast : program) (toks : Tok.t list) : entity list =
   let qualify x = 
     Module_ml.module_name_of_filename env.current_file ^ "." ^ x 
   in
   let range any = 
     let (min, max) = range_of_any_with_comment_ml any toks in
     let nblines = nb_newlines max in
-    (PI.line_of_info min, PI.line_of_info max + nblines)
+    (Tok.line_of_tok min, Tok.line_of_tok max + nblines)
   in
   let cnt = ref 0 in
-  match top_opt with
-  | None -> []
-  | Some xs -> xs |> List.map (fun top ->
-      match top with
-
-      | TopItem Let(_i1, _,[Left(LetClassic(
-                              {l_name=Name (name, _); l_params=[];
-                               l_body=[Left(Function(_, _))];
+  ast |> List.map (fun top ->
+      match top.i with
+      | Let(_i1, _, [LetClassic(
+                              {lname= (name, _); 
+                               lparams=[];
+                               lbody=Function(_, _);
                                _
-                              }))]) ->
+                              })]) ->
         let kind = E.Function in 
-
         [{
           name = qualify name |> uniquify env kind;
           kind;
-          range = range (Toplevel top);
+          range = range (I top);
         }]
 
 
-      | TopItem Let(_i1, _,[Left(LetClassic(
-                              {l_name=Name (name, _); l_params=[]; _}))]) ->
+      | Let(_i1, _,[LetClassic({lname=(name, _); lparams=[]; _})]) ->
         let kind = E.Constant in 
-
         [{
           name = qualify name |> uniquify env kind;
           kind;
-          range = range (Toplevel top);
+          range = range (I top);
         }]
 
-      | TopItem Let(_i1, _, [Left(LetClassic(
-                              {l_name=Name (name, _); l_params=_::_; _}))]) ->
+      | Let(_i1, _, [LetClassic(
+                              {lname=(name, _); lparams=_::_; _})]) ->
         let kind = E.Function in
         [{
           name = qualify name |> uniquify env kind;
           kind;
-          range = range (Toplevel top);
+          range = range (I top);
         }]
-      | TopItem(Exception(_, Name((name, _)), _)) ->
+
+      | Exception(_, (name, _), _) ->
         let kind = E.Exception in
         [{
           name = qualify name |> uniquify env kind;
           kind;
-          range = range (Toplevel top);
+          range = range (I top);
         }]
 
-      | TopItem Let(_i1, _, [Left(LetPattern(PatUnderscore _, _, _))]) ->
+      | Let(_i1, _, [LetPattern(PatUnderscore _, _)]) ->
         incr cnt;
         [{
           name = qualify (spf "_%d" !cnt);
           kind = E.TopStmts;
-          range = range (Toplevel top);
+          range = range (I top);
         }]
 
-      | TopItem(Type(_, [Left(TyDef(_, Name((name, _)), _, _ ))])) ->
+      | Type(_, [TyDecl({tname = (name, _); _})]) ->
         let kind = E.Type in
         [{
           name = qualify name |> uniquify env kind;
           kind;
-          range = range (Toplevel top);
+          range = range (I top);
         }]
 
-      | TopItem(Val(_, Name((name, _)), _, _)) ->
+      | Val (_, (name, _), _) ->
         let kind = E.Prototype in
         [{
           name = qualify name |> uniquify env kind;
           kind;
-          range = range (Toplevel top);
+          range = range (I top);
         }]
-        
-      | TopItem(Type(t1, xs)) ->
-        let (xs, ys) = Common.partition_either (fun x -> x) xs in
+
+      | Type(_t1, _xs) -> failwith "TODO: Type"
+(*
+        let (xs, ys) = Either_.partition (fun x -> x) xs in
         let zipped = Common2.zip xs (t1::ys) in
         zipped |> Common.map_filter (fun (x, _tok1) ->
           match x with
@@ -348,10 +361,11 @@ let (extract_entities_ml: env -> Parse_ml.program_and_tokens -> entity list) =
               kind = E.Type;
               range = range (TypeDeclaration x);
             }
-
           | _ -> None
-        ) 
+        )
+*)
       | _ -> []
+    
   ) |> List.flatten
 
 (*--------------------------------------------------*)
@@ -396,11 +410,15 @@ let string_of_entity_kind kind =
 
 (* main entry point *)
 let lpize xs = 
+
+  (* C++ specifics. TODO: move elsewhere? when parse file? *)
+(*
   Parse_cpp.init_defs !Flag_parsing_cpp.macros_h;
   let root = Sys.getcwd () in
   let local = Filename.concat root "pfff_macros.h" in
   if Sys.file_exists local
   then Parse_cpp.add_defs local;
+*)
 
   sanity_check xs;
   let current_dir = ref "" in
@@ -409,6 +427,7 @@ let lpize xs =
   let hentities = Hashtbl.create 101 in
 
   xs |> List.iter (fun file ->
+    let pr s = UConsole.print s in
     let dir = Filename.dirname file in
     if dir <> !current_dir
     then begin
@@ -420,9 +439,10 @@ let lpize xs =
     pr (spf "\\subsection*{[[%s]]}" file);
     pr "";
 
-    let (xs, _stat) = 
+    let ast, toks = 
       (* CONFIG *)
-      Parse_ml.parse file
+      let _res = Parse_ml.parse (Fpath.v file) in
+      failwith "TODO"
       (* Parse_cpp.parse file   *)
     in
     let env = {
@@ -434,23 +454,23 @@ let lpize xs =
        *)
       cnt = ref 1;
     } in
-    let entities = 
+    let entities : entity list = 
       (* CONFIG *)
-      extract_entities_ml env xs
+      extract_entities_ml env ast toks
       (* extract_entities_cpp env xs  *)
     in
 
     let hstart = 
-      entities |> List.map (fun e -> fst e.range, e) |> Common.hash_of_list
+      entities |> List.map (fun e -> fst e.range, e) |> Hashtbl_.hash_of_list
     in
     let hcovered = 
       entities |> List.map (fun e -> 
         let (lstart, lend) = e.range in
         Common2.enum_safe lstart lend
-      ) |> List.flatten |> Common.hashset_of_list
+      ) |> List.flatten |> Hashtbl_.hashset_of_list
     in
     
-    let lines = Common.cat file in
+    let lines = UFile.Legacy.cat file in
     let arr = Array.of_list lines in
 
     (* CONFIG *)
@@ -470,7 +490,7 @@ let lpize xs =
           nbdollars := !nbdollars + (count_dollar arr.(line - 1));
         );
         pr "@";
-        if !nbdollars mod 2 = 1
+        if !nbdollars mod 2 =|= 1
         then pr "%$";
         pr "";
     );
@@ -483,7 +503,7 @@ let lpize xs =
      * this assumption because) because we would have too many dupes.
      *)
     pr (spf "<<%s>>=" file);
-    Common.cat file |> Common.index_list_1 |> List.iter (fun (s, idx) ->
+    UFile.Legacy.cat file |> List_.index_list_1 |> List.iter (fun (s, idx) ->
       match Common2.hfind_option idx hstart with
       | None -> 
           if Hashtbl.mem hcovered idx
@@ -501,16 +521,3 @@ let lpize xs =
     Sys.command (spf "rm -f %s" file) |> ignore;
   );
   ()
-
-(*
-  "-lpize", " <files>",
-  Common.mk_action_n_arg lpize;
-
-  "-find_source", " <dirs>",
-  Common.mk_action_n_arg find_source;
-
-  "-lang", Arg.Set_string lang, 
-  (spf " <str> choose language (default = %s)" !lang);
-  "-verbose", Arg.Set verbose, 
-  " ";
-*)
