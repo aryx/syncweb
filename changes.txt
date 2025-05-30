@@ -1,5 +1,13 @@
 # -*- org -*-
 
+* 0.7 (Q2 2025)
+
+** lpizer
+- resume lpizer, switch to dune and latest semgrep libs
+
+** Internals:
+- update to latest commons in semgrep 1.109.0
+
 * 0.6 (Q2 2024)
 
 ** Internals:
@@ -15,14 +23,14 @@
 ** Features:
 - automatic indexing provided by codegraph!
 - index for defs and uses of entities, including record fields!
-(better than ctwill of Knuth?)
+  (better than ctwill of Knuth?)
 - mini-indexes a la ctwill of Knuth (see his books such as MMIXware).
 
 ** Internals:
 - bypass completely noweb. Generate .tex directly
-(I used to have a noweblatexpad script, but it was a hack, and
-for the automatic indexing, easier to bypass noweb which is not
-a big help)
+  (I used to have a noweblatexpad script, but it was a hack, and
+  for the automatic indexing, easier to bypass noweb which is not
+  a big help)
 
 * 0.3
 
@@ -76,11 +84,11 @@ a big help)
 ** Features:
 - fine grained sync using md5sum
 
-* beta
+* Beta
 
 ** Features:
 - sync
 - specific to ocaml
 - make a few assumptions on format of literate document and its markup.
 
-* alpha
+* Alpha

@@ -1,0 +1,23 @@
+(executables
+ (names Main)
+ (libraries
+    ; external libs
+    logs
+    fpath
+    commons
+
+    ; internal
+    ; frontend
+    ; backend
+ )
+ (preprocess (pps ppx_deriving.show )) ; LATER: ppx_profiling
+ ; 'byte' is useful for ocamldebug
+ ; 'best' is 'native' with a fallback to 'byte' when native compilation isn’t available.
+ (modes (best exe) byte)
+)
+
+(install
+ (package syncweb)
+ (section bin)
+ (files (Main.exe as lpizer))
+)
