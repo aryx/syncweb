@@ -59,18 +59,28 @@ let drop_space_and_newline hooks toks =
   )
 
 (*****************************************************************************)
-(* Functions *)
+(* API *)
 (*****************************************************************************)
 
-let comment_before hooks (tok : Tok.t) all_toks : Tok.t option =
+let toks_before hooks (tok : Tok.t) all_toks =
   let pos = Tok.bytepos_of_tok tok in
-  let before =
-    all_toks
+  all_toks
     |> Common2.take_while (fun tok2 ->
            let info = hooks.tokf tok2 in
            let pos2 = Tok.bytepos_of_tok info in
            pos2 < pos)
-  in
+
+let toks_after hooks (tok : Tok.t) all_toks =
+  let pos = Tok.bytepos_of_tok tok in
+  all_toks
+    |> Common2.drop_while (fun tok2 ->
+      let info = hooks.tokf tok2 in
+      let pos2 = Tok.bytepos_of_tok info in
+      pos2 <= pos
+  )
+
+let comment_before hooks (tok : Tok.t) all_toks : Tok.t option =
+  let before = toks_before hooks tok all_toks in
   let first_non_space =
     List.rev before |> drop_space_and_newline hooks
   in
@@ -81,15 +91,8 @@ let comment_before hooks (tok : Tok.t) all_toks : Tok.t option =
   | _ -> None
 
 let comment_after hooks (tok : Tok.t) all_toks : Tok.t option =
-  let pos = Tok.bytepos_of_tok tok in
+  let after = toks_after hooks tok all_toks in
   let line = Tok.line_of_tok tok in
-  let after =
-    all_toks
-    |> Common2.drop_while (fun tok2 ->
-           let info = hooks.tokf tok2 in
-           let pos2 = Tok.bytepos_of_tok info in
-           pos2 <= pos)
-  in
   let first_non_space = after |> drop_space_and_newline hooks in
   match first_non_space with
   | x :: _xs when hooks.kind x =*= PI.Esthet PI.Comment ->
