@@ -3,6 +3,7 @@
 open Common
 open Fpath_.Operators
 module E = Entity_code
+module PI = Lib_ast_fuzzy
 
 (*****************************************************************************)
 (* Prelude *)
@@ -93,7 +94,6 @@ open Ast_cpp
 module E = Entity_code
 
 (*
-module PI = Parse_info
 let hooks_for_comment_cpp = { Comment_code.
     kind = Token_helpers_cpp.token_kind_of_tok;
     tokf = Token_helpers_cpp.info_of_tok;
@@ -247,6 +247,7 @@ let is_estet_comment (ii : Tok.t) =
   (s =~ ".*####")
 
 let range_of_any_with_comment_ml (any : AST_ocaml.any) (toks : Parser_ml.token list) : Tok.t * Tok.t =
+  let hooks = hooks_for_comment_ml in
   let any_gen = Ocaml_to_generic.any any in
   let ii = 
     AST_generic_helpers.ii_of_any any_gen |> List.filter Tok.is_origintok 
@@ -255,18 +256,34 @@ let range_of_any_with_comment_ml (any : AST_ocaml.any) (toks : Parser_ml.token l
     Tok_range.min_max_toks_by_pos ii 
   in
 
-  let if_not_estet_comment ii otherwise =
-    if (not (is_estet_comment ii))
-    then ii else otherwise
+  let if_not_estet_comment ii =
+    if not (is_estet_comment ii)
+    then Some ii else None
   in
-  match Comment_code.comment_before hooks_for_comment_ml min toks,
-        Comment_code.comment_after hooks_for_comment_ml max toks
-  with
-  | None, None -> min, max
-  | Some ii, None -> if_not_estet_comment ii min, max
-  | None, Some ii -> min, if_not_estet_comment ii max
-  | Some i1, Some i2 -> 
-          if_not_estet_comment i1 min, if_not_estet_comment i2 max
+  let comment_before_opt =
+    let* i1 = Comment_code.comment_before hooks min toks in
+    if_not_estet_comment i1
+  in
+  let _comment_after_opt = 
+    Comment_code.comment_after hooks max toks
+  in
+  let toks_after =
+    let after = Comment_code.toks_after hooks max toks in
+    Comment_code.drop_space_and_newline hooks after
+  in
+  let min = comment_before_opt ||| min in
+  let after_opt =
+    match toks_after with
+    | x :: _xs  ->
+        (match hooks.kind x with
+        | PI.RPar | PI.RBrace | PI.RBracket | RAngle -> 
+              Some (hooks.tokf x)
+        | _ -> None
+        )
+    | _ -> None
+  in
+  let max = after_opt ||| max in
+  min, max
 
 open AST_ocaml
 
@@ -288,90 +305,70 @@ let extract_entities_ml (env : env) (ast : program) (toks : Parser_ml.token list
     let nblines = nb_newlines max in
     (Tok.line_of_tok min, Tok.line_of_tok max + nblines)
   in
+
   let cnt = ref 0 in
   ast |> List.map (fun top ->
+      let mk_entity kind name = 
+        {
+          name = qualify name |> uniquify env kind;
+          kind;
+          range = range (I top);
+        }
+      in
       match top.i with
+      (* the different kinds of let *)
       | Let(_i1, _, [LetClassic(
                               {lname= (name, _); 
                                lparams=[];
                                lbody=Function(_, _);
                                _
                               })]) ->
-        let kind = E.Function in 
-        [{
-          name = qualify name |> uniquify env kind;
-          kind;
-          range = range (I top);
-        }]
-
+        [mk_entity E.Function name]
 
       | Let(_i1, _,[LetClassic({lname=(name, _); lparams=[]; _})]) ->
-        let kind = E.Constant in 
-        [{
-          name = qualify name |> uniquify env kind;
-          kind;
-          range = range (I top);
-        }]
+        [mk_entity E.Constant name]
 
+      (* TODO: what about let rec ... and ... *)
       | Let(_i1, _, [LetClassic(
                               {lname=(name, _); lparams=_::_; _})]) ->
-        let kind = E.Function in
-        [{
-          name = qualify name |> uniquify env kind;
-          kind;
-          range = range (I top);
-        }]
-
-      | Exception(_, (name, _), _) ->
-        let kind = E.Exception in
-        [{
-          name = qualify name |> uniquify env kind;
-          kind;
-          range = range (I top);
-        }]
+        [mk_entity E.Function name]
 
       | Let(_i1, _, [LetPattern(PatUnderscore _, _)]) ->
         incr cnt;
-        [{
-          name = qualify (spf "_%d" !cnt);
-          kind = E.TopStmts;
-          range = range (I top);
-        }]
+        [mk_entity E.TopStmts (spf "_%d" !cnt)]
 
-      | Type(_, [TyDecl({tname = (name, _); _})]) ->
-        let kind = E.Type in
-        [{
-          name = qualify name |> uniquify env kind;
-          kind;
-          range = range (I top);
-        }]
+      | Exception(_, (name, _), _) ->
+        [mk_entity E.Exception name]
 
       | Val (_, (name, _), _) ->
-        let kind = E.Prototype in
-        [{
-          name = qualify name |> uniquify env kind;
-          kind;
-          range = range (I top);
-        }]
+        [mk_entity E.Prototype name]
 
-      | Type(_t1, _xs) -> failwith "TODO: Type"
-(*
-        let (xs, ys) = Either_.partition (fun x -> x) xs in
-        let zipped = Common2.zip xs (t1::ys) in
-        zipped |> Common.map_filter (fun (x, _tok1) ->
-          match x with
-          | (TyDef(_, Name((name, _)), _, _)) -> 
-            let kind = E.Type in
-            Some {
-              name = qualify name |> uniquify env kind;
-              kind = E.Type;
-              range = range (TypeDeclaration x);
-            }
-          | _ -> None
-        )
-*)
+      | Type(_, [TyDecl({tname = (name, _); _})]) ->
+        [mk_entity E.Type name]
+
+      (* type x = ... and y = ... *)
+      | Type(ttype, xs) ->
+          let idx = ref 0 in
+          xs |> List.filter_map (fun x ->
+              incr idx;
+              match x with
+              | TyDecl({tname = (name, _);_}) -> 
+                  let kind = E.Type in
+                  let any : any = 
+                    if !idx =|= 1
+                    then 
+                      I (AST_ocaml.mki (Type (ttype, [x])))
+                    else 
+                      I (AST_ocaml.mki (Type (Tok.unsafe_fake_tok "", [x])))
+                  in
+                  Some {
+                    name = qualify name |> uniquify env kind;
+                    kind = E.Type;
+                    range = range any;
+                  }
+               | _ -> None
+           )
       | _ -> []
-    
   ) |> List.flatten
 
 (*--------------------------------------------------*)
@@ -502,9 +499,19 @@ let lpize (xs : Fpath.t list) : unit =
 
     let ast, toks = 
       (* CONFIG *)
-      let res = Parse_ml.parse file in
-      (* Parse_cpp.parse file   *)
-      res.ast, res.tokens
+        (* TODO: use a Pfff_or_tree_sitter approach again *)
+        try 
+          let res = Parse_ml.parse file in
+          (* Parse_cpp.parse file   *)
+          res.ast, res.tokens
+        with Parsing_error.Syntax_error _x ->
+            let toks = Parse_ml.tokens (Parsing_helpers.File file) in
+            let res2 = Parse_ocaml_tree_sitter.parse file in
+            (match res2.program with
+            | Some ast -> ast, toks
+            | None -> 
+                failwith (spf "fail to parse %s also with tree-sitter" !!file)
+            )
     in
     let env = {
       current_file = !!file;
@@ -515,7 +522,7 @@ let lpize (xs : Fpath.t list) : unit =
        *)
       cnt = ref 1;
     } in
-    let entities : entity list = 
+    let entities : entity list =
       (* CONFIG *)
       extract_entities_ml env ast toks
       (* extract_entities_cpp env xs  *)
