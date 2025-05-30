@@ -241,13 +241,15 @@ let is_estet_comment (ii : Tok.t) =
   (s =~ ".*------") ||
   (s =~ ".*####")
 
-let range_of_any_with_comment_ml _any _toks =
-  failwith "TODO: range_of_any_with_comment_ml"
-
+let range_of_any_with_comment_ml (any : AST_ocaml.any) (_toks : Parser_ml.token list) : Tok.t * Tok.t =
+  let any_gen = Ocaml_to_generic.any any in
+  let ii = 
+    AST_generic_helpers.ii_of_any any_gen |> List.filter Tok.is_origintok 
+  in
+  let (min, max) = 
+    Tok_range.min_max_toks_by_pos ii in
+  min, max
 (*
-let range_of_any_with_comment_ml any toks =
-  let ii = Lib_parsing_ml.ii_of_any any in
-  let (min, max) = PI.min_max_ii_by_pos ii in
   let if_not_estet_comment ii otherwise =
     if (not (is_estet_comment ii))
     then ii else otherwise
@@ -273,7 +275,7 @@ let nb_newlines (info : Tok.t) =
 (* TODO: 
  * - let f = function ... leads to constant!! should be function! 
  *)
-let extract_entities_ml (env : env) (ast : program) (toks : Tok.t list) : entity list =
+let extract_entities_ml (env : env) (ast : program) (toks : Parser_ml.token list) : entity list =
   let qualify x = 
     Module_ml.module_name_of_filename env.current_file ^ "." ^ x 
   in
@@ -441,9 +443,9 @@ let lpize xs =
 
     let ast, toks = 
       (* CONFIG *)
-      let _res = Parse_ml.parse (Fpath.v file) in
-      failwith "TODO: parse"
+      let res = Parse_ml.parse (Fpath.v file) in
       (* Parse_cpp.parse file   *)
+      res.ast, res.tokens
     in
     let env = {
       current_file = file;
