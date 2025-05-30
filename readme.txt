@@ -27,6 +27,9 @@ in the .mli and .ml file, avoiding tedious copy-paste and maintenance
 problems. One can also do some forms of Aspect-oriented Programming
 at the noweb level.
 
+Syncweb continues the long tradition of tools like cweb and noweb of
+using a very confusing name in the Web-era for a program that has
+nothing to do with the Web. Syncweb does not synchronize the Web.
 
 Example of use
 ----------------

@@ -442,7 +442,7 @@ let lpize xs =
     let ast, toks = 
       (* CONFIG *)
       let _res = Parse_ml.parse (Fpath.v file) in
-      failwith "TODO"
+      failwith "TODO: parse"
       (* Parse_cpp.parse file   *)
     in
     let env = {
@@ -518,6 +518,6 @@ let lpize xs =
 
     (* CONFIG *)
     (* for the initial 'make sync' to work *)
-    Sys.command (spf "rm -f %s" file) |> ignore;
+    (* Sys.command (spf "rm -f %s" file) |> ignore ; *)
   );
   ()
