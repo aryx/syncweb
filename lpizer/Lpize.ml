@@ -228,12 +228,10 @@ let extract_entities_cpp env xs =
 (* OCaml *)
 (*--------------------------------------------------*)
 
-(*
 let hooks_for_comment_ml = { Comment_code.
     kind = Token_helpers_ml.token_kind_of_tok;
     tokf = Token_helpers_ml.info_of_tok;
     }
-*)
 
 let is_estet_comment (ii : Tok.t) =
   let s = Tok.content_of_tok ii in
@@ -241,15 +239,15 @@ let is_estet_comment (ii : Tok.t) =
   (s =~ ".*------") ||
   (s =~ ".*####")
 
-let range_of_any_with_comment_ml (any : AST_ocaml.any) (_toks : Parser_ml.token list) : Tok.t * Tok.t =
+let range_of_any_with_comment_ml (any : AST_ocaml.any) (toks : Parser_ml.token list) : Tok.t * Tok.t =
   let any_gen = Ocaml_to_generic.any any in
   let ii = 
     AST_generic_helpers.ii_of_any any_gen |> List.filter Tok.is_origintok 
   in
   let (min, max) = 
-    Tok_range.min_max_toks_by_pos ii in
-  min, max
-(*
+    Tok_range.min_max_toks_by_pos ii 
+  in
+
   let if_not_estet_comment ii otherwise =
     if (not (is_estet_comment ii))
     then ii else otherwise
@@ -262,7 +260,6 @@ let range_of_any_with_comment_ml (any : AST_ocaml.any) (_toks : Parser_ml.token 
   | None, Some ii -> min, if_not_estet_comment ii max
   | Some i1, Some i2 -> 
           if_not_estet_comment i1 min, if_not_estet_comment i2 max
-*)
 
 open AST_ocaml
 
