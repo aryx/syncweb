@@ -79,6 +79,10 @@ let count_dollar s =
   done;
   !cnt
 
+(*****************************************************************************)
+(* Lang specific *)
+(*****************************************************************************)
+
 (*--------------------------------------------------*)
 (* C *)
 (*--------------------------------------------------*)
@@ -410,6 +414,10 @@ let string_of_entity_kind kind =
   | E.Prototype -> "signature"
   | _ -> failwith (spf "not handled kind: %s" (E.string_of_entity_kind kind))
 
+(*****************************************************************************)
+(* OLD code *)
+(*****************************************************************************)
+
 (* OLD:
 (* Help to create a first draft, to LPize a big set of files.
  * See now pfff -lpize which supports fine grained split of entities
@@ -458,7 +466,10 @@ let lpize file =
 *)
 
 
-(* main entry point *)
+(*****************************************************************************)
+(* Entry point *)
+(*****************************************************************************)
+
 let lpize (xs : Fpath.t list) : unit = 
 
   (* C++ specifics. TODO: move elsewhere? when parse file? *)

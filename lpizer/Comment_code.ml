@@ -62,7 +62,7 @@ let drop_space_and_newline hooks toks =
 (* Functions *)
 (*****************************************************************************)
 
-let comment_before hooks tok all_toks =
+let comment_before hooks (tok : Tok.t) all_toks : Tok.t option =
   let pos = Tok.bytepos_of_tok tok in
   let before =
     all_toks
@@ -80,7 +80,7 @@ let comment_before hooks tok all_toks =
       if Tok.col_of_tok info =|= 0 then Some info else None
   | _ -> None
 
-let comment_after hooks tok all_toks =
+let comment_after hooks (tok : Tok.t) all_toks : Tok.t option =
   let pos = Tok.bytepos_of_tok tok in
   let line = Tok.line_of_tok tok in
   let after =
