@@ -3,6 +3,12 @@
 (*****************************************************************************)
 (* Purpose *)
 (*****************************************************************************)
+(* Assist in producing a first version of a literate programming (LP)
+ * document.
+ *
+ * history:
+ *  - was in pfff -lpize before.
+ *)
 
 (*****************************************************************************)
 (* Flags *)
@@ -26,7 +32,21 @@ let actions () = [
 (* Main action *)
 (*****************************************************************************)
 
-let main_action xs =
+(* for lpification, to get a list of files and handling the skip list *)
+(*
+let find_source xs =
+  let root = Common2_.common_prefix_of_files_or_dirs xs in
+  let root = Unix.realpath root |> Common2_.chop_dirsymbol in
+  let files = 
+    failwith "TODO: find_source use Find_generic in codegraph"
+  in
+    (* Find_source.files_of_dir_or_files ~lang:!lang xs in *)
+  files |> List.iter (fun file ->
+    Logs.info (fun m -> m "processing: %s" (Filename_.readable root file))
+  )
+*)
+
+let main_action (xs : Fpath.t list) : unit =
   Lpize.lpize xs
 
 (*****************************************************************************)
@@ -85,7 +105,7 @@ let main () =
     (* main entry *)
     (* --------------------------------------------------------- *)
     | x::xs -> 
-        main_action (x::xs)
+        main_action (Fpath_.of_strings (x::xs))
     (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)

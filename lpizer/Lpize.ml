@@ -1,5 +1,19 @@
+(* Copyright 2009-2025 Yoann Padioleau, see copyright.txt *)
+
 open Common
+open Fpath_.Operators
 module E = Entity_code
+
+(*****************************************************************************)
+(* Prelude *)
+(*****************************************************************************)
+(* Core algorithms behind the lpizer except the cmdline parsing
+ * (done in Main.ml)
+*)
+
+(*****************************************************************************)
+(* Globals *)
+(*****************************************************************************)
 
 (* TODO: move to Main.ml? make lang (and use Lang.t?) a parameter of lpize! 
  * instead of all those hardcoded CONFIG in this file.
@@ -13,18 +27,6 @@ let lang = ref "ml"
 (* In this file because it can't be put in syncweb/ (it uses graph_code_c),
  * and it's a form of code slicing ...
  *)
-
-(* for lpification, to get a list of files and handling the skip list *)
-let find_source xs =
-  let root = Common2_.common_prefix_of_files_or_dirs xs in
-  let root = Unix.realpath root |> Common2_.chop_dirsymbol in
-  let files = 
-    failwith "TODO: find_source use Find_generic in codegraph"
-  in
-    (* Find_source.files_of_dir_or_files ~lang:!lang xs in *)
-  files |> List.iter (fun file ->
-    Logs.info (fun m -> m "processing: %s" (Filename_.readable root file))
-  )
 
 (* syncweb does not like tabs *)
 let untabify s =
@@ -44,6 +46,7 @@ type entity = {
 }
 
 type env = {
+  (* TODO: Fpath.t *)
   current_file: string;
   cnt: int ref;
   hentities: (Graph_code.node, bool) Hashtbl.t;
@@ -407,8 +410,56 @@ let string_of_entity_kind kind =
   | E.Prototype -> "signature"
   | _ -> failwith (spf "not handled kind: %s" (E.string_of_entity_kind kind))
 
+(* OLD:
+(* Help to create a first draft, to LPize a big set of files.
+ * See now pfff -lpize which supports fine grained split of entities
+ * (and also untabification) by actually parsing the source code files.
+ *)
+let lpize file =
+  let files = Common.cat file |> Common.exclude (fun s -> s =~ "^[ \t]*$") in
+  (* sanity check *)
+  let group_by_basename =
+    files |> List.map (fun file -> Filename.basename file, file)
+      |> Common.group_assoc_bykey_eff
+  in
+  group_by_basename |> List.iter (fun (base, xs) ->
+    if List.length xs > 1
+    then pr2 (spf "multiple files with same name: %s" 
+                     (xs |> Common.join "\n"))
+  );
+
+  let current_topdir = ref "" in
+  files |> List.iter (fun file ->
+    let xs = Common.split "/" file in
+    let hd = List.hd xs in
+    if hd <> !current_topdir
+    then begin
+      pr (spf "\\section{[[%s/]]}" hd);
+      pr "";
+      current_topdir := hd;
+    end;
+
+      pr (spf "\\subsection*{[[%s]]}" file);
+      pr "";
+    
+    let base = (*Filename.basename*) file in
+    pr (spf "<<%s>>=" base);
+    Common.cat file |> List.iter (fun s ->
+      pr (untabify s);
+    );
+    pr "@";
+    pr "";
+    pr "";
+
+    (* for the initial 'make sync' to work *)
+    Sys.command (spf "rm -f %s" file) |> ignore;
+  )
+
+*)
+
+
 (* main entry point *)
-let lpize xs = 
+let lpize (xs : Fpath.t list) : unit = 
 
   (* C++ specifics. TODO: move elsewhere? when parse file? *)
 (*
@@ -427,7 +478,7 @@ let lpize xs =
 
   xs |> List.iter (fun file ->
     let pr s = UConsole.print s in
-    let dir = Filename.dirname file in
+    let dir = Filename.dirname !!file in
     if dir <> !current_dir
     then begin
       pr (spf "\\section{[[%s/]]}" dir);
@@ -435,17 +486,17 @@ let lpize xs =
       current_dir := dir;
     end;
 
-    pr (spf "\\subsection*{[[%s]]}" file);
+    pr (spf "\\subsection*{[[%s]]}" !!file);
     pr "";
 
     let ast, toks = 
       (* CONFIG *)
-      let res = Parse_ml.parse (Fpath.v file) in
+      let res = Parse_ml.parse file in
       (* Parse_cpp.parse file   *)
       res.ast, res.tokens
     in
     let env = {
-      current_file = file;
+      current_file = !!file;
       hentities = hentities;
       (* starts at 1 so that first have no int, just the filename
        * e.g.  function foo (foo.h), and then the second one have
@@ -469,7 +520,7 @@ let lpize xs =
       ) |> List.flatten |> Hashtbl_.hashset_of_list
     in
     
-    let lines = UFile.Legacy.cat file in
+    let lines = UFile.cat file in
     let arr = Array.of_list lines in
 
     (* CONFIG *)
@@ -484,7 +535,7 @@ let lpize xs =
         Common2.enum_safe lstart lend |> List.iter (fun line ->
           let idx = line - 1 in
           if idx >= Array.length arr || idx < 0
-          then failwith (spf "out of range for %s, line %d" file line);
+          then failwith (spf "out of range for %s, line %d" !!file line);
           pr (untabify (arr.(line - 1)));
           nbdollars := !nbdollars + (count_dollar arr.(line - 1));
         );
@@ -501,8 +552,8 @@ let lpize xs =
     (* we don't use the basename (even though 'make sync' ' used to make
      * this assumption because) because we would have too many dupes.
      *)
-    pr (spf "<<%s>>=" file);
-    UFile.Legacy.cat file |> List_.index_list_1 |> List.iter (fun (s, idx) ->
+    pr (spf "<<%s>>=" !!file);
+    UFile.cat file |> List_.index_list_1 |> List.iter (fun (s, idx) ->
       match Common2.hfind_option idx hstart with
       | None -> 
           if Hashtbl.mem hcovered idx
