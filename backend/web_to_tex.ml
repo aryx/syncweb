@@ -410,7 +410,8 @@ let web_to_tex orig texfile (defs, uses) =
       xs |> List.iter (fun s ->
         (match s with
         | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
-          error "you must call Web.expand_sharp_include before"
+          error (spf "you must call Web.expand_sharp_include before got %s"
+                        s)
         (* pad's special macros for todos and notes 
          * todo: get rid of noweblatex and code in main.ml for to_noweb? 
          *)

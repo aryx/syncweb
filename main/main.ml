@@ -63,16 +63,15 @@ let with_error file f =
 (* Helpers *)
 (*****************************************************************************)
 
-open Web
 (* Allows to have multiple filenames with the same name but different dir.
  * We used to take the basename so that files could be put in any directory.
  *)
-let find_topkey_corresponding_to_file orig viewf =
+let find_topkey_corresponding_to_file (orig : Web.t) (viewf : string) =
   (* old: Filename.basename viewf *)
   let base = Filename.basename viewf in
   let defs = orig |> List_.filter_map (function
-    | Tex _ -> None
-    | ChunkDef (def, _xs) -> 
+    | Web.Tex _ -> None
+    | Web.ChunkDef (def, _xs) -> 
       let s = def.chunkdef_key in
       if Filename.basename s =*= base
       then Some s
@@ -240,8 +239,8 @@ let actions () = [
     let orig = Web.parse file in
     let orig =
       orig |> List.map (function 
-        | Tex xs -> 
-          Tex (xs |> List.map (fun s -> 
+        | Web.Tex xs -> 
+          Web.Tex (xs |> List.map (fun s -> 
             match s with
             | _ when s =~ "^%.*" -> "%"
             | _ when s =~ "^[ \t]*\\\\[tln] " -> "%"
@@ -261,16 +260,16 @@ let unparse_orig_web orig filename =
   UFile.Legacy.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     orig |> List.iter (function
-    | Tex xs -> 
+    | Web.Tex xs -> 
         xs |> List.iter pr;
-    | ChunkDef (def, body) -> 
+    | Web.ChunkDef (def, body) -> 
         let start = spf "<<%s>>=" def.chunkdef_key in
         let end_mark = def.chunkdef_end in
         pr start;
         body |> List.iter (function
-        | Code s -> 
+        | Web.Code s -> 
             pr s
-        | ChunkName (s, indent) -> 
+        | Web.ChunkName (s, indent) -> 
             Common2_.do_n indent (fun () -> pr_no_nl " ");
             let item = spf "<<%s>>" s in
             pr item;

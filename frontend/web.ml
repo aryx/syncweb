@@ -114,7 +114,8 @@ let thd3 (_, _, z) = z
 
 let cnt_id = ref 0
 
-let parse file = 
+let parse (file : string) :t = 
+  Logs.info (fun m -> m "parsing %s" file);
   let xs = UFile.Legacy.cat file in 
   let xs' = xs |> List_.index_list_1 |> List.map (fun (s, i) -> 
     s, i,
@@ -204,13 +205,15 @@ let unparse orig filename =
 (* Multi file support *)
 (*****************************************************************************)
 
-let expand_sharp_include orig =
+let expand_sharp_include (orig : t) : t =
+  Logs.info (fun m -> m "expanding #include");
   orig |> List.map (function
     | Tex xs ->
       xs |> List.map (fun s ->
         match s with
         | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
           let file = Common.matched1 s in
+          (* TODO: shoud recurse and expand_sharp_include in this orig too! *)
           let orig = parse file in
           orig
         | _ -> [Tex [s]]

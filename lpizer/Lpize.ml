@@ -325,6 +325,7 @@ let extract_entities_ml (env : env) (ast : program) (toks : Parser_ml.token list
                               })]) ->
         [mk_entity E.Function name]
 
+      (* TODO: look if ref or Hash or queue and use E.Global then *)                  
       | Let(_i1, _,[LetClassic({lname=(name, _); lparams=[]; _})]) ->
         [mk_entity E.Constant name]
 
@@ -340,6 +341,7 @@ let extract_entities_ml (env : env) (ast : program) (toks : Parser_ml.token list
       | Exception(_, (name, _), _) ->
         [mk_entity E.Exception name]
 
+      (* TODO: look if ref or Hash or queue and use E.Global then *)                  
       | Val (_, (name, _), _) ->
         [mk_entity E.Prototype name]
 
