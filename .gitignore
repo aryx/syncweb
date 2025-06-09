@@ -1,9 +1,7 @@
 _build
-.merlin
 
 # ocaml objects
 *.cm*
-*.annot
 *.opt
 
 # c objects
@@ -13,23 +11,15 @@ _build
 # syncweb objects
 *.md5sum_*
 
-# make generated files
-.depend
-/Makefile.config
-
-# source generated files
-/globals/config.ml
-
-# binaries
-/syncweb
-/demos/demo
-/indexer/indexer
-/lpizer/lpizer
-
-# ?????
+# codegraph objects
 /graph_code.marshall
 /graph_code.marshall.opti
+
+# binaries
+/demos/demo
+
+# ?????
 /syncweb.install
+
 /demos/demo.ml
-t
 /demos/demo.mli

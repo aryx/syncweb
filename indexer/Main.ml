@@ -4,6 +4,9 @@ open Common
 (*****************************************************************************)
 (* Purpose *)
 (*****************************************************************************)
+(* Generate somes defs_and_uses.list file used by syncweb to automatically
+ * add crossrefs to entities in a literate document.
+ *)
 
 (*****************************************************************************)
 (* Flags *)
@@ -30,7 +33,7 @@ let actions () = [
 (*****************************************************************************)
 
 let main_action xs =
-  Index_pfff.build_graph_code !lang xs
+  Index.build_graph_code !lang xs
 
 (*****************************************************************************)
 (* The options *)
@@ -45,7 +48,7 @@ let options () = [
   (spf " <str> choose language (default = %s)" !lang);
   ] @
   Common2.cmdline_flags_devel () @
-  Common.options_of_actions action (all_actions()) @
+  Arg_.options_of_actions action (all_actions()) @
   []
 
 (*****************************************************************************)
@@ -59,20 +62,20 @@ let main () =
       " [options] <orig> <view> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
-  let args = Common.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_.parse_options (options()) usage_msg Sys.argv in
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
-  Common.profile_code "Main total" (fun () -> 
+  Profiling.profile_code "Main total" (fun () -> 
     
     (match args with
     
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Common.action_list (all_actions())) -> 
-        Common.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
+        Arg_.do_action !action xs (all_actions())
 
-    | _ when not (Common.null_string !action) -> 
+    | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
 
     (* --------------------------------------------------------- *)
@@ -84,13 +87,13 @@ let main () =
     (* empty entry *)
     (* --------------------------------------------------------- *)
     | [] -> 
-        Common.usage usage_msg (options()); 
+        Arg_.usage usage_msg (options()); 
         failwith "too few arguments"
     )
   )
 
 (*****************************************************************************)
 let _ =
-  Common.main_boilerplate (fun () -> 
+  UCommon.main_boilerplate (fun () -> 
     main ();
   )

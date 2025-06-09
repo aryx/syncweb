@@ -2,6 +2,9 @@
 
 * 0.7 (Q2 2025)
 
+** indexer
+- resume indexer, switch to dune and latest semgrep libs
+
 ** lpizer
 - resume lpizer, switch to dune and latest semgrep libs
 

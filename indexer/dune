@@ -6,19 +6,29 @@
     ;bigarray
     ;ocamlgraph
 
+    ; in semgrep
+    commons
+
+    ; in codemap
+    graph_code
+
     ; for lang_cmt
     ;compiler-libs  compiler-libs.common
     ;
     ;commons commons_core
     ;pfff-commons-graph
-    ;pfff-h_program-lang  pfff-graph_code
-    ;
-    ;pfff-lang_ml pfff-lang_ml-analyze
+    ;pfff-h_program-lang
+
+
+    ; in codegraph
+    pfff-lang_ml-analyze
     ;pfff-lang_cmt pfff-lang_cmt-analyze
     ;pfff-lang_cpp 
-    ;pfff-lang_c pfff-lang_c-analyze
+    pfff-lang_c-analyze
     ;
-    ;; for find_source Lib_parsing_xxx
+
+    ; for find_source Lib_parsing_xxx
+    codegraph.finder
     ;pfff-lang_java
     ;pfff-lang_js
     ;pfff-lang_lisp
