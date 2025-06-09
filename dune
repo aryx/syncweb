@@ -3,10 +3,4 @@
   (_
     (flags (:standard  -w -52-6))))
 
-(dirs
-  main
-  frontend
-  backend
-  lpizer
-  ;TODO: lpizer
-)
+;(dirs main frontend backend lpizer indexer)

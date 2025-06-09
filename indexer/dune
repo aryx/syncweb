@@ -1,31 +1,31 @@
 (executables
- (names main_indexer)
+ (names Main)
  (libraries 
+    ; external libs
     str
-    bigarray
-    ocamlgraph
-    dyp
+    ;bigarray
+    ;ocamlgraph
 
     ; for lang_cmt
-    compiler-libs  compiler-libs.common
-
-    commons commons_core
-    pfff-commons-graph
-    pfff-h_program-lang  pfff-graph_code
-
-    pfff-lang_ml pfff-lang_ml-analyze
-    pfff-lang_cmt pfff-lang_cmt-analyze
-    pfff-lang_cpp 
-    pfff-lang_c pfff-lang_c-analyze
-
-    ; for find_source Lib_parsing_xxx
-    pfff-lang_java
-    pfff-lang_js
-    pfff-lang_lisp
-    pfff-lang_php
-    pfff-lang_python
-
-    pfff-lang_GENERIC    
+    ;compiler-libs  compiler-libs.common
+    ;
+    ;commons commons_core
+    ;pfff-commons-graph
+    ;pfff-h_program-lang  pfff-graph_code
+    ;
+    ;pfff-lang_ml pfff-lang_ml-analyze
+    ;pfff-lang_cmt pfff-lang_cmt-analyze
+    ;pfff-lang_cpp 
+    ;pfff-lang_c pfff-lang_c-analyze
+    ;
+    ;; for find_source Lib_parsing_xxx
+    ;pfff-lang_java
+    ;pfff-lang_js
+    ;pfff-lang_lisp
+    ;pfff-lang_php
+    ;pfff-lang_python
+    ;
+    ;pfff-lang_GENERIC    
 
  )
  ; for ocamldebug
@@ -34,8 +34,7 @@
 
 
 (install
- (package syncweb_indexer)
+ (package syncweb)
  (section bin)
- (files (main_indexer.exe as syncweb_indexer) 
-        )
+ (files (Main.exe as syncweb_indexer))
 )
