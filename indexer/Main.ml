@@ -1,4 +1,4 @@
-(* Copyright 2009-2017 Yoann Padioleau, see copyright.txt *)
+(* Copyright 2009-2017, 2025 Yoann Padioleau, see copyright.txt *)
 open Common
 
 (*****************************************************************************)
@@ -32,8 +32,8 @@ let actions () = [
 (* Main action *)
 (*****************************************************************************)
 
-let main_action xs =
-  Index.build_graph_code !lang xs
+let main_action (root : string) : unit =
+  Index.build_graph_code !lang (Fpath.v root)
 
 (*****************************************************************************)
 (* The options *)
@@ -81,14 +81,14 @@ let main () =
     (* --------------------------------------------------------- *)
     (* main entry *)
     (* --------------------------------------------------------- *)
-    | x::xs -> 
-        main_action (x::xs)
+    | [x] -> 
+        main_action x
     (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)
-    | [] -> 
+    | [] | _::_::_ -> 
         Arg_.usage usage_msg (options()); 
-        failwith "too few arguments"
+        failwith "too few or too many arguments"
     )
   )
 

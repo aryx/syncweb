@@ -50,7 +50,9 @@ let hook_use_edge _src dst _g (loc : Loc.t) =
 
 
 (* copy paste of pfff/main_codegraph.ml *)
-let build_graph_code lang xs =
+let build_graph_code lang (root : Fpath.t) =
+
+  (* old:
   let xs = List.map Unix.realpath xs in
   let root, files = 
     match xs with
@@ -62,27 +64,26 @@ let build_graph_code lang xs =
           find_source__files_of_dir_or_files ~lang xs in
         root, files
   in
+  *)
 
   let empty = Graph_code.empty_statistics () in
   let _g, _stats =
     try (
     match lang with
     | "ml"  -> 
-      Graph_code_ml.build ~verbose:!verbose (Fpath.v root) files, empty
+      let files = failwith "TODO" in
+      Graph_code_ml.build ~verbose:!verbose root files, empty
     | "cmt"  -> 
-      let _ml_files = Find_source.files_of_root ~lang:"ml" (Fpath.v root) in
-      let _cmt_files = files in
-(*
-        Graph_code_cmt.hook_def_node := hook_def_node;
-        Graph_code_cmt.hook_use_edge := (fun (src, dst) g loc ->
+      let ml_files = Find_source.files_of_root ~lang:"ml" root in
+      let cmt_files = Find_source.files_of_root ~lang:"cmt" root in
+      Graph_code_cmt.hook_def_node := hook_def_node;
+      Graph_code_cmt.hook_use_edge := (fun (src, dst) g loc ->
           hook_use_edge src dst g loc;
-        );
-
-      Graph_code_cmt.build ~verbose:!verbose ~root ~cmt_files ~ml_files, 
+      );
+      Graph_code_cmt.build root ~cmt_files ~ml_files,
       empty
-*)
-       failwith "TODO: Index cmt"
     | "c" -> 
+      let files = failwith "TODO" in
 (*
         Parse_cpp.init_defs !Flag_parsing_cpp.macros_h;
         let local = Filename.concat root "pfff_macros.h" in
@@ -95,7 +96,7 @@ let build_graph_code lang xs =
           hook_use_edge src dst g loc;
         );
 
-        Graph_code_c.build (Fpath.v root) files, empty
+        Graph_code_c.build root files, empty
     | _ -> failwith ("language not supported: " ^ lang)
     )
     with Graph_code.Error err ->

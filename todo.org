@@ -2,6 +2,17 @@
 
 * Last
 
+** Last1
+
+*** RELAX add a lpizer -dryrun option
+that does not rm -f the file
+or add -rm_views option?
+
+*** RELAX split Lpize.ml for C and ML in different files
+Lpize_c.ml, Lpize_ocaml.ml, etc ?
+Lpize_env.ml ?
+
+
 ** Last
 
 *** answer Ben about his markdown idea? meh

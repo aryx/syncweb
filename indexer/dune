@@ -13,7 +13,7 @@
     graph_code
 
     ; for lang_cmt
-    ;compiler-libs  compiler-libs.common
+    compiler-libs compiler-libs.common
     ;
     ;commons commons_core
     ;pfff-commons-graph
@@ -22,7 +22,7 @@
 
     ; in codegraph
     pfff-lang_ml-analyze
-    ;pfff-lang_cmt pfff-lang_cmt-analyze
+    pfff-lang_cmt pfff-lang_cmt-analyze
     ;pfff-lang_cpp 
     pfff-lang_c-analyze
     ;
