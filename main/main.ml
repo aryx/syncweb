@@ -189,7 +189,7 @@ let actions () = [
     if (e <> "nw")
     then failwith (spf "expect a .nw file not a .%s" e);
     let orig = Web.parse origfile in
-    let (defs, uses) = Crossref_code.parse_defs_and_uses defs_and_uses_file in
+    let (defs, uses) = Crossref_code.parse_defs_and_uses (Fpath.v defs_and_uses_file) in
     (* multi-file support *)
     let orig = Web.expand_sharp_include orig in
     let texfile = Filename_.filename_of_dbe (d,b,"tex") in
