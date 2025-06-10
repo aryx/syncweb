@@ -5,6 +5,11 @@ open Either
 open Web
 
 (*****************************************************************************)
+(* Prelude  *)
+(*****************************************************************************)
+(* ?? *)
+
+(*****************************************************************************)
 (* Types  *)
 (*****************************************************************************)
 
@@ -16,7 +21,12 @@ type loc = {
   file: Fpath.t;
   line: int;
 }
-(* Yet another Entity_code.t,
+
+let string_of_loc { file; line } =
+  spf "%s:%d" !!file line
+
+
+(* Yet another Entity_code.kind,
  * but I don't want to depend on pfff/h_program-lang *)
 type entity_kind =
   | Function
@@ -42,10 +52,7 @@ type defs = ((string * entity_kind) * loc) list
 type uses = ((string * entity_kind) * loc) list
 
 let debug = ref false
-
-let string_of_loc { file; line } =
-  spf "%s:%d" !!file line
-  
+ 
 (*****************************************************************************)
 (* Parsing  *)
 (*****************************************************************************)
@@ -127,13 +134,9 @@ let parse_defs_and_uses (file : Fpath.t) : defs * uses =
   !defs, !uses
 
 (*****************************************************************************)
-(* Chunkid <-> loc list  *)
-(*****************************************************************************)
-
-(*****************************************************************************)
 (* Chunkid -> defs * uses and Def -> Chunkid  *)
 (*****************************************************************************)
-let hs__from_orig orig (defs, uses) =
+let hs__from_orig (orig : Web.t) (defs, uses) =
   let hchunkname_to_defs = Crossref_chunk.hchunkname_to_defs__from_orig orig in
 
   let hdefs_and_uses_of_chunkid = Hashtbl.create 101 in

@@ -24,7 +24,7 @@ type t = tex_or_chunkdef list
   and chunkname = tex_string
   and chunkid = int
 
-val parse: string (* Common.filename *) -> t
+val parse: Fpath.t -> t
 
 val unparse: t -> string (* Common.filename *) -> unit
 

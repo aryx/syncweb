@@ -87,7 +87,7 @@ let rename_chunknames xs =
     res ^ suffix
   in
   xs |> List.iter (fun file ->
-    let orig = Web.parse file in
+    let orig = Web.parse (Fpath.v file) in
     
     let rec tex_or_chunkdef x =
       match x with
@@ -147,7 +147,7 @@ let rename_chunknames_archi xs =
   in
 
   origs |> List.iter (fun file ->
-    let orig = Web.parse file in
+    let orig = Web.parse (Fpath.v file) in
     
     let rec tex_or_chunkdef x =
       match x with
@@ -177,7 +177,7 @@ let merge_files xs =
   xs |> List.iter (fun file ->
     let orig = 
       try
-        Web.parse file 
+        Web.parse (Fpath.v file) 
       with exn ->
         failwith (spf "PB with %s, exn = %s" file (Common.exn_to_s exn))
     in
@@ -239,7 +239,7 @@ let merge_files xs =
       UCommon.pr ""
     );
     
-    let orig = Web.parse file in
+    let orig = Web.parse (Fpath.v file) in
 
     let subst_maybe key =
       try 

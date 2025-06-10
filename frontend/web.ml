@@ -1,5 +1,6 @@
 (* Copyright 2009-2017 Yoann Padioleau, see copyright.txt *)
 open Common
+open Fpath_.Operators
 
 (*****************************************************************************)
 (* Prelude *)
@@ -114,9 +115,9 @@ let thd3 (_, _, z) = z
 
 let cnt_id = ref 0
 
-let parse (file : string) :t = 
-  Logs.info (fun m -> m "parsing %s" file);
-  let xs = UFile.Legacy.cat file in 
+let parse (file : Fpath.t) :t = 
+  Logs.info (fun m -> m "parsing %s" !!file);
+  let xs = UFile.cat file in 
   let xs' = xs |> List_.index_list_1 |> List.map (fun (s, i) -> 
     s, i,
     (match s with
@@ -178,7 +179,7 @@ let parse (file : string) :t =
 (* Unparser *)
 (*****************************************************************************)
 
-let unparse orig filename =
+let unparse (orig : t) (filename : string) : unit =
   UFile.Legacy.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     orig |> List.iter (function
@@ -214,7 +215,7 @@ let expand_sharp_include (orig : t) : t =
         | _ when s =~ "#include +\"\\(.*\\.nw\\)\"" ->
           let file = Common.matched1 s in
           (* TODO: shoud recurse and expand_sharp_include in this orig too! *)
-          let orig = parse file in
+          let orig = parse (Fpath.v file) in
           orig
         | _ -> [Tex [s]]
         ) |> List.flatten

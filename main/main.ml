@@ -120,7 +120,7 @@ let parse_origs origfs =
   let cachefile = "." ^ orig1 ^ "cache" in
   let f () = 
     origfs |> List.map (fun file -> 
-      with_error file (fun () -> file, Web.parse file)
+      with_error file (fun () -> file, Web.parse (Fpath.v file))
     )
   in
   origfs |> List.iter (fun file -> 
@@ -150,7 +150,7 @@ let actions () = [
   "-parse_orig", "   <file>",
     Arg_.mk_action_1_arg (fun x -> 
       let tmpfile = "/tmp/xxx" in
-      let orig = Web.parse x in
+      let orig = Web.parse (Fpath.v x) in
       Web.unparse orig tmpfile;
       Sys.command(spf "diff %s %s" x tmpfile) |> ignore;
     );
@@ -162,7 +162,7 @@ let actions () = [
   (* tangling *)
   "-view_of_orig", "   <file> <key>", 
     Arg_.mk_action_2_arg (fun x key -> 
-      let orig = Web.parse x in
+      let orig = Web.parse (Fpath.v x) in
       let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
       Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
@@ -173,7 +173,7 @@ let actions () = [
   (* duplicate of -view_of_orig *)
   "-to_code", "   <file> <key>", 
     Arg_.mk_action_2_arg (fun x key -> 
-      let orig = Web.parse x in
+      let orig = Web.parse (Fpath.v x) in
       let view = Web_to_code.view_of_orig key orig in
       let tmpfile = "/tmp/xxx" in
       Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
@@ -188,7 +188,7 @@ let actions () = [
     let (d,b,e) = Filename_.dbe_of_filename origfile in
     if (e <> "nw")
     then failwith (spf "expect a .nw file not a .%s" e);
-    let orig = Web.parse origfile in
+    let orig = Web.parse (Fpath.v origfile) in
     let (defs, uses) = Crossref_code.parse_defs_and_uses (Fpath.v defs_and_uses_file) in
     (* multi-file support *)
     let orig = Web.expand_sharp_include orig in
@@ -199,7 +199,7 @@ let actions () = [
   (* superseded by Main.main_action now *)
   "-sync", "   <orig> <view>", 
     Arg_.mk_action_2_arg (fun origf viewf -> 
-      let orig = Web.parse origf in
+      let orig = Web.parse (Fpath.v origf) in
       let views = Code.parse ~lang:Lang.mark_ocaml viewf in
 
       let orig' = Sync.sync ~lang:Lang.mark_ocaml     orig views  in
@@ -236,7 +236,7 @@ let actions () = [
   (* pad's hacks *)
   "-to_noweb", " <orig>", 
   Arg_.mk_action_1_arg (fun file -> 
-    let orig = Web.parse file in
+    let orig = Web.parse (Fpath.v file) in
     let orig =
       orig |> List.map (function 
         | Web.Tex xs -> 
@@ -279,7 +279,7 @@ let unparse_orig_web orig filename =
   )
 in
 
-    let orig = Web.parse file in
+    let orig = Web.parse (Fpath.v file) in
     let (d,b,_e) = Filename_.dbe_of_filename file in
     let file2 = Filename_.filename_of_dbe (d,b,"w") in
     unparse_orig_web orig file2
@@ -303,7 +303,7 @@ let main_action xs =
   (* simple case, one tex.nw file, one view *)
   | [origf;viewf] -> 
 
-      let orig = Web.parse origf in
+      let orig = Web.parse (Fpath.v origf) in
       let topkey = 
         (* old: Filename.basename viewf *)
         find_topkey_corresponding_to_file orig viewf
