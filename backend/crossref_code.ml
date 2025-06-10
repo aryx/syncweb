@@ -257,5 +257,19 @@ let hs__from_orig (orig : Web.t) (defs, uses) =
 let hdefs_and_uses_of_chunkid__from_orig orig (defs, uses) =
   hs__from_orig orig (defs, uses) |> fst
 
-let hchunkid_of_def__from_orig orig defs =
-  hs__from_orig orig (defs, []) |> snd
+let hchunkid_of_def__from_orig (orig : Web.t) defs =
+  (* so one can use [<parse()>] instead of [<Parse.parse()]> when
+   * there is no ambiguity
+   * TODO: do it only when single func? anyway later we check
+   * for ambiguity when using Hashtbl.find_all and getting many candidates
+   *)
+  let addons = 
+    defs |> List.filter_map (fun ((str, kind), loc) ->
+      match kind with
+      | Function when str =~ ".*\\.\\([^.]+\\)$" ->
+         let final = Common.matched1 str in
+         Some ((final, kind), loc)
+      | _ -> None
+    )
+  in
+  hs__from_orig orig (addons @ defs, []) |> snd

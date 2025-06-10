@@ -69,7 +69,7 @@ type tex_string = elt list
 (* todo: ugly, should have file x loc information in Web.t *)
 let last_chunkdef = ref ""
 let error s =
-  UCommon.pr2 (spf "near:|%s|" !last_chunkdef);
+  Logs.err (fun m -> m "near:|%s|" !last_chunkdef);
   failwith s
 
 (*****************************************************************************)
@@ -336,7 +336,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
 
       (* special case {{foo()}} *)
       | _ when suffix = "()" (* s =~ "^\\(.*\\)()$" *) ->
-        UCommon.pr2 (spf "warning: not automatic index found for %s" s);
+        Logs.warn (fun m -> m "not automatic index found for %s" s);
 
         (* less: handle new format 'function [[foo()]]'? *)
         let name_candidates = [
@@ -350,7 +350,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
           
       | _ -> 
 
-        UCommon.pr2 (spf "warning: not automatic index found for %s" s);
+        Logs.warn (fun m -> m "not automatic index found for %s" s);
         let name_candidates = [
           spf "global [[%s]]" s;
           spf "struct [[%s]]" s;
