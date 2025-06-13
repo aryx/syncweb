@@ -5,7 +5,8 @@ open Fpath_.Operators
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
-(*
+(* AST for the .nw file.
+ *
  * Web.t below used to be called Engine.orig, and Code.t Engine.view, so
  * many of the comments below refer to this old naming scheme.
  * This was before I decided that syncweb could also generate

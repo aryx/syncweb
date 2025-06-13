@@ -266,7 +266,8 @@ let hchunkid_of_def__from_orig (orig : Web.t) defs =
   let addons = 
     defs |> List.filter_map (fun ((str, kind), loc) ->
       match kind with
-      | Function when str =~ ".*\\.\\([^.]+\\)$" ->
+      | (Function | Global | Type | Constant | Constructor)
+          when str =~ ".*\\.\\([^.]+\\)$" ->
          let final = Common.matched1 str in
          Some ((final, kind), loc)
       | _ -> None

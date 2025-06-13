@@ -193,7 +193,7 @@ let actions () = [
     (* multi-file support *)
     let orig = Web.expand_sharp_include orig in
     let texfile = Filename_.filename_of_dbe (d,b,"tex") in
-    Web_to_tex.web_to_tex orig texfile (defs, uses);
+    Web_to_tex.web_to_tex orig (Fpath.v texfile) (defs, uses);
   );
 
   (* superseded by Main.main_action now *)

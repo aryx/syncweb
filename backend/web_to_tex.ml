@@ -288,7 +288,7 @@ let pr_final_index pr hnwixident =
   )
 
 (* for [< >] *)
-let chunkid_of_def hchunkid_of_def hkey_to_def s =
+let chunkid_of_def_opt hchunkid_of_def hkey_to_def (s : string) : chunkid option =
   let s, suffix =
     match s with
     | _ when s =~ "\\(.*\\)()$" ->
@@ -307,7 +307,7 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
   let candidates = Hashtbl.find_all hchunkid_of_def s in
   match candidates with
   | [(_kind, _loc), id] -> 
-    id
+    Some id
   | ((_, loc1), _)::((_, loc2), _)::_ ->
     UCommon.pr2_gen candidates;
     failwith (spf "ambiguity for def of %s, at %s and %s" 
@@ -366,23 +366,24 @@ let chunkid_of_def hchunkid_of_def hkey_to_def s =
 
     in
     (* less: warning if ambiguity? *)
-    let name = 
-      try 
-        name_candidates |> List.find (fun x -> 
+    let* name = 
+      let name_opt = name_candidates |> List.find_opt (fun x -> 
           Hashtbl.mem hkey_to_def x)
-      with Not_found -> 
-        error (spf "could not find def for |%s|" f)
+      in
+      if name_opt =*= None
+      then Logs.err (fun m -> m "could not find def for |%s|" f);
+      name_opt
     in
     let def = Hashtbl.find hkey_to_def name in
-    def.chunkdef_id
+    Some def.chunkdef_id
 
       
 (*****************************************************************************)
 (* Entry point  *)
 (*****************************************************************************)
 
-let web_to_tex orig texfile (defs, uses) =
-  UFile.Legacy.with_open_outfile texfile (fun (pr, _chan)  ->
+let web_to_tex (orig : Web.t) (texfile : Fpath.t) (defs, uses) =
+  UFile.with_open_out texfile (fun (pr, _chan)  ->
 
   (* for nwbegincode{}, not sure it's needed *)
   let cnt = ref 0 in
@@ -453,17 +454,24 @@ let web_to_tex orig texfile (defs, uses) =
             pr "}";
           | B s ->
 
-            let chunkid = chunkid_of_def hchunkid_of_def hkey_to_def s in
-            pr "$\\texttt{";
-            pr_in_quote pr s;
-            pr "}";
-            (if Hashtbl.mem hreferenced_def_already_recently s
-             then ()
-             else begin
-               Hashtbl.add hreferenced_def_already_recently s true;
-               pr (spf "^{\\subpageref{%s}}" 
-                     (label_of_id chunkid));
-             end);
+            let chunkid_opt = chunkid_of_def_opt hchunkid_of_def hkey_to_def s in
+            (match chunkid_opt with
+            | None -> 
+               pr "$\\texttt{";
+               pr_in_quote pr s;
+               pr "X}";
+            | Some chunkid ->
+               pr "$\\texttt{";
+               pr_in_quote pr s;
+               pr "}";
+               (if Hashtbl.mem hreferenced_def_already_recently s
+                then ()
+                else begin
+                  Hashtbl.add hreferenced_def_already_recently s true;
+                   pr (spf "^{\\subpageref{%s}}" 
+                        (label_of_id chunkid));
+                 end)
+            );
             pr "$";
         );
         pr "\n";
