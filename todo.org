@@ -1,5 +1,16 @@
 # -*- org -*-
 
+* Manual
+
+** related work
+https://entangled.github.io/
+- markdown < latex
+-? has syncweb like 2way sync, but not sure how it solves
+   conflicts given it does not use md5sum
+- longer to define blocks ``` {.python #factorial}
+- no automatic code indexing (syncweb_indexer)
++ coloring and markdown so also displayable on the web
+
 * Last
 
 ** Last1
