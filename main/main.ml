@@ -44,6 +44,7 @@ let less_marks = ref false
 
 (* for -debug, -verbose, -quiet *)
 let logs_level = ref (Some Logs.Warning)
+let backtrace = ref false
 (* action mode *)
 let action = ref ""
 
@@ -117,7 +118,8 @@ let find_topkey_corresponding_to_file (orig : Web.t) (viewf : string) =
 (* opti: mostly copy paste and adaptation of Common2.cache_computation *)
 let parse_origs origfs =
   let orig1 = List.hd origfs in
-  let cachefile = "." ^ orig1 ^ "cache" in
+  let (d,b,e) = Filename_.dbe_of_filename orig1 in
+  let cachefile = Filename_.filename_of_dbe (d, "." ^ b, e ^ "cache") in
   let f () = 
     origfs |> List.map (fun file -> 
       with_error file (fun () -> file, Web.parse (Fpath.v file))
@@ -410,6 +412,8 @@ let options () =
       Crossref_code.debug := true;
     ), " ";
 
+    "-backtrace", Arg.Set backtrace,
+    " dump the backtrace after an error";
     "-version",   Arg.Unit (fun () -> 
       UCommon.pr2 (spf "syncweb version: %s" version);
       exit 0;
@@ -455,7 +459,19 @@ let main () =
     (* main entry *)
     (* --------------------------------------------------------- *)
     | x::xs -> 
-        main_action (x::xs)
+       (try
+          main_action (x::xs)
+       with exn ->
+          if !backtrace
+          then raise exn
+          else
+            (match exn with
+            | Failure s ->
+               Logs.err (fun m -> m "syncweb: %s" s);
+               exit 1;
+            | exn -> raise exn
+            )
+        )
     (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)
