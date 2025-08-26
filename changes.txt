@@ -1,6 +1,15 @@
 # -*- org -*-
 
-* 0.7 (Q2 2025)
+* TODO
+
+* -----------------------------------------------------------
+
+* 0.8 (Q3 2025) (Dockerfile and GHA CI)
+
+** testinfra
+- Dockerfile and docker.yml GHA (GitHub Actions) CI check
+
+* 0.7 (Q2 2025) ()
 
 ** indexer
 - resume indexer, switch to dune and latest semgrep libs
@@ -8,20 +17,26 @@
 ** lpizer
 - resume lpizer, switch to dune and latest semgrep libs
 
-** Internals:
+** internals:
 - update to latest commons in semgrep 1.109.0
 
-* 0.6 (Q2 2024)
+* -----------------------------------------------------------
 
-** Internals:
+* 0.6 (Q2 2024) ()
+
+** internals:
 - update to latest commons in semgrep 1.70.0
 
-* 0.5 (Q1 2023)
+* -----------------------------------------------------------
 
-** Internals:
+* 0.5 (Q1 2023) (use dune)
+
+** internals:
 - switch to dune
 
-* 0.4 (Q1 2018)
+* -----------------------------------------------------------
+
+* 0.4 (Q1 2018) ()
 
 ** Features:
 - automatic indexing provided by codegraph!
@@ -35,7 +50,7 @@
   for the automatic indexing, easier to bypass noweb which is not
   a big help)
 
-* 0.3
+* 0.3 ()
 
 ** Features:
 - md5sum marks can now be generated in an auxillary file instead of
@@ -56,7 +71,7 @@
 - better file position information when something goes wrong in
   the original document or views.
 
-* 0.2
+* 0.2 ()
 
 ** Features:
 - show contextual diff of changes instead of just the 2 variations. Helpful
@@ -80,18 +95,20 @@
 - add stuff on copy-paste and AOP
 - improved documentation related to emacs
 
-* 0.1
+* 0.1 ()
 
 ** first public release
 
 ** Features:
 - fine grained sync using md5sum
 
-* Beta
+* -----------------------------------------------------------
+
+* Beta ()
 
 ** Features:
 - sync
 - specific to ocaml
 - make a few assumptions on format of literate document and its markup.
 
-* Alpha
+* Alpha ()

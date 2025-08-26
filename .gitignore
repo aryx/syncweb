@@ -1,4 +1,4 @@
-_build
+/_build
 
 # ocaml objects
 *.cm*
@@ -19,7 +19,7 @@ _build
 /demos/demo
 
 # ?????
-/syncweb.install
+# /syncweb.install
 
 /demos/demo.ml
 /demos/demo.mli
