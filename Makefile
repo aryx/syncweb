@@ -1,3 +1,6 @@
+###############################################################################
+# Prelude
+###############################################################################
 
 ###############################################################################
 # Main targets
@@ -5,13 +8,18 @@
 
 all:
 	dune build
-install:
-	dune install
 clean:
 	dune clean
+install:
+	dune install
 
 setup:
 	opam install --deps-only .
+
+.PHONY: all clean install test
+
+build-docker:
+	docker build -t "syncweb" .
 
 ###############################################################################
 # Developer targets

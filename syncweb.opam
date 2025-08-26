@@ -24,10 +24,11 @@ homepage: "https://github.com/aryx/syncweb"
 dev-repo: "git+https://github.com/aryx/syncweb"
 bug-reports: "https://github.com/aryx/syncweb/issues"
 
+#TODO: we depends on many semgrep libs, codemap libs, and codegraph libs
 depends: [
   "ocaml" {>= "4.12.0"}
   "dune" {>= "3.2.0" }
-  "commons" {>= "1.5.5" }
+  # "commons" {>= "1.5.5" }
 ]
 
 build: ["dune" "build" "-p" name "-j" jobs]

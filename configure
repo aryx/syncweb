@@ -1,0 +1,34 @@
+#!/bin/sh
+set -eu # to debug this script add '-x'
+
+###############################################################################
+# Prelude
+###############################################################################
+# The goal of this script is to automate the configuration and installation
+# of packages that are needed to then compile and install syncweb itself.
+# See also my https://github.com/aryx/xix/blob/master/configure for more info.
+
+###############################################################################
+# Platform specific setup
+###############################################################################
+
+###############################################################################
+# Platform independent
+###############################################################################
+
+#TODO:
+# - check opam is in PATH
+# - check opam was initialized
+# - use opam.locked
+
+#in theory we should also
+# - check the ocaml switch is a good version
+# - check external deps are installed (e.g., pcre, codemap libs, semgrep libs)
+
+opam install --no-depexts --deps-only ./syncweb.opam -y
+
+echo 'Everything looks fine. You can now run: '
+echo
+echo '   $ make'
+echo '   $ make all'
+echo '   $ make install'
