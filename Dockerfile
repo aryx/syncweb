@@ -26,17 +26,26 @@ RUN eval $(opam env) && dune install
 #TODO: can't because then can't find -ltree-sitter
 # RUN rm -rf /semgrep
 
-
-# Install codemap libs (commons2_) for indexer
+# Install codemap libs (commons2_) for indexer and lpizer?
 WORKDIR /codemap
 RUN apt-get install -y libcairo2-dev libgtk2.0-dev
-# alt: add codemap as a submodule in codegraph source
-RUN git clone https://github.com/aryx/codemap /codemap
+RUN git clone --depth=1 https://github.com/aryx/codemap /codemap
 RUN ./configure
 RUN eval $(opam env) && make
 RUN eval $(opam env) && make all
 RUN eval $(opam env) && dune install
 RUN rm -rf /codemap
+
+# Install codegraph libs (finder for indexer, lang_ml-analyze for lpizer)
+WORKDIR /codegraph
+RUN apt-get install -y libcairo2-dev libgtk2.0-dev
+RUN git clone --depth=1 https://github.com/aryx/codegraph /codegraph
+RUN ./configure
+RUN eval $(opam env) && make
+RUN eval $(opam env) && make all
+RUN eval $(opam env) && dune install
+RUN rm -rf /codegraph
+
 
 # Back to syncweb
 WORKDIR /src
@@ -53,5 +62,5 @@ RUN eval $(opam env) && make all
 RUN eval $(opam env) && make install
 
 # Test
-RUN eval $(opam env) && syncweb --help && lpizer --help && indexer --help
+RUN eval $(opam env) && syncweb --help && lpizer --help && syncweb_indexer --help
 # TODO run more tests, make test!
