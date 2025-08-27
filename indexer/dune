@@ -3,43 +3,26 @@
  (libraries 
     ; external libs
     str
-    ;bigarray
-    ;ocamlgraph
+    ; for lang_cmt
+    compiler-libs compiler-libs.common
 
-    ; in semgrep
+    ; in semgrep-libs
     commons
 
     ; in codemap
     graph_code
 
-    ; for lang_cmt
-    compiler-libs compiler-libs.common
-    ;
-    ;commons commons_core
-    ;pfff-commons-graph
-    ;pfff-h_program-lang
-
-
     ; in codegraph
     pfff-lang_ml-analyze
     pfff-lang_cmt pfff-lang_cmt-analyze
-    ;pfff-lang_cpp 
     pfff-lang_c-analyze
-    ;
 
     ; for find_source Lib_parsing_xxx
     codegraph.finder
-    ;pfff-lang_java
-    ;pfff-lang_js
-    ;pfff-lang_lisp
-    ;pfff-lang_php
-    ;pfff-lang_python
-    ;
-    ;pfff-lang_GENERIC    
-
  )
- ; for ocamldebug
- (modes byte)
+ ; 'byte' is useful for ocamldebug
+ ; 'best' is 'native' with a fallback to 'byte' when native compilation isn’t available.
+ (modes (best exe) byte)
 )
 
 
