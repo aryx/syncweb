@@ -1,4 +1,5 @@
 # Build syncweb (and semgrep/codemap/codegraph) with OCaml 4.14.2 via OPAM on Ubuntu.
+# Similar to efuns Dockerfile
 
 FROM ubuntu:22.04
 # alt: 24.04
@@ -9,9 +10,9 @@ RUN apt-get install -y build-essential autoconf automake pkgconf git wget curl
 
 # Setup OPAM and OCaml
 RUN apt-get install -y opam
-# Initialize opam (disable sandboxing due to Docker)
-RUN opam init --disable-sandboxing -y
-RUN opam switch create 4.14.2 -v
+RUN opam init --disable-sandboxing -y # (disable sandboxing due to Docker)
+ARG OCAML_VERSION=4.14.2
+RUN opam switch create ${OCAML_VERSION} -v
 
 
 # Install semgrep libs (and its many dependencies) for lpizer and indexer
