@@ -12,21 +12,11 @@ open Common
 (* Flags *)
 (*****************************************************************************)
 
+(* possible values: "cmt", "ml" (see Index.ml) *)
 let lang = ref "c"
 
 (* action mode *)
 let action = ref ""
-
-(*****************************************************************************)
-(* Helpers *)
-(*****************************************************************************)
-
-(*****************************************************************************)
-(* Actions *)
-(*****************************************************************************)
-
-let actions () = [
-]
 
 (*****************************************************************************)
 (* Main action *)
@@ -39,16 +29,14 @@ let main_action (root : string) : unit =
 (* The options *)
 (*****************************************************************************)
 
-let all_actions () = 
-  actions() @
-  []
+let actions () = [
+]
 
 let options () = [
   "-lang", Arg.Set_string lang, 
   (spf " <str> choose language (default = %s)" !lang);
   ] @
-  Common2.cmdline_flags_devel () @
-  Arg_.options_of_actions action (all_actions()) @
+  Arg_.options_of_actions action (actions()) @
   []
 
 (*****************************************************************************)
@@ -59,7 +47,7 @@ let main () =
 
   let usage_msg = 
     "Usage: " ^ Filename.basename Sys.argv.(0) ^ 
-      " [options] <orig> <view> " ^ "\n" ^ "Options are:"
+      " [options] -lang <lang> <dir> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
@@ -68,12 +56,11 @@ let main () =
   Profiling.profile_code "Main total" (fun () -> 
     
     (match args with
-    
-    (* --------------------------------------------------------- *)
+        (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
-    | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
-        Arg_.do_action !action xs (all_actions())
+    | xs when List.mem !action (Arg_.action_list (actions())) -> 
+        Arg_.do_action !action xs (actions())
 
     | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
@@ -83,6 +70,7 @@ let main () =
     (* --------------------------------------------------------- *)
     | [x] -> 
         main_action x
+
     (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)
