@@ -60,7 +60,11 @@ RUN apt-get install -y libcairo2-dev libgtk2.0-dev
 RUN git clone --depth=1 https://github.com/aryx/codegraph /codegraph
 RUN ./configure
 RUN eval $(opam env) && make && make all
-RUN eval $(opam env) && dune install
+RUN eval $(opam env) && dune install \
+    pfff-lang_cmt pfff-lang_cmt-analyze pfff-lang_ml-analyze \
+    pfff-lang_c-analyze \
+    codegraph
+#TODO: split codegraph.finder in separate lib outside codegraph package
 RUN rm -rf /codegraph
 
 
