@@ -25,9 +25,10 @@ dev-repo: "git+https://github.com/aryx/syncweb"
 bug-reports: "https://github.com/aryx/syncweb/issues"
 
 #TODO: we depends on many semgrep libs, codemap libs, and codegraph libs
+# see Dockerfile and its 'dune install ...' commands
 depends: [
   "ocaml" {>= "4.12.0"}
-  "dune" {>= "3.2.0" }
+  "dune" {>= "3.7.0" }
   # "commons" {>= "1.5.5" }
 ]
 
