@@ -13,16 +13,6 @@ module PI = Lib_ast_fuzzy
 *)
 
 (*****************************************************************************)
-(* Globals *)
-(*****************************************************************************)
-
-(* TODO: move to Main.ml? make lang (and use Lang.t?) a parameter of lpize! 
- * instead of all those hardcoded CONFIG in this file.
-*)
-(* CONFIG *)
-let lang = ref "ml"
-
-(*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
 (* In this file because it can't be put in syncweb/ (it uses graph_code_c),
@@ -391,12 +381,20 @@ let sanity_check _xs =
 *)
   ()
 
-let string_of_entity_kind kind =
+let string_of_entity_kind (lang : Lang.t) (kind : E.kind) : string =
   match kind with
   | E.Function  -> "function"
   | E.Global    -> "global"
-  | E.Type      ->  if !lang = "c" then "enum"   else "type"
-  | E.Class     -> if !lang = "c" then "struct" else "class"
+  | E.Type      ->  
+      (match lang with
+      | Lang.C ->  "enum" 
+      | _ -> "type"
+      )
+  | E.Class     -> 
+      (match lang with
+      | Lang.C ->  "struct" 
+      | _ -> "class"
+      )
   | E.Constant  -> "constant"
   (* old: was "function", because in C people sometimes use macro
    * where it could be a function (if C supported inline keywords),
@@ -469,7 +467,7 @@ let lpize file =
 (* Entry point *)
 (*****************************************************************************)
 
-let lpize (xs : Fpath.t list) : unit = 
+let lpize (lang : Lang.t) (xs : Fpath.t list) : unit = 
 
   (* C++ specifics. TODO: move elsewhere? when parse file? *)
 (*
@@ -500,7 +498,8 @@ let lpize (xs : Fpath.t list) : unit =
     pr "";
 
     let ast, toks = 
-      (* CONFIG *)
+        match lang with
+        | Lang.Ocaml -> (
         (* TODO: use a Pfff_or_tree_sitter approach again *)
         try 
           let res = Parse_ml.parse file in
@@ -514,6 +513,9 @@ let lpize (xs : Fpath.t list) : unit =
             | None -> 
                 failwith (spf "fail to parse %s also with tree-sitter" !!file)
             )
+         )
+       | _ -> 
+            failwith (spf "language not supported yet: %s" (Lang.to_string lang))
     in
     let env = {
       current_file = !!file;
@@ -549,7 +551,7 @@ let lpize (xs : Fpath.t list) : unit =
     (* the chunks *)
     entities |> List.iter (fun e ->
         let (lstart, lend) = e.range in
-        pr (spf "<<%s [[%s]]%s>>=" (string_of_entity_kind e.kind) e.name suffix);
+        pr (spf "<<%s [[%s]]%s>>=" (string_of_entity_kind lang e.kind) e.name suffix);
 
         let nbdollars = ref 0 in
         Common2.enum_safe lstart lend |> List.iter (fun line ->
@@ -580,7 +582,7 @@ let lpize (xs : Fpath.t list) : unit =
           then ()
           else pr (untabify s)
       | Some e -> 
-        pr (spf "<<%s [[%s]]%s>>" (string_of_entity_kind e.kind) e.name suffix);
+        pr (spf "<<%s [[%s]]%s>>" (string_of_entity_kind lang e.kind) e.name suffix);
     );
     pr "@";
     pr "";

@@ -18,9 +18,10 @@ install:
 	dune install
 
 #TODO: use testo, run syncweb on demos/ ? or in tests/syncweb/?
+#TODO: ./bin/lpizer -verbose -lang c tests/lpizer/*.c
 test:
 	./bin/syncweb_indexer -lang cmt .
-	./bin/lpizer -verbose -lang cmt tests/lpizer/*.ml
+	./bin/lpizer -verbose -lang ocaml tests/lpizer/*.ml
 
 setup:
 	opam install --deps-only .

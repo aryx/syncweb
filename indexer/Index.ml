@@ -5,7 +5,7 @@ module E = Entity_code
 
 (* copy paste of pfff/main_codegraph.ml *)
 
-let find_source__files_of_dir_or_files ~lang _xs = 
+let _find_source__files_of_dir_or_files ~lang _xs = 
   match lang with
 (*
   | "cmt"  -> 
@@ -14,7 +14,7 @@ let find_source__files_of_dir_or_files ~lang _xs =
 *)
   | _ -> failwith "TODO: find_source__files_of_dir_or_files"
 
-let find_source__files_of_root ~lang _root = 
+let _find_source__files_of_root ~lang _root = 
   match lang with
 (*
   | "cmt"  -> 
@@ -26,7 +26,7 @@ let find_source__files_of_root ~lang _root =
 let verbose = ref false
 (*let output_dir = ref None *)
 
-let dep_file_of_dir dir = 
+let _dep_file_of_dir dir = 
   Filename.concat dir !!(Graph_code.default_filename)
 
 (* special hooks *)

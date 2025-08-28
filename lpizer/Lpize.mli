@@ -1,2 +1,2 @@
 
-val lpize: Fpath.t list -> unit
+val lpize: Lang.t -> Fpath.t list -> unit

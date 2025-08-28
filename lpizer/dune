@@ -10,6 +10,8 @@
     parser_cpp.ast parser_cpp.menhir parser_cpp.ast_generic
     parser_ocaml.ast parser_ocaml.menhir parser_ocaml.ast_generic
       parser_ocaml.tree_sitter ; to parse Cap object types
+    ; for Lang.t
+    semgrep.rule
 
     ; from codemap now
     commons2_
@@ -17,6 +19,8 @@
 
     ; from codegraph now
     pfff-lang_ml-analyze
+
+
 
     ; internal
     ; frontend
