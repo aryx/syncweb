@@ -1,4 +1,5 @@
-(* Copyright 2009-2017 Yoann Padioleau, see copyright.txt *)
+(* Copyright 2009-2017, 2025 Yoann Padioleau, see copyright.txt *)
+open Common
 
 (*****************************************************************************)
 (* Purpose *)
@@ -13,6 +14,11 @@
 (*****************************************************************************)
 (* Flags *)
 (*****************************************************************************)
+
+(* possible values: "c" *)
+let lang_str = ref "ml"
+
+let log_level = ref (Some Logs.Warning)
 
 (* action mode *)
 let action = ref ""
@@ -47,6 +53,7 @@ let find_source xs =
 *)
 
 let main_action (xs : Fpath.t list) : unit =
+  (* TODO: pass down Lang.of_string !lang_str *)
   Lpize.lpize xs
 
 (*****************************************************************************)
@@ -61,18 +68,20 @@ let all_actions () =
   actions() @
   []
 
-(* TODO: add
-  "-lang", Arg.Set_string lang, 
-  (spf " <str> choose language (default = %s)" !lang);
-  "-verbose", Arg.Set verbose, 
-  " ";
-*)
-
 let options () = [
+  "-lang", Arg.Set_string lang_str, 
+  (spf " <str> choose language (default = %s) " !lang_str);
   ] @
   Common2.cmdline_flags_devel () @
   Arg_.options_of_actions action (all_actions()) @
-  []
+  [
+  "-verbose", Arg.Unit (fun () -> log_level := Some Logs.Info),
+  " ";
+  "-debug", Arg.Unit (fun () -> log_level := Some Logs.Debug),
+  " ";
+  "-quiet", Arg.Unit (fun () -> log_level := None),
+  " ";
+  ]
 
 (*****************************************************************************)
 (* Main entry point *)
@@ -82,16 +91,18 @@ let main () =
 
   let usage_msg = 
     "Usage: " ^ Filename.basename Sys.argv.(0) ^ 
-      " [options] <orig> <view> " ^ "\n" ^ "Options are:"
+      " [options] -lang <lang> <files> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
   let args = Arg_.parse_options (options()) usage_msg Sys.argv in
+
+  Logs_.setup ~level:!log_level ();
+  Logs.info (fun m -> m "Starting logging");
 
   (* must be done after Arg.parse, because Common.profile is set by it *)
   Profiling.profile_code "Main total" (fun () -> 
     
     (match args with
-    
     (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
@@ -106,6 +117,7 @@ let main () =
     (* --------------------------------------------------------- *)
     | x::xs -> 
         main_action (Fpath_.of_strings (x::xs))
+
     (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)

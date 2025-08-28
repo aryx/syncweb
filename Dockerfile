@@ -84,4 +84,4 @@ RUN eval $(opam env) && make install
 
 # Test
 RUN eval $(opam env) && syncweb --help && lpizer --help && syncweb_indexer --help
-# TODO run more tests, make test!
+RUN make test
