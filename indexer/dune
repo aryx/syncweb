@@ -13,7 +13,7 @@
 (library
  (name indexer)
  (modules
-   Index
+   Index CLI_indexer
  )
  (wrapped false)
  (libraries 
