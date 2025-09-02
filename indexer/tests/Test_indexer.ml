@@ -21,7 +21,7 @@ let run_main (caps : <Cap.fork; ..>) (cmd : string) : (unit (* Exit.t *), string
       print_string (spf "executing: mk %s\n" cmd);
       try 
         Ok ((* Exit.catch (fun () ->  *)
-              CLI_indexer.main caps (Array.of_list ("indexer" :: args)))
+              CLI_indexer.main (Array.of_list ("indexer" :: args)))
       with 
       | Common.UnixExit 0 -> Ok ()
       | Common.UnixExit n -> Error (spf "UnixExit %d" n)

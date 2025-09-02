@@ -10,6 +10,7 @@
    commons
 
    syncweb_lpizer_tests
+   syncweb_indexer_tests
  )
  ; 'byte' is for ocamldebug
  (modes native byte))
