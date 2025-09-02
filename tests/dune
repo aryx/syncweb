@@ -1,0 +1,23 @@
+(executable
+ (name test)
+ (modules Test)
+ (libraries
+   ; std deps
+   testo
+   str unix
+
+   ; semgrep-libs deps
+   commons
+
+ )
+ ; 'byte' is for ocamldebug
+ (modes native byte))
+
+(install
+ (package syncweb)
+ (section bin)
+ (files
+  (test.exe as test)
+  ; useful to debug, see ../../debug and ocamldebug
+  (test.bc as test.bc))
+)

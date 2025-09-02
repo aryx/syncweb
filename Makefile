@@ -6,9 +6,8 @@
 # Main targets
 ###############################################################################
 
-# TODO: add {,test.bc} at some point
 default:
-	bash -c "dune build _build/install/default/bin/{syncweb,lpizer,syncweb_indexer}"
+	bash -c "dune build _build/install/default/bin/{syncweb,lpizer,syncweb_indexer,test.bc}"
 
 all:
 	dune build
@@ -22,6 +21,7 @@ install:
 test:
 	./bin/syncweb_indexer -lang cmt .
 	./bin/lpizer -verbose -lang ocaml tests/lpizer/*.ml
+	./test
 
 setup:
 	opam install --deps-only .
