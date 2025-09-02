@@ -18,11 +18,11 @@ let test_hello =
   Testo.create "hello"
     (fun () -> print_endline "hello!")
 
-let tests _caps _env =
+let tests caps _env =
   List.flatten [
     [ test_hello; ];
+     Test_lpizer.tests (caps :> < Cap.fork> );
     (* 
-     Test_lpizer.tests caps;
      Test_shell.tests caps;
      *)
     ]
@@ -33,7 +33,7 @@ let tests _caps _env =
 (*****************************************************************************)
 
 let main (caps : Cap.all_caps) : unit =
-  Testo.interpret_argv ~project_name:"xix"
+  Testo.interpret_argv ~project_name:"syncweb"
 (*
     ~handle_subcommand_result:(fun exit_code res ->
       handle_results res;

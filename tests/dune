@@ -9,7 +9,7 @@
    ; semgrep-libs deps
    commons
 
-   ;syncweb_lpizer_tests
+   syncweb_lpizer_tests
  )
  ; 'byte' is for ocamldebug
  (modes native byte))

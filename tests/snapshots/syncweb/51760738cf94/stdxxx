@@ -1,0 +1,10 @@
+executing: lpizer --help
+Usage: lpizer [options] -lang <lang> <files> 
+Options are:
+  -lang  <str> choose language (default = ml) 
+  -debugger  option to set if launched inside ocamldebug
+  -verbose  
+  -debug  
+  -quiet  
+  -help  Display this list of options
+  --help  Display this list of options
