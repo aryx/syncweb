@@ -22,7 +22,7 @@ let tests _caps _env =
   List.flatten [
     [ test_hello; ];
     (* 
-     Test_mk.tests caps;
+     Test_lpizer.tests caps;
      Test_shell.tests caps;
      *)
     ]
