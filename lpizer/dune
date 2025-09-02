@@ -13,7 +13,7 @@
 (library
  (name lpizer)
  (modules
-    Lpize Comment_code
+    Lpize Comment_code CLI_lpizer
  )
  (wrapped false)
  (libraries
