@@ -1,2 +1,2 @@
 
-val main: unit -> unit
+val main: string array -> unit

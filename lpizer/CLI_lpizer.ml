@@ -82,14 +82,14 @@ let options () = [
 (* Main entry point *)
 (*****************************************************************************)
 
-let main () = 
+let main (argv : string array) : unit = 
 
   let usage_msg = 
-    "Usage: " ^ Filename.basename Sys.argv.(0) ^ 
+    "Usage: " ^ Filename.basename argv.(0) ^ 
       " [options] -lang <lang> <files> " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
-  let args = Arg_.parse_options (options()) usage_msg Sys.argv in
+  let args = Arg_.parse_options (options()) usage_msg argv in
 
   Logs_.setup ~level:!log_level ();
   Logs.info (fun m -> m "Starting logging");
