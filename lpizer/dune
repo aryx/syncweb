@@ -1,5 +1,21 @@
 (executables
  (names Main)
+ (modules Main)
+ (libraries 
+    lpizer
+  )
+ ; 'byte' is useful for ocamldebug
+ ; 'best' is 'native' with a fallback to 'byte' when native compilation isn’t available.
+ (modes (best exe) byte)
+ (preprocess (pps ppx_deriving.show )) ; LATER: ppx_profiling
+)
+
+(library
+ (name lpizer)
+ (modules
+    Lpize Comment_code
+ )
+ (wrapped false)
  (libraries
     ; external libs
     logs
@@ -27,9 +43,6 @@
     ; backend
  )
  (preprocess (pps ppx_deriving.show )) ; LATER: ppx_profiling
- ; 'byte' is useful for ocamldebug
- ; 'best' is 'native' with a fallback to 'byte' when native compilation isn’t available.
- (modes (best exe) byte)
 )
 
 (install

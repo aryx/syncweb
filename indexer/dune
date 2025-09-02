@@ -1,5 +1,21 @@
 (executables
  (names Main)
+ (modules Main)
+ (libraries 
+    indexer
+  )
+ ; 'byte' is useful for ocamldebug
+ ; 'best' is 'native' with a fallback to 'byte' when native compilation isn’t available.
+ (modes (best exe) byte)
+ (preprocess (pps ppx_deriving.show )) ; LATER: ppx_profiling
+)
+
+(library
+ (name indexer)
+ (modules
+   Index
+ )
+ (wrapped false)
  (libraries 
     ; external libs
     str
@@ -20,9 +36,6 @@
     ; for find_source Lib_parsing_xxx
     codegraph.finder
  )
- ; 'byte' is useful for ocamldebug
- ; 'best' is 'native' with a fallback to 'byte' when native compilation isn’t available.
- (modes (best exe) byte)
 )
 
 
