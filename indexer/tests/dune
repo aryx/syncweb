@@ -1,0 +1,11 @@
+(library
+ (name syncweb_indexer_tests)
+ (wrapped false)
+ (libraries
+   testo
+   commons
+
+   indexer
+)
+ (preprocess (pps ppx_deriving.show))
+)

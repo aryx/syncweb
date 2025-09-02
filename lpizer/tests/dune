@@ -1,0 +1,11 @@
+(library
+ (name syncweb_lpizer_tests)
+ (wrapped false)
+ (libraries
+   testo
+   commons
+
+   lpizer
+)
+ (preprocess (pps ppx_deriving.show))
+)
