@@ -24,9 +24,10 @@
     ; from semgrep-libs
     commons
     parser_cpp.ast parser_cpp.menhir parser_cpp.ast_generic
+       parser_cpp.tree_sitter
     parser_ocaml.ast parser_ocaml.menhir parser_ocaml.ast_generic
       parser_ocaml.tree_sitter ; to parse Cap object types
-    ; for Lang.t
+    ; for Lang.t ; TODO: remove deps to semgrep! move Lang out of it
     semgrep.rule
 
     ; from codemap now
@@ -36,13 +37,11 @@
     ; from codegraph now
     pfff-lang_ml-analyze
 
-
-
     ; internal
     ; frontend
     ; backend
  )
- (preprocess (pps ppx_deriving.show )) ; LATER: ppx_profiling
+ (preprocess (pps ppx_deriving.show profiling.ppx ))
 )
 
 (install

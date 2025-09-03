@@ -44,6 +44,10 @@ type env = {
   hentities: (Graph_code.node, bool) Hashtbl.t;
 }
 
+type prog =
+ | POCaml of AST_ocaml.program * Parser_ml.token list
+ | PCpp of Ast_cpp.program * Parser_cpp.token list
+
 let uniquify env kind s =
   let sfinal =
     if Hashtbl.mem env.hentities (s, kind) 
@@ -80,6 +84,7 @@ let count_dollar s =
 (*--------------------------------------------------*)
 
 module C = Ast_cpp
+(* TODO: switch to Ast_c! now in codemap, via Ast_c_build *)
 
 let hooks_for_comment_cpp = { Comment_code.
     kind = Token_helpers_cpp.token_kind_of_tok;
@@ -111,7 +116,7 @@ let range_of_any_with_comment_cpp
  * - do not create chunk entity for #define XXx when just after a ifndef XXx
  *   at the top of the file.
  *)
-let _extract_entities_cpp (env : env) (ast : C.program) (toks : Parser_cpp.token list) : entity list =
+let extract_entities_cpp (env : env) (ast : C.program) (toks : Parser_cpp.token list) : entity list =
   ast |> List.filter_map (fun (top : C.toplevel) ->
     match top with
     | CppDirective directive ->
@@ -509,19 +514,27 @@ let lpize (lang : Lang.t) (xs : Fpath.t list) : unit =
     pr (spf "\\subsection*{[[%s]]}" !!file);
     pr "";
 
-    let ast, toks = 
+    let prog : prog = 
         match lang with
+        | Lang.C ->
+            let toks = Parse_cpp.tokens (Parsing_helpers.File file) in
+            let res2 = Parse_cpp_tree_sitter.parse file in
+            (match res2.program with
+            | Some ast -> PCpp (ast, toks)
+            | None -> 
+                failwith (spf "fail to parse %s also with tree-sitter" !!file)
+            )
+
         | Lang.Ocaml -> (
         (* TODO: use a Pfff_or_tree_sitter approach again *)
         try 
           let res = Parse_ml.parse file in
-          (* Parse_cpp.parse file   *)
-          res.ast, res.tokens
+          POCaml (res.ast, res.tokens)
         with Parsing_error.Syntax_error _x ->
             let toks = Parse_ml.tokens (Parsing_helpers.File file) in
             let res2 = Parse_ocaml_tree_sitter.parse file in
             (match res2.program with
-            | Some ast -> ast, toks
+            | Some ast -> POCaml (ast, toks)
             | None -> 
                 failwith (spf "fail to parse %s also with tree-sitter" !!file)
             )
@@ -539,9 +552,11 @@ let lpize (lang : Lang.t) (xs : Fpath.t list) : unit =
       cnt = ref 1;
     } in
     let entities : entity list =
-      (* CONFIG *)
-      extract_entities_ml env ast toks
-      (* extract_entities_cpp env xs  *)
+      match prog with
+      | POCaml (ast, toks) ->
+         extract_entities_ml env ast toks
+      | PCpp (ast, toks) ->
+         extract_entities_cpp env ast toks
     in
 
     let hstart = 

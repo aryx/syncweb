@@ -1,0 +1,37 @@
+executing: lpizer -lang c tests/lpizer/foo.c
+\section{[[tests/lpizer/]]}
+
+\subsection*{[[tests/lpizer/foo.c]]}
+
+<<function [[foo]]>>=
+void foo () {
+    return 1;
+}
+@
+
+<<function [[bar]]>>=
+// comment
+void bar () {
+    return 2;
+}
+@
+
+<<function [[main]]>>=
+/* other comment */
+void main () {
+    return 1;
+}
+@
+
+
+%-------------------------------------------------------------
+
+<<tests/lpizer/foo.c>>=
+<<function [[foo]]>>
+
+<<function [[bar]]>>
+
+<<function [[main]]>>
+@
+
+

@@ -39,8 +39,10 @@ let e2e_tests (caps : <Cap.fork; .. > ) =
         | Error s -> failwith (spf "unexpected failure: %s" s)
     )
   ] @
-    (["foo.ml"] |> List.map (fun file ->
-       let args = spf "-lang ocaml tests/lpizer/%s" file in
+    ([("foo.ml", "ocaml");
+      ("foo.c", "c");
+     ] |> List.map (fun (file, lang) ->
+       let args = spf "-lang %s tests/lpizer/%s" lang file in
        t ~checked_output:(Testo.stdout ()) args (fun () ->
         match run_main caps args with
         | Ok Exit.OK -> ()
