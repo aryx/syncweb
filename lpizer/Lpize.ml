@@ -3,21 +3,22 @@
 open Common
 open Fpath_.Operators
 module E = Entity_code
-module PI = Lib_ast_fuzzy
+module Fuzz = Lib_ast_fuzzy
 
 (*****************************************************************************)
 (* Prelude *)
 (*****************************************************************************)
 (* Core algorithms behind the lpizer except the cmdline parsing
- * (done in Main.ml)
+ * (done in CLI_lpizer.ml)
+ *
+ * TODO: would be better to factorize and transform the Cpp and OCaml
+ * ASTs in the generic AST and then analyze the toplevel entities of
+ * the generic AST.
 *)
 
 (*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
-(* In this file because it can't be put in syncweb/ (it uses graph_code_c),
- * and it's a form of code slicing ...
- *)
 
 (* syncweb does not like tabs *)
 let untabify s =
@@ -78,24 +79,26 @@ let count_dollar s =
 (* C *)
 (*--------------------------------------------------*)
 
-(*
-module Ast = Ast_cpp
-open Ast_cpp
-module E = Entity_code
+module C = Ast_cpp
 
-(*
 let hooks_for_comment_cpp = { Comment_code.
     kind = Token_helpers_cpp.token_kind_of_tok;
     tokf = Token_helpers_cpp.info_of_tok;
     }
 
-let range_of_any_with_comment_cpp any toks =
-  let ii = Lib_parsing_cpp.ii_of_any any in
-  let (min, max) = PI.min_max_ii_by_pos ii in
-  match Comment_code.comment_before hooks_for_comment_cpp min toks with
+let range_of_any_with_comment_cpp 
+  (any : Ast_cpp.any) (toks : Parser_cpp.token list) : Tok.t * Tok.t =
+  let hooks = hooks_for_comment_cpp in
+  let any_gen = Cpp_to_generic.any any in
+  let ii = 
+    AST_generic_helpers.ii_of_any any_gen |> List.filter Tok.is_origintok in
+  let (min, max) = Tok_range.min_max_toks_by_pos ii in
+  (* TODO? duplicate or better factorize with range_of_any_with_comment_ml
+   * complex code
+   *)
+  match Comment_code.comment_before hooks min toks with
   | None -> min, max
   | Some ii -> ii, max
-*)
  
 
 (* todo: 
@@ -108,35 +111,48 @@ let range_of_any_with_comment_cpp any toks =
  * - do not create chunk entity for #define XXx when just after a ifndef XXx
  *   at the top of the file.
  *)
-let extract_entities_cpp env xs =
-  xs |> List.filter_map (fun (top, toks) ->
+let _extract_entities_cpp (env : env) (ast : C.program) (toks : Parser_cpp.token list) : entity list =
+  ast |> List.filter_map (fun (top : C.toplevel) ->
     match top with
-    | CppDirectiveDecl decl ->
-      (match decl with
+    | CppDirective directive ->
+      (match directive with
       | Define (_, ident, kind_define, _val) ->
         let kind =
           match kind_define with
             | DefineVar -> E.Constant
-            | DefineFunc _ -> E.Macro
+            | DefineMacro _ -> E.Macro
         in
         let (min, max) = range_of_any_with_comment_cpp (Toplevel top) toks in
         Some {
           name = fst ident |> uniquify env kind;
           kind = kind;
-          range = (PI.line_of_info min, PI.line_of_info max);
+          range = (Tok.line_of_tok min, Tok.line_of_tok max);
         }
       | _ -> None
       )
-
-    | DeclElem decl ->
+    | CppIfdef _ | MacroDecl _ | MacroVar _ -> None
+    | X st_or_decl ->
+     (match st_or_decl with
+     | S _st -> None
+     | D decl -> 
       (match decl with
-      | Func (FunctionOrMethod def) ->
+      | Func (ent, _def) ->
         let (min, max) = range_of_any_with_comment_cpp (Toplevel top) toks in
         Some { 
-          name = Ast.string_of_name_tmp def.f_name |> uniquify env E.Function;
+          name = C.string_of_name_tmp ent.name |> uniquify env E.Function;
           kind = E.Function;
-          range = (PI.line_of_info min, PI.line_of_info max);
+          range = (Tok.line_of_tok min, Tok.line_of_tok max);
         }
+      | 
+       (DeclList (_, _)|TemplateDecl (_, (_, _, _), _, _)|
+       TemplateInstanciation (_, ({name=(_, _, _); _ }, {v_type=(_, _); _ }), _)|
+       UsingDecl (_, _, _)|NamespaceAlias (_, (_, _), _, (_, _, _), _)|
+       Namespace (_, _, (_, _, _))|ExternDecl (_, (_, _), _)|
+       ExternList (_, (_, _), (_, _, _))|Asm (_, _, (_, (_, _), _), _)|
+       StaticAssert (_, (_, _, _))|Concept (_, (_, _), _, _, _)|Friend (_, _)|
+       EmptyDef _|NotParsedCorrectly _|DeclTodo (_, _)) -> None
+
+(*
       | BlockDecl decl ->
         let (min, max) = range_of_any_with_comment_cpp (Toplevel top) toks in
           (match decl with
@@ -153,9 +169,9 @@ let extract_entities_cpp env xs =
                   v_storage = StoTypedef _; _
                 } -> 
                 Some { 
-                  name = Ast.string_of_name_tmp name |> uniquify env E.Class;
+                  name = C.string_of_name_tmp name |> uniquify env E.Class;
                   kind = E.Class;
-                  range = (PI.line_of_info min, PI.line_of_info max);
+                  range = (Tok.line_of_tok min, Tok.line_of_tok max);
                 }
 
               (* other typedefs, don't care *)
@@ -173,18 +189,18 @@ let extract_entities_cpp env xs =
                   v_storage = _; _
                 } -> 
                 Some { 
-                  name = Ast.string_of_name_tmp name |> uniquify env E.Global;
+                  name = C.string_of_name_tmp name |> uniquify env E.Global;
                   kind = E.Global;
-                  range = (PI.line_of_info min, PI.line_of_info max);
+                  range = (Tok.line_of_tok min, Tok.line_of_tok max);
                 }
               (* struct def *)
               | { v_namei = _;
                   v_type = (_, (StructDef { c_name = Some name; _})); _
                 } -> 
                 Some { 
-                  name = Ast.string_of_name_tmp name |> uniquify env E.Class;
+                  name = C.string_of_name_tmp name |> uniquify env E.Class;
                   kind = E.Class;
-                  range = (PI.line_of_info min, PI.line_of_info max);
+                  range = (Tok.line_of_tok min, Tok.line_of_tok max);
                 }
               (* enum def *)
               | { v_namei = _;
@@ -193,10 +209,10 @@ let extract_entities_cpp env xs =
                 } -> 
                 Some { 
                   name = 
-                    Ast.string_of_name_tmp (None, [], IdIdent ident) 
+                    C.string_of_name_tmp (None, [], IdIdent ident) 
                       |> uniquify env E.Type;
                   kind = E.Type;
-                  range = (PI.line_of_info min, PI.line_of_info max);
+                  range = (Tok.line_of_tok min, Tok.line_of_tok max);
                 }
 
               (* enum anon *)
@@ -207,20 +223,16 @@ let extract_entities_cpp env xs =
                 Some { 
                   name = "_anon_"  |> uniquify env E.Type;
                   kind = E.Type;
-                  range = (PI.line_of_info min, PI.line_of_info max);
+                  range = (Tok.line_of_tok min, Tok.line_of_tok max);
                 }
-                
 
               | _ -> None
               )
-          | _ -> None
-          )
-      | _ -> None
-      )
-    | _ -> None
-  )
+   )
+   *)
+  )))
 
-*)
+
 (*--------------------------------------------------*)
 (* OCaml *)
 (*--------------------------------------------------*)
@@ -266,7 +278,7 @@ let range_of_any_with_comment_ml (any : AST_ocaml.any) (toks : Parser_ml.token l
     match toks_after with
     | x :: _xs  ->
         (match hooks.kind x with
-        | PI.RPar | PI.RBrace | PI.RBracket | RAngle -> 
+        | Fuzz.RPar | Fuzz.RBrace | Fuzz.RBracket | Fuzz.RAngle -> 
               Some (hooks.tokf x)
         | _ -> None
         )
