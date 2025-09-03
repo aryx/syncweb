@@ -41,8 +41,9 @@ let find_source xs =
   )
 *)
 
-let main_action (xs : Fpath.t list) : unit =
-  Lpize.lpize (Lang.of_string !lang_str) xs
+let main_action (xs : Fpath.t list) : Exit.t =
+  Lpize.lpize (Lang.of_string !lang_str) xs;
+  Exit.OK
 
 (*****************************************************************************)
 (* Actions *)
@@ -82,7 +83,7 @@ let options () = [
 (* Main entry point *)
 (*****************************************************************************)
 
-let main (argv : string array) : unit = 
+let main (argv : string array) : Exit.t = 
 
   let usage_msg = 
     "Usage: " ^ Filename.basename argv.(0) ^ 
@@ -102,7 +103,8 @@ let main (argv : string array) : unit =
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
     | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
-        Arg_.do_action !action xs (all_actions())
+        Arg_.do_action !action xs (all_actions());
+        raise (Exit.ExitCode 0)
 
     | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)

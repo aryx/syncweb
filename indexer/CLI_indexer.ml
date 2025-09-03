@@ -22,8 +22,9 @@ let action = ref ""
 (* Main action *)
 (*****************************************************************************)
 
-let main_action (root : string) : unit =
-  Index.build_graph_code !lang (Fpath.v root)
+let main_action (root : string) : Exit.t =
+  Index.build_graph_code !lang (Fpath.v root);
+  Exit.OK
 
 (*****************************************************************************)
 (* The options *)
@@ -43,7 +44,7 @@ let options () = [
 (* Main entry point *)
 (*****************************************************************************)
 
-let main (argv : string array) : unit = 
+let main (argv : string array) : Exit.t = 
 
   let usage_msg = 
     "Usage: " ^ Filename.basename argv.(0) ^ 
@@ -60,7 +61,8 @@ let main (argv : string array) : unit =
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
     | xs when List.mem !action (Arg_.action_list (actions())) -> 
-        Arg_.do_action !action xs (actions())
+        Arg_.do_action !action xs (actions());
+        raise (Exit.ExitCode 0)
 
     | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)

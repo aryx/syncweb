@@ -1,2 +1,2 @@
 
-val main: string array -> unit
+val main: string array -> Exit.t
