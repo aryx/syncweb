@@ -1,0 +1,45 @@
+executing: lpizer -lang ocaml tests/lpizer/foo.ml
+\section{[[tests/lpizer/]]}
+
+\subsection*{[[tests/lpizer/foo.ml]]}
+
+<<function [[Foo.foo]]>>=
+let foo x =
+  x + x
+@
+
+<<function [[Foo.bar]]>>=
+let bar x =
+  x + x
+[@@profiling]
+@
+
+<<function [[Foo.foo (tests/lpizer/foo.ml)]]>>=
+let foo () =
+  (
+    some big call
+  )
+@
+
+<<function [[Foo.foo (tests/lpizer/foo.ml)2]]>>=
+(* comment before *)
+let foo () =
+  ()
+@
+
+
+%-------------------------------------------------------------
+
+<<tests/lpizer/foo.ml>>=
+
+<<function [[Foo.foo]]>>
+
+<<function [[Foo.bar]]>>
+
+<<function [[Foo.foo (tests/lpizer/foo.ml)]]>>
+
+<<function [[Foo.foo (tests/lpizer/foo.ml)2]]>>
+
+@
+
+

@@ -1,4 +1,4 @@
-executing: mk --help
+executing: indexer --help
 Usage: indexer [options] -lang <lang> <dir> 
 Options are:
   -lang  <str> choose language (default = c)

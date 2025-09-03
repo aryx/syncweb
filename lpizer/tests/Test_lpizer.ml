@@ -31,14 +31,22 @@ let run_main (caps : <Cap.fork; ..>) (cmd : string) : (Exit.t, string) result =
 (* Tests *)
 (*****************************************************************************)
 let e2e_tests (caps : <Cap.fork; .. > ) = 
-  Testo.categorize "e2e" [
+  Testo.categorize "e2e" ([
     t ~checked_output:(Testo.stdxxx ()) "--help" (fun () ->
         match run_main caps "--help" with
         | Ok Exit.OK -> ()
         | Ok x -> failwith (spf "unexpected exit: %s" (Exit.show x))
         | Error s -> failwith (spf "unexpected failure: %s" s)
     )
-  ]
+  ] @
+    (["foo.ml"] |> List.map (fun file ->
+       let args = spf "-lang ocaml tests/lpizer/%s" file in
+       t ~checked_output:(Testo.stdout ()) args (fun () ->
+        match run_main caps args with
+        | Ok Exit.OK -> ()
+        | Ok x -> failwith (spf "unexpected exit: %s" (Exit.show x))
+        | Error s -> failwith (spf "unexpected failure: %s" s)
+    ))))
 
 (*****************************************************************************)
 (* The suite *)

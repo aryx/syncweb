@@ -18,7 +18,7 @@ let run_main (caps : <Cap.fork; ..>) (cmd : string) : (Exit.t, string) result =
    * tests; simpler to just fork.
    *)
   CapProcess.apply_in_child_process caps (fun () ->
-      print_string (spf "executing: mk %s\n" cmd);
+      print_string (spf "executing: indexer %s\n" cmd);
       try 
         Ok (Exit.catch (fun () ->
               CLI_indexer.main (Array.of_list ("indexer" :: args))))
@@ -31,15 +31,15 @@ let run_main (caps : <Cap.fork; ..>) (cmd : string) : (Exit.t, string) result =
 (* Tests *)
 (*****************************************************************************)
 let e2e_tests (caps : < Cap.fork; ..>) = 
-  Testo.categorize "e2e" [
+  Testo.categorize "e2e" ([
     t ~checked_output:(Testo.stdxxx ()) "--help" (fun () ->
         match run_main caps "--help" with
         | Ok Exit.OK -> ()
         | Ok x -> failwith (spf "unexpected exit: %s" (Exit.show x))
         | Error s -> failwith (spf "unexpected failure: %s" s)
-    )
-  ]
-
+    );
+    ]
+   )
 (*****************************************************************************)
 (* The suite *)
 (*****************************************************************************)
