@@ -1,5 +1,6 @@
 (* Copyright 2009-2018, 2025 Yoann Padioleau, see copyright.txt *)
 open Common
+open Fpath_.Operators
 
 (*****************************************************************************)
 (* Purpose *)
@@ -52,12 +53,12 @@ let action = ref ""
 (* Debugging helpers *)
 (*****************************************************************************)
 
-let with_error file f = 
+let with_error (file : Fpath.t) f = 
   try
-    Logs.info (fun m -> m "processing %s" file);
+    Logs.info (fun m -> m "processing %s" !!file);
     f ()
   with e ->
-    Logs.err (fun m -> m "Problem found while was processing %s" file);
+    Logs.err (fun m -> m "Problem found while was processing %s" !!file);
     raise e
 
 (*****************************************************************************)
@@ -67,9 +68,9 @@ let with_error file f =
 (* Allows to have multiple filenames with the same name but different dir.
  * We used to take the basename so that files could be put in any directory.
  *)
-let find_topkey_corresponding_to_file (orig : Web.t) (viewf : string) =
+let find_topkey_corresponding_to_file (orig : Web.t) (viewf : Fpath.t) =
   (* old: Filename.basename viewf *)
-  let base = Filename.basename viewf in
+  let base = Filename.basename !!viewf in
   let defs = orig |> List_.filter_map (function
     | Web.Tex _ -> None
     | Web.ChunkDef (def, _xs) -> 
@@ -80,11 +81,11 @@ let find_topkey_corresponding_to_file (orig : Web.t) (viewf : string) =
   )
   in
   (match defs with
-  | [] -> failwith (spf "could not find topkey for %s" viewf)
+  | [] -> failwith (spf "could not find topkey for %s" !!viewf)
   | [x] -> x
   | x::y::ys ->
     (* same basenames, need to use the directory as a discriminator *)
-    let revdir = Filename.dirname viewf |> String_.split ~sep:"/" |> List.rev in
+    let revdir = Filename.dirname !!viewf |> String_.split ~sep:"/" |> List.rev in
     let candidates = 
       (x::y::ys) |> List.map (fun file ->
         Filename.dirname file |> String_.split ~sep:"/" |> List.rev,
@@ -92,7 +93,7 @@ let find_topkey_corresponding_to_file (orig : Web.t) (viewf : string) =
        )
     in
     let err () = 
-      failwith (spf "too many matching topkeys for %s (%s)" viewf
+      failwith (spf "too many matching topkeys for %s (%s)" !!viewf
                   ((x::y::ys) |> String.concat ", "))
     in
     let rec aux revdir candidates =
@@ -116,22 +117,22 @@ let find_topkey_corresponding_to_file (orig : Web.t) (viewf : string) =
   )
 
 (* opti: mostly copy paste and adaptation of Common2.cache_computation *)
-let parse_origs origfs =
+let parse_origs (origfs : Fpath.t list) : (Fpath.t * Web.t) list =
   let orig1 = List.hd origfs in
-  let (d,b,e) = Filename_.dbe_of_filename orig1 in
+  let (d,b,e) = Filename_.dbe_of_filename !!orig1 in
   let cachefile = Filename_.filename_of_dbe (d, "." ^ b, e ^ "cache") in
   let f () = 
-    origfs |> List.map (fun file -> 
-      with_error file (fun () -> file, Web.parse (Fpath.v file))
+    origfs |> List.map (fun (file : Fpath.t) -> 
+      with_error file (fun () -> file, Web.parse file)
     )
   in
-  origfs |> List.iter (fun file -> 
-    if not (Sys.file_exists file)
-    then failwith (spf "parse_origs: file %s does not exist" file)
+  origfs |> List.iter (fun (file : Fpath.t) -> 
+    if not (Sys.file_exists !!file)
+    then failwith (spf "parse_origs: file %s does not exist" !!file)
   );
   if Sys.file_exists cachefile && 
-    origfs |> List.for_all (fun file -> 
-      UFile.filemtime (Fpath.v cachefile) >= UFile.filemtime (Fpath.v file))
+    origfs |> List.for_all (fun (file : Fpath.t) -> 
+      UFile.filemtime (Fpath.v cachefile) >= UFile.filemtime file)
   then begin
     Logs.info (fun m -> m "using cache: %s" cachefile);
     (* todo: use versioning *)
@@ -151,14 +152,14 @@ let actions () = [
   (* testing *)
   "-parse_orig", "   <file>",
     Arg_.mk_action_1_arg (fun x -> 
-      let tmpfile = "/tmp/xxx" in
+      let tmpfile = Fpath.v "/tmp/xxx" in
       let orig = Web.parse (Fpath.v x) in
       Web.unparse orig tmpfile;
-      Sys.command(spf "diff %s %s" x tmpfile) |> ignore;
+      Sys.command(spf "diff %s %s" x !!tmpfile) |> ignore;
     );
   "-parse_view", "   <file>", 
     Arg_.mk_action_1_arg (fun x -> 
-      ignore(Code.parse ~lang:Lang.mark_ocaml_short x);
+      ignore(Code.parse ~lang:Lang.mark_ocaml_short (Fpath.v x));
     );
 
   (* tangling *)
@@ -166,9 +167,9 @@ let actions () = [
     Arg_.mk_action_2_arg (fun x key -> 
       let orig = Web.parse (Fpath.v x) in
       let view = Web_to_code.view_of_orig key orig in
-      let tmpfile = "/tmp/xxx" in
+      let tmpfile = Fpath.v "/tmp/xxx" in
       Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
-      tmpfile |> UFile.Legacy.cat |> List.iter UCommon.pr;
+      tmpfile |> UFile.cat |> List.iter UCommon.pr;
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
 
@@ -177,9 +178,9 @@ let actions () = [
     Arg_.mk_action_2_arg (fun x key -> 
       let orig = Web.parse (Fpath.v x) in
       let view = Web_to_code.view_of_orig key orig in
-      let tmpfile = "/tmp/xxx" in
+      let tmpfile = Fpath.v "/tmp/xxx" in
       Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
-      tmpfile |> UFile.Legacy.cat |> List.iter UCommon.pr;
+      tmpfile |> UFile.cat |> List.iter UCommon.pr;
       (*Common.command2(spf "diff %s %s" x tmpfile); *)
     );
 
@@ -202,13 +203,13 @@ let actions () = [
   "-sync", "   <orig> <view>", 
     Arg_.mk_action_2_arg (fun origf viewf -> 
       let orig = Web.parse (Fpath.v origf) in
-      let views = Code.parse ~lang:Lang.mark_ocaml viewf in
+      let views = Code.parse ~lang:Lang.mark_ocaml (Fpath.v viewf) in
 
       let orig' = Sync.sync ~lang:Lang.mark_ocaml     orig views  in
 
-      let tmpfile = "/tmp/xxx" in
+      let tmpfile = Fpath.v "/tmp/xxx" in
       Web.unparse orig' tmpfile;
-      Sys.command(spf "diff %s %s" origf tmpfile) |> ignore;
+      Sys.command(spf "diff %s %s" origf !!tmpfile) |> ignore;
     );
   "-unmark", "   <file>", 
     Arg_.mk_action_1_arg (fun file -> 
@@ -229,11 +230,14 @@ let actions () = [
 
 
   "-rename_chunknames", " <origs>", 
-  Arg_.mk_action_n_arg Refactor.rename_chunknames;
+  Arg_.mk_action_n_arg (fun xs -> 
+        Refactor.rename_chunknames (Fpath_.of_strings xs));
   "-rename_chunknames_archi", " <origs and views>", 
-  Arg_.mk_action_n_arg Refactor.rename_chunknames_archi;
+  Arg_.mk_action_n_arg (fun xs ->
+        Refactor.rename_chunknames_archi (Fpath_.of_strings xs));
   "-merge_files", " <origs>", 
-  Arg_.mk_action_n_arg Refactor.merge_files;
+  Arg_.mk_action_n_arg (fun xs ->
+        Refactor.merge_files (Fpath_.of_strings xs));
 
   (* pad's hacks *)
   "-to_noweb", " <orig>", 
@@ -252,7 +256,7 @@ let actions () = [
         | x -> x
       )
     in
-    Web.unparse orig (file ^ "_noweb.nw")
+    Web.unparse orig (Fpath.v (file ^ "_noweb.nw"))
   );
 
   "-to_web", " <orig>", 
@@ -304,13 +308,14 @@ let main_action (xs : string list ) : Exit.t =
   match xs with
   (* simple case, one tex.nw file, one view *)
   | [origf;viewf] -> 
-
-      let orig = Web.parse (Fpath.v origf) in
+      let origf = Fpath.v origf in
+      let viewf = Fpath.v viewf in
+      let orig = Web.parse origf in
       let topkey = 
         (* old: Filename.basename viewf *)
         find_topkey_corresponding_to_file orig viewf
       in
-      if not (Sys.file_exists viewf)
+      if not (Sys.file_exists !!viewf)
       then
         let view = Web_to_code.view_of_orig ~topkey orig in
         Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view viewf;
@@ -341,7 +346,7 @@ let main_action (xs : string list ) : Exit.t =
   | xs when List.length xs > 2 -> 
       let origfs, viewf = 
         match List.rev xs with
-        | x::xs -> List.rev xs, x
+        | x::xs -> List.rev xs |> Fpath_.of_strings, Fpath.v x
         | _ -> raise Impossible
       in
       let origs = parse_origs origfs in
@@ -351,7 +356,7 @@ let main_action (xs : string list ) : Exit.t =
         find_topkey_corresponding_to_file orig viewf
       in
 
-      if not (Sys.file_exists viewf)
+      if not (Sys.file_exists !!viewf)
       then 
         let view = Web_to_code.view_of_orig ~topkey orig in
         Code.unparse ~md5sum_in_auxfile ~less_marks ~lang view viewf;
@@ -374,7 +379,7 @@ let main_action (xs : string list ) : Exit.t =
             let origs' = Web.unpack_multi orig' in
             Common2.zip origs origs' |> List.iter (fun ((f1,orig),(_f2,orig'))->
               if orig <> orig' then begin
-                UCommon.pr2 (spf "orig %s has been updated" f1);
+                UCommon.pr2 (spf "orig %s has been updated" !!f1);
                 Web.unparse orig' f1;
               end;
             )

@@ -1,4 +1,5 @@
 open Common
+open Fpath_.Operators
 
 open Web
 open Code
@@ -30,7 +31,7 @@ let trim s =
 (*****************************************************************************)
 
 (* less: could make this a generic mapper *)
-let rename_chunknames xs =
+let rename_chunknames (xs : Fpath.t list) =
   let subst_maybe s =
     let s, suffix =
       match s with
@@ -86,8 +87,8 @@ let rename_chunknames xs =
     in
     res ^ suffix
   in
-  xs |> List.iter (fun file ->
-    let orig = Web.parse (Fpath.v file) in
+  xs |> List.iter (fun (file : Fpath.t) ->
+    let orig = Web.parse file in
     
     let rec tex_or_chunkdef x =
       match x with
@@ -108,9 +109,9 @@ let rename_chunknames xs =
 (* Rename chunks to indicate arch specific code (x86) or (arm) *)
 (*****************************************************************************)
 
-let rename_chunknames_archi xs =
-  let origs, views = xs |> Either_.partition (fun file ->
-    if file =~ ".*.nw$"
+let rename_chunknames_archi (xs : Fpath.t list) =
+  let origs, views = xs |> Either_.partition (fun (file : Fpath.t) ->
+    if !!file =~ ".*.nw$"
     then Left file
     else Right file
   )
@@ -118,7 +119,7 @@ let rename_chunknames_archi xs =
 
   let hchunks = Hashtbl.create 101 in
     
-  views |> List.iter (fun file ->
+  views |> List.iter (fun (file : Fpath.t) ->
     let view = Code.parse ~lang:Lang.mark_C_short file in
 
     let rec codetree x =
@@ -146,8 +147,8 @@ let rename_chunknames_archi xs =
       else s
   in
 
-  origs |> List.iter (fun file ->
-    let orig = Web.parse (Fpath.v file) in
+  origs |> List.iter (fun (file : Fpath.t) ->
+    let orig = Web.parse file in
     
     let rec tex_or_chunkdef x =
       match x with
@@ -168,18 +169,18 @@ let rename_chunknames_archi xs =
 (* Merge files?? *)
 (*****************************************************************************)
 
-let merge_files xs =
+let merge_files (xs : Fpath.t list) =
   let hchunkkey_to_files = Hashtbl.create 101 in
   let htopkeysfile = Hashtbl.create 101 in
   let hfile_to_topkeys = Hashtbl.create 101 in
 
   (* first pass, find duplicate chunk names in different .nw *)
-  xs |> List.iter (fun file ->
+  xs |> List.iter (fun (file : Fpath.t) ->
     let orig = 
       try
-        Web.parse (Fpath.v file) 
+        Web.parse file 
       with exn ->
-        failwith (spf "PB with %s, exn = %s" file (Common.exn_to_s exn))
+        failwith (spf "PB with %s, exn = %s" !!file (Common.exn_to_s exn))
     in
 
     let rec tex_or_chunkdef x =
@@ -197,7 +198,7 @@ let merge_files xs =
         Hashtbl.replace hfiles_of_key file true;
         if key =~ ".*\\.ml[i]?$" 
         then begin
-          let path = Filename.concat (Filename.dirname file) key in
+          let path = Filename.concat (Filename.dirname !!file) key in
           if Sys.file_exists path && not (Hashtbl.mem htopkeysfile path)
           then begin 
             Hashtbl.add htopkeysfile path true;
@@ -218,8 +219,8 @@ let merge_files xs =
   let lastdir = ref "" in
 
   (* second pass, rename them *)
-  xs |> List.iter (fun file ->
-    let dir = Filename.dirname file in
+  xs |> List.iter (fun (file : Fpath.t) ->
+    let dir = Filename.dirname !!file in
     (* let pr _ = () in (* TODO *)   *)
     if dir <> !lastdir then begin
       UCommon.pr "";
@@ -228,7 +229,7 @@ let merge_files xs =
       lastdir := dir
     end;
 
-    UCommon.pr (spf "\\section{[[%s]]}" file);
+    UCommon.pr (spf "\\section{[[%s]]}" !!file);
 
     (* to have a single topkey entry *)
     let xs = Hashtbl.find_all hfile_to_topkeys file in
@@ -239,14 +240,14 @@ let merge_files xs =
       UCommon.pr ""
     );
     
-    let orig = Web.parse (Fpath.v file) in
+    let orig = Web.parse file in
 
     let subst_maybe key =
       try 
         let h = Hashtbl.find hchunkkey_to_files key in
         let files = Hashtbl_.hashset_to_list h in
         if List.length files > 1
-        then key ^ (spf "(%s)" (Filename.basename file))
+        then key ^ (spf "(%s)" (Filename.basename !!file))
         else key
       with Not_found -> key
     in
@@ -284,8 +285,8 @@ let merge_files xs =
     let orig2 = List.map tex_or_chunkdef orig |> List.flatten in
     Web.unparse orig2 file;
 
-    UFile.Legacy.cat file |> List.iter UCommon.pr; 
-    Sys.command (spf "rm -f %s" file) |> ignore;
+    UFile.cat file |> List.iter UCommon.pr; 
+    Sys.command (spf "rm -f %s" !!file) |> ignore;
 
     Hashtbl.find_all hfile_to_topkeys file |> List.iter (fun topkey ->
       Sys.command (spf "rm -f %s/%s" dir topkey) |> ignore;

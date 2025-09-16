@@ -18,9 +18,9 @@ type t = codetree list
      and position = First (* s: *) | Middle (* x: *) | Last (* e: *)
 
 (* may also parse the .md5sum_xxx file if it exists *)
-val parse: lang:Lang.mark_language -> string (* Common.filename *) -> t
+val parse: lang:Lang.mark_language -> Fpath.t -> t
 
 val unparse: 
   ?md5sum_in_auxfile:bool ->
   ?less_marks:bool ->
-  lang:Lang.mark_language -> t -> string (* Common.filename *) -> unit
+  lang:Lang.mark_language -> t -> Fpath.t -> unit

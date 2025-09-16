@@ -116,7 +116,7 @@ let thd3 (_, _, z) = z
 
 let cnt_id = ref 0
 
-let parse (file : Fpath.t) :t = 
+let parse (file : Fpath.t) : t = 
   Logs.info (fun m -> m "parsing %s" !!file);
   let xs = UFile.cat file in 
   let xs' = xs |> List_.index_list_1 |> List.map (fun (s, i) -> 
@@ -180,8 +180,8 @@ let parse (file : Fpath.t) :t =
 (* Unparser *)
 (*****************************************************************************)
 
-let unparse (orig : t) (filename : string) : unit =
-  UFile.Legacy.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
+let unparse (orig : t) (filename : Fpath.t) : unit =
+  UFile.with_open_out filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     orig |> List.iter (function
     | Tex xs -> 
@@ -240,13 +240,13 @@ let expand_sharp_include (orig : t) : t =
  * instead of abusing Tex
  *)
 
-let pack_multi xs = 
-  xs |> List.map (fun (file, xs) -> 
-    Tex (["MULTIFILE:" ^ file])::xs
+let pack_multi (xs : (Fpath.t * t) list) : t = 
+  xs |> List.map (fun (file, ys) -> 
+    Tex (["MULTIFILE:" ^ !!file])::ys
   ) |> List.flatten
 
 
-let unpack_multi orig =
+let unpack_multi (orig : t) : (Fpath.t * t) list =
   let (pre, groups) = 
     Common2_.group_by_pre (fun x ->
       match x with
@@ -260,7 +260,7 @@ let unpack_multi orig =
   groups |> List.map (fun (x, xs) ->
     match x with
     | Tex [s] when s =~ "MULTIFILE:\\(.*\\)$" ->
-        Common.matched1 s, xs
+        Fpath.v (Common.matched1 s), xs
     | _ -> raise Impossible
   )
 

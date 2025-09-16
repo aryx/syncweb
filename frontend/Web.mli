@@ -26,7 +26,7 @@ type t = tex_or_chunkdef list
 
 val parse: Fpath.t -> t
 
-val unparse: t -> string (* Common.filename *) -> unit
+val unparse: t -> Fpath.t -> unit
 
 (* multi file support for weaving *)
 val expand_sharp_include: 
@@ -34,6 +34,6 @@ val expand_sharp_include:
 
 (* multi file support for sync *)
 val pack_multi: 
-  (string (* Common.filename *) * t) list -> t
+  (Fpath.t * t) list -> t
 val unpack_multi: 
-  t -> (string (* Common.filename *) * t) list
+  t -> (Fpath.t * t) list

@@ -1,5 +1,6 @@
 (* Copyright 2009-2017 Yoann Padioleau, see copyright.txt *)
 open Common
+open Fpath_.Operators
 
 (*****************************************************************************)
 (* Prelude *)
@@ -52,12 +53,12 @@ let generate_n_spaces i =
 
 (* for better error reporting *)
 type pinfo = {
-  file: string (* filename *);
+  file: Fpath.t;
   line: int;
 }
 let s_of_pinfo pinfo = 
-  spf "%s:%d" pinfo.file pinfo.line
-let mkp file line = 
+  spf "%s:%d" !!(pinfo.file) pinfo.line
+let mkp (file : Fpath.t) (line : int) : pinfo = 
   { file = file; line = line}
 
 type mark2 = 
@@ -93,9 +94,9 @@ let readjust_mark2_remove_indent i body =
   )
 
 (* patch the Start2 with the signature information in the md5sum_aux file *)
-let readjust_start2_with_signatures file xs = 
+let readjust_start2_with_signatures (file : Fpath.t) xs = 
   let sigfile = Signature.signaturefile_of_file file in
-  if Sys.file_exists sigfile
+  if Sys.file_exists !!sigfile
   then 
     let md5s = Signature.parse_signaturefile sigfile in
     let rec aux mark2s md5sums = 
@@ -145,8 +146,8 @@ let readjust_start2_with_signatures file xs =
 (* old: was computing a first "implicit" chunk corresponding to the name if
  * the file, but not worth the extra complexity.
  *)
-let parse2 ~lang file = 
-  let xs = UFile.Legacy.cat file in 
+let parse ~lang (file : Fpath.t) : t = 
+  let xs = UFile.cat file in 
 
   let xs' = xs |> List_.index_list_1 |> List.map (fun (s, line) -> 
     match lang.Lang.parse_mark_startend s with
@@ -208,11 +209,7 @@ let parse2 ~lang file =
   in
   let codetrees = aux xs' in
   codetrees
-
-let parse ~lang a = 
-(*  Common.profile_code "Code.parse" (fun () ->  *)
-      parse2 ~lang a
-(* ) *)
+[@@profiling]
 
 (*****************************************************************************)
 (* Unparser *)
@@ -261,13 +258,13 @@ let rec adjust_pretty_print_field view =
 let unparse 
   ?(md5sum_in_auxfile=false) 
   ?(less_marks=false)
-  ~lang views filename 
+  ~lang (views : t) (filename : Fpath.t) : unit
  =
   let md5sums = ref [] in
   if less_marks 
   then adjust_pretty_print_field views;
 
-  UFile.Legacy.with_open_outfile filename (fun (pr_no_nl, _chan) -> 
+  UFile.with_open_out filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
     let pr_indent indent = Common2_.do_n indent (fun () -> pr_no_nl " ") in
 
@@ -332,7 +329,7 @@ let unparse
   );
 
   if md5sum_in_auxfile then begin
-    UFile.Legacy.write_file ~file:(Signature.signaturefile_of_file filename)
+    UFile.write_file ~file:(Signature.signaturefile_of_file filename)
       (!md5sums |> List.rev |> String.concat "\n");
   end;
   ()

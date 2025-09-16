@@ -3,11 +3,13 @@
  (wrapped false)
  (libraries
    commons
+   profiling
+
    commons2
    commons2_
  )
  (preprocess
-   (pps ppx_deriving.show) ; ppx_profiling
+   (pps ppx_deriving.show profiling.ppx)
  )
 )
 

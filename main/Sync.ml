@@ -140,7 +140,7 @@ let candidates_against_orig _body_orig view_elems _orig_elems =
 (* Pierce with his lenses takes also the original view, but I instead use the
  * md5sum in the view as a way to access the original version of orig.
  *)
-let sync2 ~lang orig views = 
+let sync ~lang (orig : Web.t) (views : Code.t) : Web.t = 
   ignore(lang);
 
   let h = build_chunk_hash_from_views views in
@@ -239,7 +239,7 @@ let sync2 ~lang orig views =
                              *  - make sync should now work
                              *)
                               failwith (spf "TODO: didnt find the md5sum in %s"
-                                          (Dumper.dump elem_view))
+                                         (String_.show (Dumper.dump elem_view)))
                           | Some s -> s
                         in
 
@@ -315,9 +315,4 @@ let sync2 ~lang orig views =
   );
 
   orig'
-
-let sync ~lang a b = 
-(*  Common.profile_code "Sync.sync" (fun () ->  *)
-      sync2 ~lang a b
-(* ) *)
-
+[@@profiling]
