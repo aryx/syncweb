@@ -17,6 +17,15 @@ module Fuzz = Lib_ast_fuzzy
 *)
 
 (*****************************************************************************)
+(* Types *)
+(*****************************************************************************)
+
+type conf = {
+  lang: Lang.t;
+  suffix: string;
+}
+
+(*****************************************************************************)
 (* Helpers *)
 (*****************************************************************************)
 
@@ -484,7 +493,7 @@ let lpize file =
 (* Entry point *)
 (*****************************************************************************)
 
-let lpize (lang : Lang.t) (xs : Fpath.t list) : unit = 
+let lpize (conf : conf) (xs : Fpath.t list) : unit = 
 
   (* C++ specifics. TODO: move elsewhere? when parse file? *)
 (*
@@ -515,7 +524,7 @@ let lpize (lang : Lang.t) (xs : Fpath.t list) : unit =
     pr "";
 
     let prog : prog = 
-        match lang with
+        match conf.lang with
         | Lang.C ->
             let toks = Parse_cpp.tokens (Parsing_helpers.File file) in
             let res2 = Parse_cpp_tree_sitter.parse file in
@@ -540,7 +549,8 @@ let lpize (lang : Lang.t) (xs : Fpath.t list) : unit =
             )
          )
        | _ -> 
-            failwith (spf "language not supported yet: %s" (Lang.to_string lang))
+            failwith (spf "language not supported yet: %s" 
+                (Lang.to_string conf.lang))
     in
     let env = {
       current_file = !!file;
@@ -572,13 +582,16 @@ let lpize (lang : Lang.t) (xs : Fpath.t list) : unit =
     let lines = UFile.cat file in
     let arr = Array.of_list lines in
 
-    (* CONFIG *)
-    let suffix = "" in (* "arm" *)
+    let chunkname_str e = 
+        spf "<<%s [[%s]]%s>>" (string_of_entity_kind conf.lang e.kind) e.name 
+            conf.suffix
+    in
 
     (* the chunks *)
     entities |> List.iter (fun e ->
         let (lstart, lend) = e.range in
-        pr (spf "<<%s [[%s]]%s>>=" (string_of_entity_kind lang e.kind) e.name suffix);
+        (* this is a def, we need <<...>>= *)
+        pr (chunkname_str e ^ "=");
 
         let nbdollars = ref 0 in
         Common2.enum_safe lstart lend |> List.iter (fun line ->
@@ -609,7 +622,7 @@ let lpize (lang : Lang.t) (xs : Fpath.t list) : unit =
           then ()
           else pr (untabify s)
       | Some e -> 
-        pr (spf "<<%s [[%s]]%s>>" (string_of_entity_kind lang e.kind) e.name suffix);
+        pr (chunkname_str e);
     );
     pr "@";
     pr "";

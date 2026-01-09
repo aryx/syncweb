@@ -187,17 +187,29 @@ let actions () = [
   (* weaving *)
   "-to_tex", " <nw file> <defs and uses file>", 
   Arg_.mk_action_2_arg (fun origfile defs_and_uses_file -> 
-    (* todo: parse .aux? *)
-    let (d,b,e) = Filename_.dbe_of_filename origfile in
-    if (e <> "nw")
-    then failwith (spf "expect a .nw file not a .%s" e);
-    let orig = Web.parse (Fpath.v origfile) in
-    let (defs, uses) = Crossref_code.parse_defs_and_uses (Fpath.v defs_and_uses_file) in
-    (* multi-file support *)
-    let orig = Web.expand_sharp_include orig in
-    let texfile = Filename_.filename_of_dbe (d,b,"tex") in
-    Web_to_tex.web_to_tex orig (Fpath.v texfile) (defs, uses);
-  );
+    try 
+      (* todo: parse .aux? *)
+      let (d,b,e) = Filename_.dbe_of_filename origfile in
+      if (e <> "nw")
+      then failwith (spf "expect a .nw file not a .%s" e);
+      let orig = Web.parse (Fpath.v origfile) in
+      let (defs, uses) = Crossref_code.parse_defs_and_uses (Fpath.v defs_and_uses_file) in
+      (* multi-file support *)
+      let orig = Web.expand_sharp_include orig in
+      let texfile = Filename_.filename_of_dbe (d,b,"tex") in
+      Web_to_tex.web_to_tex orig (Fpath.v texfile) (defs, uses);
+   (* coupling: with main() code *)
+   with exn ->
+          if !backtrace
+          then raise exn
+          else
+            (match exn with
+            | Failure s | Sys_error s ->
+               Logs.err (fun m -> m "syncweb: %s" s);
+               ()
+            | exn -> raise exn
+            )
+ );
 
   (* superseded by Main.main_action now *)
   "-sync", "   <orig> <view>", 
@@ -326,6 +338,7 @@ let main_action (xs : string list ) : Exit.t =
          *)
         (* pr2 (spf "syncing %s and %s with key %s" origf viewf topkey);  *)
         let view = Code.parse ~lang viewf in 
+        Logs.info (fun m -> m "syncing %s with %s" !!origf !!viewf);
         let orig' = Sync.sync ~lang   orig view in
         begin
           let view' = Web_to_code.view_of_orig ~topkey orig' in
@@ -470,11 +483,12 @@ let main (argv : string array) : Exit.t  =
        (try
           main_action (x::xs)
        with exn ->
+          (* coupling: with -to_tex action code *)
           if !backtrace
           then raise exn
           else
             (match exn with
-            | Failure s ->
+            | Failure s | Sys_error s ->
                Logs.err (fun m -> m "syncweb: %s" s);
                Exit.Err s
             | exn -> raise exn

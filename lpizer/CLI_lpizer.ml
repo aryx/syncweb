@@ -1,11 +1,10 @@
-(* Copyright 2009-2017, 2025 Yoann Padioleau, see copyright.txt *)
+(* Copyright 2009-2026 Yoann Padioleau, see copyright.txt *)
 open Common
 
 (*****************************************************************************)
 (* Purpose *)
 (*****************************************************************************)
-(* Assist in producing a first version of a literate programming (LP)
- * document.
+(* Assist in producing a first version of a literate programming (LP) document.
  *
  * history:
  *  - was in pfff -lpize before.
@@ -17,6 +16,8 @@ open Common
 
 (* possible values: "c" *)
 let lang_str = ref "ml"
+(* ex: "(hoc)" *)
+let suffix = ref ""
 
 let log_level = ref (Some Logs.Warning)
 
@@ -41,8 +42,8 @@ let find_source xs =
   )
 *)
 
-let main_action (xs : Fpath.t list) : Exit.t =
-  Lpize.lpize (Lang.of_string !lang_str) xs;
+let main_action (conf : Lpize.conf) (xs : Fpath.t list) : Exit.t =
+  Lpize.lpize conf xs;
   Exit.OK
 
 (*****************************************************************************)
@@ -67,6 +68,8 @@ let all_actions () =
 let options () = [
   "-lang", Arg.Set_string lang_str, 
   (spf " <str> choose language (default = %s) " !lang_str);
+  "-suffix", Arg.Set_string suffix,
+  " optional suffix to add to chunk names (e.g., \"(arm)\"";
   ] @
   Common2.cmdline_flags_devel () @
   Arg_.options_of_actions action (all_actions()) @
@@ -77,7 +80,7 @@ let options () = [
   " ";
   "-quiet", Arg.Unit (fun () -> log_level := None),
   " ";
-  ]
+  ] |> Arg.align
 
 (*****************************************************************************)
 (* Main entry point *)
@@ -113,7 +116,12 @@ let main (argv : string array) : Exit.t =
     (* main entry *)
     (* --------------------------------------------------------- *)
     | x::xs -> 
-        main_action (Fpath_.of_strings (x::xs))
+        let conf : Lpize.conf = {
+          lang = Lang.of_string !lang_str;
+          suffix = !suffix;
+        } 
+        in
+        main_action conf (Fpath_.of_strings (x::xs))
 
     (* --------------------------------------------------------- *)
     (* empty entry *)
