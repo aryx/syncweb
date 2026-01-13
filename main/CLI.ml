@@ -1,11 +1,10 @@
-(* Copyright 2009-2018, 2025 Yoann Padioleau, see copyright.txt *)
+(* Copyright 2009-2026 Yoann Padioleau, see copyright.txt *)
 open Common
 open Fpath_.Operators
 
 (*****************************************************************************)
 (* Purpose *)
 (*****************************************************************************)
-
 (* syncweb is a command-line tool enabling programmers to use the
  * literate programming[1] development methodology while still being able
  * to modify the generated files from the literate document.
@@ -18,9 +17,6 @@ open Fpath_.Operators
  *    code), and that you modify one instance, then it does not propagate
  *    to the other!! bug!! (see pb with char_code vs charcode in Efuns.nw)
  *  - add some Common.profile, parsing orig, parsing view, extract view, etc
- *  - optimize make sync when have many files, cache in a .marshall
- *    the parsing of the .nw? or use hashtbl instead of list for faster
- *    lookup
  *  - detect recursive chunks that leads to weird thing when do 'make sync'
  *  - could autodetect language based on view filenames?
  * 
@@ -33,7 +29,7 @@ open Fpath_.Operators
  *)
 
 (* coupling: changes.txt *)
-let version = "0.6"
+let version = "0.8"
 
 (*****************************************************************************)
 (* Flags *)
@@ -149,19 +145,6 @@ let parse_origs (origfs : Fpath.t list) : (Fpath.t * Web.t) list =
 (*****************************************************************************)
 
 let actions () = [
-  (* testing *)
-  "-parse_orig", "   <file>",
-    Arg_.mk_action_1_arg (fun x -> 
-      let tmpfile = Fpath.v "/tmp/xxx" in
-      let orig = Web.parse (Fpath.v x) in
-      Web.unparse orig tmpfile;
-      Sys.command(spf "diff %s %s" x !!tmpfile) |> ignore;
-    );
-  "-parse_view", "   <file>", 
-    Arg_.mk_action_1_arg (fun x -> 
-      ignore(Code.parse ~lang:Lang.mark_ocaml_short (Fpath.v x));
-    );
-
   (* tangling *)
   "-view_of_orig", "   <file> <key>", 
     Arg_.mk_action_2_arg (fun x key -> 
@@ -303,13 +286,25 @@ in
     unparse_orig_web orig file2
   );
 
+  (* testing *)
+  "-parse_orig", "   <file>",
+    Arg_.mk_action_1_arg (fun x -> 
+      let tmpfile = Fpath.v "/tmp/xxx" in
+      let orig = Web.parse (Fpath.v x) in
+      Web.unparse orig tmpfile;
+      Sys.command(spf "diff %s %s" x !!tmpfile) |> ignore;
+    );
+  "-parse_view", "   <file>", 
+    Arg_.mk_action_1_arg (fun x -> 
+      ignore(Code.parse ~lang:Lang.mark_ocaml_short (Fpath.v x));
+    );
 ]
 
 (*****************************************************************************)
 (* Main action *)
 (*****************************************************************************)
 
-let main_action (xs : string list ) : Exit.t = 
+let main_action (xs : Fpath.t list ) : Exit.t = 
   let md5sum_in_auxfile = !md5sum_in_auxfile in
   let less_marks = !less_marks in
   let lang = 
@@ -318,10 +313,8 @@ let main_action (xs : string list ) : Exit.t =
   in
 
   match xs with
-  (* simple case, one tex.nw file, one view *)
+  (* simple case, one .nw file, one view *)
   | [origf;viewf] -> 
-      let origf = Fpath.v origf in
-      let viewf = Fpath.v viewf in
       let orig = Web.parse origf in
       let topkey = 
         (* old: Filename.basename viewf *)
@@ -355,11 +348,11 @@ let main_action (xs : string list ) : Exit.t =
         Exit.OK
       end
 
-  (* many .tex.nw, one view (to be called repeatedely for each view) *)
+  (* many .nw, one view (to be called repeatedely for each view) *)
   | xs when List.length xs > 2 -> 
       let origfs, viewf = 
         match List.rev xs with
-        | x::xs -> List.rev xs |> Fpath_.of_strings, Fpath.v x
+        | x::xs -> List.rev xs, x
         | _ -> raise Impossible
       in
       let origs = parse_origs origfs in
@@ -412,7 +405,7 @@ let all_actions () =
   actions() @
   []
 
-let options () = 
+let options () = (
   [
     "-lang", Arg.Set_string lang, 
     (spf " <lang> (default=%s, choices=%s)" !lang 
@@ -441,10 +434,8 @@ let options () =
       exit 0;
     ), 
     "  guess what";
-  ] @
-  Common2_.cmdline_flags_devel () @
-  Arg_.options_of_actions action (all_actions()) @
-  []
+  ] @ Arg_.options_of_actions action (all_actions())
+ ) |> Arg.align
 
 (*****************************************************************************)
 (* Main entry point *)
@@ -466,7 +457,7 @@ let main (argv : string array) : Exit.t  =
 (*  Profiling.profile_code "Main total" (fun () ->  *)
     
     (match args with
-        (* --------------------------------------------------------- *)
+    (* --------------------------------------------------------- *)
     (* actions, useful to debug subpart *)
     (* --------------------------------------------------------- *)
     | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
@@ -481,7 +472,7 @@ let main (argv : string array) : Exit.t  =
     (* --------------------------------------------------------- *)
     | x::xs -> 
        (try
-          main_action (x::xs)
+          main_action (Fpath_.of_strings (x::xs))
        with exn ->
           (* coupling: with -to_tex action code *)
           if !backtrace

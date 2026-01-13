@@ -3,6 +3,8 @@
 
 * 0.8 (Q1 2026) ()
 
+** Features:
+
 ** lpizer
 - new -suffix option
 
