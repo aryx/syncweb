@@ -4,9 +4,14 @@
 * 0.8 (Q1 2026) ()
 
 ** Features:
+- new syncweb -loc action to give statistics about the .nw file such
+  as the lines of code (LOC) and lines of explanations (LOE).
 
 ** lpizer
 - new -suffix option
+
+** internals:
+- new -dump_orig action to dump the internal representation of a .nw file
 
 * -----------------------------------------------------------
 

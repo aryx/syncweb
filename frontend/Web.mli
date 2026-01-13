@@ -19,10 +19,12 @@ type t = tex_or_chunkdef list
       | ChunkName of chunkname * int (* indentation *)
   (* Those strings can contain noweb quotes ([[ ]]), but they are
    * not parsed here. See Web_to_tex.texstring instead.
+   * Those are single line strings; it does not contain any \n.
    *)
   and tex_string = string 
   and chunkname = tex_string
   and chunkid = int
+[@@deriving show]
 
 val parse: Fpath.t -> t
 

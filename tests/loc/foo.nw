@@ -1,0 +1,53 @@
+% test for syncweb -loc
+\documentclass[]{report}
+\usepackage{noweb}
+\usepackage{hyperref}
+\begin{document}
+\title{Foo}
+\author{Bar}
+\maketitle 
+\chapter{First chapter}
+
+\section{First section}
+
+This is some example
+of latex.
+
+<<hello.c>>=
+<<includes>>
+
+int main(int argc, char** argv) 
+{
+    <<say hello>>
+    return 0;
+}
+@
+
+<<say hello>>=
+printf("Hello World!\n");
+@
+
+<<includes>>=
+#include <stdio.h> /* for printf */
+@
+
+\section{Second section}
+
+And now some included files:
+<<included files>>=
+#include "foo.h"
+@
+
+\pagebreak
+
+\section{Third section}
+
+<<included files>>=
+#include "bar.h"
+@
+
+\section{Index}
+
+\nowebindex
+
+\end{document}

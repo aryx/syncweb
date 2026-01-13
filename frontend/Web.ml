@@ -46,6 +46,7 @@ type t = tex_or_chunkdef list
   and tex_string = string 
   and chunkname = tex_string
   and chunkid = int
+[@@deriving show { with_path = false} ]
 
 (*****************************************************************************)
 (* Invariants  *)

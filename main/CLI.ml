@@ -146,17 +146,7 @@ let parse_origs (origfs : Fpath.t list) : (Fpath.t * Web.t) list =
 
 let actions () = [
   (* tangling *)
-  "-view_of_orig", "   <file> <key>", 
-    Arg_.mk_action_2_arg (fun x key -> 
-      let orig = Web.parse (Fpath.v x) in
-      let view = Web_to_code.view_of_orig key orig in
-      let tmpfile = Fpath.v "/tmp/xxx" in
-      Code.unparse ~lang:Lang.mark_ocaml view tmpfile;
-      tmpfile |> UFile.cat |> List.iter UCommon.pr;
-      (*Common.command2(spf "diff %s %s" x tmpfile); *)
-    );
-
-  (* duplicate of -view_of_orig *)
+  (* old: alt: -view_of_orig *)
   "-to_code", "   <file> <key>", 
     Arg_.mk_action_2_arg (fun x key -> 
       let orig = Web.parse (Fpath.v x) in
@@ -194,7 +184,7 @@ let actions () = [
             )
  );
 
-  (* superseded by Main.main_action now *)
+  (* sync, superseded by Main.main_action now *)
   "-sync", "   <orig> <view>", 
     Arg_.mk_action_2_arg (fun origf viewf -> 
       let orig = Web.parse (Fpath.v origf) in
@@ -222,7 +212,12 @@ let actions () = [
       then UFile.Legacy.write_file file s
       else failwith "ok, skipping"
     );
-
+  "-loc", " <file>",
+    Arg_.mk_action_1_arg (fun file ->
+     let orig = Web.parse (Fpath.v file) in
+     let stats : Stat.t = Stat.stat_of_web orig in
+     Logs.app (fun m -> m "LOC = %d (LOE = %d)" stats.loc stats.loe);
+  );
 
   "-rename_chunknames", " <origs>", 
   Arg_.mk_action_n_arg (fun xs -> 
@@ -285,6 +280,12 @@ in
     let file2 = Filename_.filename_of_dbe (d,b,"w") in
     unparse_orig_web orig file2
   );
+  (* debugging *)
+  "-dump_orig", "   <file>",
+    Arg_.mk_action_1_arg (fun x -> 
+      let orig = Web.parse (Fpath.v x) in
+      Logs.app (fun m -> m "web = %s" (Web.show orig));
+    );
 
   (* testing *)
   "-parse_orig", "   <file>",
