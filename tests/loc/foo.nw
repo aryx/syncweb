@@ -8,6 +8,10 @@
 \maketitle 
 \chapter{First chapter}
 
+% this should not count
+\l neither this
+\t or this
+
 \section{First section}
 
 This is some example

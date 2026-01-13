@@ -1,8 +1,5 @@
 (* Copyright 2026 Yoann Padioleau, see copyright.txt *)
-(*
 open Common
-open Fpath_.Operators
-*)
 open Web
 
 (*****************************************************************************)
@@ -30,8 +27,11 @@ let stat_of_web (orig : Web.t) : t =
   let rec aux1 = function
     | Tex xs ->
         xs |> List.iter (fun s ->
+            (* TEX *)
             match s with
             | "" -> ()
+            | s when s =~ "^%.*" -> ()
+            | s when s =~ "^\\\\[tl] " -> ()
             (* for now I consider Tex commands \xxx as legit explanations as
              * they can be section names for example which usually help to
              * understand the code.
@@ -44,6 +44,7 @@ let stat_of_web (orig : Web.t) : t =
       xs |> List.iter aux2
   and aux2 = function
     | Code s -> 
+        (* CODE *)
         (match s with
         | "" -> ()
         (* LATER? look if only space line? *)
