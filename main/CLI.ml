@@ -215,6 +215,7 @@ let actions () = [
   "-loc", " <file>",
     Arg_.mk_action_1_arg (fun file ->
      let orig = Web.parse (Fpath.v file) in
+     let orig = Web.expand_sharp_include orig in
      let stats : Stat.t = Stat.stat_of_web orig in
      Logs.app (fun m -> m "LOC = %d (LOE = %d)" stats.loc stats.loe);
   );
