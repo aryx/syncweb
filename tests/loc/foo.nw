@@ -8,9 +8,14 @@
 \maketitle 
 \chapter{First chapter}
 
+This should count
+
 % this should not count
 \l neither this
 \t or this
+
+% also this next line has multiple spaces and tabs which again should not count
+	  
 
 \section{First section}
 
@@ -29,6 +34,7 @@ int main(int argc, char** argv)
 
 <<say hello>>=
 printf("Hello World!\n");
+   
 @
 
 <<includes>>=

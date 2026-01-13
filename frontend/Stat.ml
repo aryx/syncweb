@@ -30,7 +30,9 @@ let stat_of_web (orig : Web.t) : t =
             (* TEX *)
             match s with
             | "" -> ()
+            | s when s =~ "^[ \t]*$" -> ()
             | s when s =~ "^%.*" -> ()
+            (* I keep \n (for notes) as legic LOE for now *)
             | s when s =~ "^\\\\[tl] " -> ()
             (* for now I consider Tex commands \xxx as legit explanations as
              * they can be section names for example which usually help to
@@ -47,6 +49,7 @@ let stat_of_web (orig : Web.t) : t =
         (* CODE *)
         (match s with
         | "" -> ()
+        | s when s =~ "^[ \t]*$" -> ()
         (* LATER? look if only space line? *)
         | _ -> 
               Logs.debug (fun m -> m "LOC: %s" s);
