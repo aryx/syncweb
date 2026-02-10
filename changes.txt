@@ -1,7 +1,6 @@
 # -*- org -*-
 
-
-* 0.8 (Q1 2026) ()
+* 0.8 (Q1 2026) (syncweb -loc for LOC/LOE stats)
 
 ** Features:
 - new syncweb -loc action to give statistics about the .nw file such
@@ -20,7 +19,7 @@
 ** testinfra
 - Dockerfile and docker.yml GHA (GitHub Actions) CI check
 
-* 0.7 (Q2 2025) ()
+* 0.7 (Q2 2025) (maintenance)
 
 ** indexer
 - resume indexer, switch to dune and latest semgrep libs
@@ -46,6 +45,11 @@
 - switch to dune
 
 * -----------------------------------------------------------
+
+* Big pause to work on semgrep 2019/2020/2021/2022/2023/2024
+
+* -----------------------------------------------------------
+
 
 * 0.4 (Q1 2018) ()
 
