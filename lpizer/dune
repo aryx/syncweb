@@ -27,15 +27,15 @@
        parser_cpp.tree_sitter
     parser_ocaml.ast parser_ocaml.menhir parser_ocaml.ast_generic
       parser_ocaml.tree_sitter ; to parse Cap object types
-    ; for Lang.t ; TODO: remove deps to semgrep! move Lang out of it
-    semgrep.rule
+    ; for Lang.t (now in semgrep-pfff-langs, not semgrep)
+    languages
 
     ; from codemap now
     commons2_
     graph_code
 
-    ; from codegraph now
-    pfff-lang_ml-analyze
+    ; from semgrep-pfff-langs now
+    parser_ocaml.graph
 
     ; internal
     ; frontend
@@ -45,7 +45,7 @@
 )
 
 (install
- (package syncweb)
+ (package lpizer)
  (section bin)
  (files (Main.exe as lpizer))
 )

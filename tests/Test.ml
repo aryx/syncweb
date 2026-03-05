@@ -22,7 +22,7 @@ let tests caps _env =
   List.flatten [
     [ test_hello; ];
      Test_lpizer.tests (caps :> < Cap.fork> );
-     Test_indexer.tests (caps :> < Cap.fork> );
+     (*TODO: Test_indexer.tests (caps :> < Cap.fork> ); *)
     ]
 
 

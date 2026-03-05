@@ -71,7 +71,7 @@ let options () = [
   "-suffix", Arg.Set_string suffix,
   " optional suffix to add to chunk names (e.g., \"(arm)\"";
   ] @
-  Common2.cmdline_flags_devel () @
+  Common2_.cmdline_flags_devel () @
   Arg_.options_of_actions action (all_actions()) @
   [
   "-verbose", Arg.Unit (fun () -> log_level := Some Logs.Info),

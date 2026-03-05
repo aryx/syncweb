@@ -3,4 +3,5 @@
   (_
     (flags (:standard  -w -52-6))))
 
-;(dirs main frontend backend lpizer indexer)
+; indexer excluded for now (depends on codegraph libs not yet vendored)
+(dirs :standard \ indexer)

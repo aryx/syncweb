@@ -10,13 +10,13 @@
    commons
 
    syncweb_lpizer_tests
-   syncweb_indexer_tests
+   ;TODO: syncweb_indexer_tests (depends on codegraph libs)
  )
  ; 'byte' is for ocamldebug
  (modes native byte))
 
 (install
- (package syncweb)
+ (package lpizer)
  (section bin)
  (files
   (test.exe as test)

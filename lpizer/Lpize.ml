@@ -575,7 +575,7 @@ let lpize (conf : conf) (xs : Fpath.t list) : unit =
     let hcovered = 
       entities |> List.map (fun e -> 
         let (lstart, lend) = e.range in
-        Common2.enum_safe lstart lend
+        Common2_.enum_safe lstart lend
       ) |> List.flatten |> Hashtbl_.hashset_of_list
     in
     
@@ -594,7 +594,7 @@ let lpize (conf : conf) (xs : Fpath.t list) : unit =
         pr (chunkname_str e ^ "=");
 
         let nbdollars = ref 0 in
-        Common2.enum_safe lstart lend |> List.iter (fun line ->
+        Common2_.enum_safe lstart lend |> List.iter (fun line ->
           let idx = line - 1 in
           if idx >= Array.length arr || idx < 0
           then failwith (spf "out of range for %s, line %d" !!file line);
@@ -616,7 +616,7 @@ let lpize (conf : conf) (xs : Fpath.t list) : unit =
      *)
     pr (spf "<<%s>>=" !!file);
     UFile.cat file |> List_.index_list_1 |> List.iter (fun (s, idx) ->
-      match Common2.hfind_option idx hstart with
+      match Common2_.hfind_option idx hstart with
       | None -> 
           if Hashtbl.mem hcovered idx
           then ()
