@@ -1,5 +1,5 @@
-# Build syncweb (and semgrep/codemap/codegraph) with OCaml 4.14.2 via OPAM on Ubuntu.
-# Similar to efuns Dockerfile
+# Build syncweb (and lpizer) with OCaml 4.14.2 via OPAM on Ubuntu.
+# semgrep-pfff-libs and semgrep-pfff-langs are vendored as git submodules.
 
 FROM ubuntu:22.04
 # alt: 24.04
@@ -11,77 +11,31 @@ RUN apt-get install -y build-essential autoconf automake pkgconf git wget curl
 # Setup OPAM and OCaml
 RUN apt-get install -y opam
 RUN opam init --disable-sandboxing -y # (disable sandboxing due to Docker)
+# can adjust with docker --build-arg OCAML_VERSION=5.2.1 ...
 ARG OCAML_VERSION=4.14.2
 RUN opam switch create ${OCAML_VERSION} -v
 
-
-# Install semgrep libs (and its many dependencies) for lpizer and indexer
-WORKDIR /semgrep
-RUN git clone --depth=1 --recurse-submodules https://github.com/aryx/semgrep-libs /semgrep
-#coupling: https://github.com/aryx/semgrep-libs/blob/master/Dockerfile
-# and install-deps-UBUNTU-for-semgrep-core Makefile target
+# Add external deps of syncweb/lpizer and their submodules
+# coupling: semgrep-pfff-libs needs pcre, gmp, ev, curl
 RUN apt-get install -y pkg-config libpcre3-dev libpcre2-dev libgmp-dev libev-dev libcurl4-gnutls-dev
-RUN ./configure
-RUN eval $(opam env) && make && make dune-build-all
-RUN eval $(opam env) && dune install \
-   TCB commons commons2 profiling tracing process_limits parallelism pcre2 \
-   testo testo-util testo-diff \
-   gitignore paths glob git_wrapper \
-   lib_parsing ast_generic tree-sitter lib_parsing_tree_sitter \
-   tree-sitter-lang \
-   parser_ocaml parser_scala parser_lisp \
-   parser_cpp parser_java \
-   parser_python parser_javascript parser_ruby parser_php \
-   parser_go parser_rust \
-   parser_yaml parser_jsonnet \
-   parser_dockerfile parser_bash \
-   pfff-lang_GENERIC-naming \
-   semgrep aliengrep spacegrep
-#TODO: remove semgrep aliengrep spacegrep
-#TODO: can't because then can't find -ltree-sitter
-# RUN rm -rf /semgrep
 
-# Install codemap libs for codegraph and then for indexer and lpizer
-WORKDIR /codemap
-RUN apt-get install -y libcairo2-dev libgtk2.0-dev
-RUN git clone --depth=1 https://github.com/aryx/codemap /codemap
-RUN ./configure
-RUN eval $(opam env) && make && make all
-RUN eval $(opam env) && dune install \
-    commons2_ files-format \
-    visualization \
-    graph_code highlight_code database_code layer_code \
-    parser_c
-RUN rm -rf /codemap
-
-# Install codegraph libs (finder for indexer, lang_ml-analyze for lpizer)
-WORKDIR /codegraph
-RUN apt-get install -y libcairo2-dev libgtk2.0-dev
-RUN git clone --depth=1 https://github.com/aryx/codegraph /codegraph
-RUN ./configure
-RUN eval $(opam env) && make && make all
-RUN eval $(opam env) && dune install \
-    pfff-lang_cmt pfff-lang_cmt-analyze pfff-lang_ml-analyze \
-    pfff-lang_c-analyze \
-    codegraph
-#TODO: split codegraph.finder in separate lib outside codegraph package
-RUN rm -rf /codegraph
-
-
-# Back to syncweb
 WORKDIR /src
 
-# Install other dependencies
-COPY syncweb.opam configure ./
+# Install dependencies (copy minimal files for Docker layer caching)
+COPY syncweb.opam lpizer.opam configure ./
+# Copy enough submodule content for configure to work
+COPY semgrep-pfff-libs/TCB/ ./semgrep-pfff-libs/TCB/
+COPY semgrep-pfff-langs/scripts/setup-tree-sitter.sh ./semgrep-pfff-langs/scripts/
+COPY semgrep-pfff-langs/libs/ocaml-tree-sitter-core/ ./semgrep-pfff-langs/libs/ocaml-tree-sitter-core/
 RUN ./configure
 
-# Now let's build from source
+# Now copy the full source and build
 COPY . .
-
 RUN eval $(opam env) && make
-RUN eval $(opam env) && make all
+# Note: 'make all' (dune build) is not used here because it would try to build
+# all libraries in vendored submodules, including ones that depend on osemgrep
+# or JS packages not needed by syncweb.
 RUN eval $(opam env) && make install
 
 # Test
-RUN eval $(opam env) && syncweb --help && lpizer --help && syncweb_indexer --help
-RUN eval $(opam env) && make test
+RUN eval $(opam env) && syncweb --help && lpizer --help
