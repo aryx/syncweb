@@ -22,8 +22,8 @@ all:
 clean:
 	dune clean
 install:
-	dune install syncweb
-	dune install lpizer
+	dune build syncweb.install lpizer.install
+	dune install syncweb lpizer
 
 #TODO: use testo, run syncweb on demos/ ? or in tests/syncweb/?
 #TODO: ./bin/lpizer -verbose -lang c tests/lpizer/*.c
