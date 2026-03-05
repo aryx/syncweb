@@ -116,7 +116,6 @@ using semgrep parsers for language-aware analysis.
     uuidm
     yojson
     ; -- from semgrep-pfff-langs --
-    compiler-libs
     (menhir (= "20230608"))
     parmap
     tsort

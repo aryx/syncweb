@@ -48,7 +48,6 @@ depends: [
   "uri"
   "uuidm"
   "yojson"
-  "compiler-libs"
   "menhir" {= "20230608"}
   "parmap"
   "tsort"
