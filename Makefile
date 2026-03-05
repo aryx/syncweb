@@ -12,7 +12,7 @@
 ###############################################################################
 
 default:
-	bash -c "dune build _build/install/default/bin/{syncweb,lpizer,test.bc}"
+	bash -c "dune build _build/install/default/bin/{syncweb,lpizer,syncweb_indexer,test.bc}"
 
 syncweb-only:
 	dune build _build/install/default/bin/syncweb
