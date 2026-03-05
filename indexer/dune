@@ -25,22 +25,18 @@
     ; in semgrep-libs
     commons
 
-    ; in codemap
+    ; in semgrep-pfff-langs
     graph_code
-
-    ; in codegraph
-    pfff-lang_ml-analyze
-    pfff-lang_cmt pfff-lang_cmt-analyze
-    pfff-lang_c-analyze
-
-    ; for find_source Lib_parsing_xxx
-    codegraph.finder
+    parser_ocaml.graph
+    parser_cmt parser_cmt.graph
+    parser_c.graph
+    parser_cmt.finder
  )
 )
 
 
 (install
- (package syncweb)
+ (package lpizer)
  (section bin)
  (files (Main.exe as syncweb_indexer))
 )

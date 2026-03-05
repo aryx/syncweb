@@ -1,1 +1,9 @@
+
+# No need for much here as codemap now by default, thx to the gitignore library,
+# also process .gitignore !
+
+# ignore submodules for now
+/semgrep-pfff-langs
+/semgrep-pfff-libs
+
 /demos/mapreduce/ocamlmpi

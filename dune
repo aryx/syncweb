@@ -3,5 +3,4 @@
   (_
     (flags (:standard  -w -52-6))))
 
-; indexer excluded for now (depends on codegraph libs not yet vendored)
-(dirs :standard \ indexer)
+;(dirs :standard \ indexer)
