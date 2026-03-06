@@ -274,7 +274,7 @@ let unparse
         if md5sum_in_auxfile 
         then begin 
           Stack_.push (spf "%s |%s" key 
-                         (Signature.to_hex (Common2.some x.chunk_md5sum)))
+                         (Signature.to_hex (Option.get x.chunk_md5sum)))
             md5sums;
           None
         end
