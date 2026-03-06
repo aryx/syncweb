@@ -270,7 +270,7 @@ let merge_files (xs : Fpath.t list) =
           let nbdollars = ys |> List.map (function
             | Code s -> count_dollar s
             | ChunkName (s, _) -> count_dollar s
-          ) |> Common2_.sum
+          ) |> Common2.sum
           in
           [ChunkDef (def, ys |> List.map code_or_chunk)] @
           (if nbdollars mod 2 =|= 1

@@ -34,7 +34,7 @@ let untabify s =
   Str.global_substitute (Str.regexp "^\\([\t]+\\)") (fun _wholestr ->
     let substr = Str.matched_string s in
     let n = String.length substr in
-    Common2_.n_space (4 * n)
+    Common2.n_space (4 * n)
   ) s
 
 (* todo: could generalize this in graph_code.ml! have a range
@@ -575,7 +575,7 @@ let lpize (conf : conf) (xs : Fpath.t list) : unit =
     let hcovered = 
       entities |> List.map (fun e -> 
         let (lstart, lend) = e.range in
-        Common2_.enum_safe lstart lend
+        Common2.enum_safe lstart lend
       ) |> List.flatten |> Hashtbl_.hashset_of_list
     in
     
@@ -594,7 +594,7 @@ let lpize (conf : conf) (xs : Fpath.t list) : unit =
         pr (chunkname_str e ^ "=");
 
         let nbdollars = ref 0 in
-        Common2_.enum_safe lstart lend |> List.iter (fun line ->
+        Common2.enum_safe lstart lend |> List.iter (fun line ->
           let idx = line - 1 in
           if idx >= Array.length arr || idx < 0
           then failwith (spf "out of range for %s, line %d" !!file line);
@@ -616,7 +616,7 @@ let lpize (conf : conf) (xs : Fpath.t list) : unit =
      *)
     pr (spf "<<%s>>=" !!file);
     UFile.cat file |> List_.index_list_1 |> List.iter (fun (s, idx) ->
-      match Common2_.hfind_option idx hstart with
+      match Common2.hfind_option idx hstart with
       | None -> 
           if Hashtbl.mem hcovered idx
           then ()

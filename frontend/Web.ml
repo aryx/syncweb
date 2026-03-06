@@ -195,7 +195,7 @@ let unparse (orig : t) (filename : Fpath.t) : unit =
         | Code s -> 
             pr s
         | ChunkName (s, indent) -> 
-            Common2_.do_n indent (fun () -> pr_no_nl " ");
+            Common2.do_n indent (fun () -> pr_no_nl " ");
             let item = spf "<<%s>>" s in
             pr item;
         );
@@ -249,7 +249,7 @@ let pack_multi (xs : (Fpath.t * t) list) : t =
 
 let unpack_multi (orig : t) : (Fpath.t * t) list =
   let (pre, groups) = 
-    Common2_.group_by_pre (fun x ->
+    Common2.group_by_pre (fun x ->
       match x with
       | Tex [s] when s =~ "MULTIFILE:.*" -> true
       | _ -> false

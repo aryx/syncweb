@@ -31,8 +31,8 @@ let action = ref ""
 (* for lpification, to get a list of files and handling the skip list *)
 (*
 let find_source xs =
-  let root = Common2_.common_prefix_of_files_or_dirs xs in
-  let root = Unix.realpath root |> Common2_.chop_dirsymbol in
+  let root = Common2.common_prefix_of_files_or_dirs xs in
+  let root = Unix.realpath root |> Common2.chop_dirsymbol in
   let files = 
     failwith "TODO: find_source use Find_generic in codegraph"
   in
@@ -71,7 +71,7 @@ let options () = [
   "-suffix", Arg.Set_string suffix,
   " optional suffix to add to chunk names (e.g., \"(arm)\"";
   ] @
-  Common2_.cmdline_flags_devel () @
+  Common2.cmdline_flags_devel () @
   Arg_.options_of_actions action (all_actions()) @
   [
   "-verbose", Arg.Unit (fun () -> log_level := Some Logs.Info),

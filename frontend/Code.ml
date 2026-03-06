@@ -74,7 +74,7 @@ let readjust_mark2_remove_indent i body =
                      " nested chunk with smaller indentation at ");
       Start2 (s, j - i, md5sum, pinfo)
   | Regular2 (s, pinfo) -> 
-      if Common2_.is_blank_string s 
+      if Common2.is_blank_string s 
       then Regular2 (s, pinfo)
       else 
         if s=~ "\\([ \t]*\\)\\(.*\\)"
@@ -106,7 +106,7 @@ let readjust_start2_with_signatures (file : Fpath.t) xs =
           if s <> s2 
           then begin 
             UCommon.pr2 (spf "not same key in view and md5sum_auxfile: %s VS %s" s s2);
-            if (Common2_.y_or_no 
+            if (Common2.y_or_no 
                   "This may be because you moved entities. Continue?")
             then x::xs
             else failwith "Stop here"
@@ -122,14 +122,14 @@ let readjust_start2_with_signatures (file : Fpath.t) xs =
           x::aux xs ys
       | (Start2(_, _j, _md5sum, _pinfo) as x)::xs, [] ->
           UCommon.pr2 "more marks in view file than md5sums in md5sum_auxfile";
-          if (Common2_.y_or_no 
+          if (Common2.y_or_no 
                 "This may be because you moved entities. Continue?")
           then x::xs
           else failwith "Stop here"
           
       | [], _y::_ys ->
           UCommon.pr2 "more md5sums in md5sum_auxfile than start marks in view file";
-          if (Common2_.y_or_no 
+          if (Common2.y_or_no 
                 "This may be because you moved entities. Continue?")
           then []
           else failwith "Stop here"
@@ -266,7 +266,7 @@ let unparse
 
   UFile.with_open_out filename (fun (pr_no_nl, _chan) -> 
     let pr s = pr_no_nl (s ^ "\n") in
-    let pr_indent indent = Common2_.do_n indent (fun () -> pr_no_nl " ") in
+    let pr_indent indent = Common2.do_n indent (fun () -> pr_no_nl " ") in
 
     let rec aux (x, body, i) =
       let key = x.chunk_key in
@@ -274,7 +274,7 @@ let unparse
         if md5sum_in_auxfile 
         then begin 
           Stack_.push (spf "%s |%s" key 
-                         (Signature.to_hex (Common2_.some x.chunk_md5sum)))
+                         (Signature.to_hex (Common2.some x.chunk_md5sum)))
             md5sums;
           None
         end
@@ -291,7 +291,7 @@ let unparse
       body |> List.iter (function
       | RegularCode s -> 
           (* bugfix: otherwise make sync will not fixpoint *)
-          if Common2_.is_blank_string s
+          if Common2.is_blank_string s
           then pr s
           else begin
             pr_indent i;

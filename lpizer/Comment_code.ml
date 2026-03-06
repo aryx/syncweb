@@ -49,7 +49,7 @@ type 'tok hooks = {
 (*****************************************************************************)
 
 let drop_space_and_newline hooks toks =
-  toks |> Common2_.drop_while (fun t ->
+  toks |> Common2.drop_while (fun t ->
       let kind = hooks.kind t in
       match kind with
       | PI.Esthet PI.Newline
@@ -65,7 +65,7 @@ let drop_space_and_newline hooks toks =
 let toks_before hooks (tok : Tok.t) all_toks =
   let pos = Tok.bytepos_of_tok tok in
   all_toks
-    |> Common2_.take_while (fun tok2 ->
+    |> Common2.take_while (fun tok2 ->
            let info = hooks.tokf tok2 in
            let pos2 = Tok.bytepos_of_tok info in
            pos2 < pos)
@@ -73,7 +73,7 @@ let toks_before hooks (tok : Tok.t) all_toks =
 let toks_after hooks (tok : Tok.t) all_toks =
   let pos = Tok.bytepos_of_tok tok in
   all_toks
-    |> Common2_.drop_while (fun tok2 ->
+    |> Common2.drop_while (fun tok2 ->
       let info = hooks.tokf tok2 in
       let pos2 = Tok.bytepos_of_tok info in
       pos2 <= pos

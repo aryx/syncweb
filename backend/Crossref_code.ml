@@ -203,7 +203,7 @@ let hs__from_orig (orig : Web.t) (defs, uses) =
    * bugfix: use Common2.hkeys not Hashtbl.iter, otherwise will get
    * get defs multiple time for each loc of id.
    *)
-  hchunkid_to_locs |> Common2_.hkeys |> List.iter (fun id ->
+  hchunkid_to_locs |> Common2.hkeys |> List.iter (fun id ->
     let locs = Hashtbl.find_all hchunkid_to_locs id in
     let defs_uses = 
       locs |> List_.filter_map (fun loc ->

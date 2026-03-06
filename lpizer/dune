@@ -31,7 +31,6 @@
     languages
 
     ; from codemap now
-    commons2_
     graph_code
 
     ; from semgrep-pfff-langs now

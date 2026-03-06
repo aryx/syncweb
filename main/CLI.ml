@@ -132,10 +132,10 @@ let parse_origs (origfs : Fpath.t list) : (Fpath.t * Web.t) list =
   then begin
     Logs.info (fun m -> m "using cache: %s" cachefile);
     (* todo: use versioning *)
-    Common2_.get_value cachefile
+    Common2.get_value cachefile
   end else begin
     let res = f () in
-    Common2_.write_value res cachefile;
+    Common2.write_value res cachefile;
     res
   end
 [@@profiling]
@@ -205,10 +205,10 @@ let actions () = [
       )
       in
       let tmpfile = "/tmp/xxx" in
-      let s = Common2_.unlines xs in
+      let s = Common2.unlines xs in
       UFile.Legacy.write_file tmpfile s;
       Sys.command(spf "diff -u %s %s" file tmpfile) |> ignore;
-      if Common2_.y_or_no "apply modif?"
+      if Common2.y_or_no "apply modif?"
       then UFile.Legacy.write_file file s
       else failwith "ok, skipping"
     );
@@ -267,7 +267,7 @@ let unparse_orig_web orig filename =
         | Web.Code s -> 
             pr s
         | Web.ChunkName (s, indent) -> 
-            Common2_.do_n indent (fun () -> pr_no_nl " ");
+            Common2.do_n indent (fun () -> pr_no_nl " ");
             let item = spf "<<%s>>" s in
             pr item;
         );
