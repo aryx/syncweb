@@ -25,6 +25,8 @@
 
 ** indexer
 - resume indexer, switch to dune and latest semgrep libs
+- allow [<parse()>] to be used instead of [<Parse.parse()>]
+  when no ambiguity
 
 ** lpizer
 - resume lpizer, switch to dune and latest semgrep libs
