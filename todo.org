@@ -13,6 +13,39 @@ https://entangled.github.io/
 
 * Last
 
+** Last2
+
+*** better error location when missing closing >] or ]]
+
+*** fix warning when same chunk used multiple times, like in Window.nw
+[00.01][WARNING]: Not consumed: [[sweep()]] sanity check i
+if(i == nil)
+    goto Rescue;
+
+actually it is consumed twice
+
+*** why syncweb -to_code does not honor the -md5sum_in_auxfile?
+
+
+
+*** lpizer: handle more cases, struct, typedefs, etc.
+or maybe switch to ast_c.ml instead of ast_c.ml (or maybe to generic AST?)
+
+try on plan9 utilities
+
+*** finish lpizer for C with lpize struct, types, etc.
+not just functions
+
+*** take inspiration from scip and use other suffix like <>, #, () for entities?
+
+*** LATER: make an OPAM package, remove some deps to semgrep libs
+inline, or remove use of Common2 or release
+commons lib again from regular semgrep repo?
+
+**** remove use of common2 and common2_ and see what remains
+and whether I can just inline a common.ml?
+
+
 ** Last1
 
 *** RELAX add a lpizer -dryrun option
