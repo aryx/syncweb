@@ -27,9 +27,11 @@
 
     ; in semgrep-pfff-langs
     graph_code
+    finding_generic
     parser_ocaml.graph
     parser_cmt parser_cmt.graph
     parser_c.graph
+    parser_cpp.menhir ; Parse_cpp.add_defs
     parser_cmt.finder
  )
 )

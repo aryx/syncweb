@@ -1,4 +1,3 @@
-# -*- org -*-
 
 * Manual
 
@@ -13,28 +12,9 @@ https://entangled.github.io/
 
 * Last
 
-** Last2
-
-*** better error location when missing closing >] or ]]
-
-*** fix warning when same chunk used multiple times, like in Window.nw
-[00.01][WARNING]: Not consumed: [[sweep()]] sanity check i
-if(i == nil)
-    goto Rescue;
-
-actually it is consumed twice
+** Last
 
 *** why syncweb -to_code does not honor the -md5sum_in_auxfile?
-
-
-
-*** lpizer: handle more cases, struct, typedefs, etc.
-or maybe switch to ast_c.ml instead of ast_c.ml (or maybe to generic AST?)
-
-try on plan9 utilities
-
-*** finish lpizer for C with lpize struct, types, etc.
-not just functions
 
 *** take inspiration from scip and use other suffix like <>, #, () for entities?
 
@@ -44,20 +24,6 @@ commons lib again from regular semgrep repo?
 
 **** remove use of common2 and common2_ and see what remains
 and whether I can just inline a common.ml?
-
-
-** Last1
-
-*** RELAX add a lpizer -dryrun option
-that does not rm -f the file
-or add -rm_views option?
-
-*** RELAX split Lpize.ml for C and ML in different files
-Lpize_c.ml, Lpize_ocaml.ml, etc ?
-Lpize_env.ml ?
-
-
-** Last
 
 *** answer Ben about his markdown idea? meh
 
@@ -86,7 +52,38 @@ failures), I can use those header information to improve the automatic indexing
 
 * Features
 
-** literate programming automatic index
+** Error/Warning infra
+
+*** better error location when missing closing >] or ]]
+
+*** fix warning when same chunk used multiple times, like in Window.nw
+[00.01][WARNING]: Not consumed: [[sweep()]] sanity check i
+if(i == nil)
+    goto Rescue;
+
+actually it is consumed twice
+
+** lpizer
+
+*** RELAX add a lpizer -dryrun option
+that does not rm -f the file
+or add -rm_views option?
+
+*** RELAX split Lpize.ml for C and ML in different files
+Lpize_c.ml, Lpize_ocaml.ml, etc ?
+Lpize_env.ml ?
+
+
+*** lpizer: handle more cases, struct, typedefs, etc.
+or maybe switch to ast_c.ml instead of ast_c.ml (or maybe to generic AST?)
+
+try on plan9 utilities
+
+*** finish lpizer for C with lpize struct, types, etc.
+not just functions
+
+
+** indexer: literate programming automatic index
 step1: DONE get an index displayed
 step2: DONE get complete and correct index displayed (use codegraph? cover fields?)
 step3: SEMI get nice index displayed (in margin? mini indexes? no duplicate, sorted)

@@ -3,25 +3,9 @@ open Fpath_.Operators
 module G = Graph_code
 module E = Entity_code
 
-(* copy paste of pfff/main_codegraph.ml *)
-
-let _find_source__files_of_dir_or_files ~lang _xs = 
-  match lang with
-(*
-  | "cmt"  -> 
-    Lib_parsing_ml.find_cmt_files_of_dir_or_files xs
-  | _ -> Find_source.files_of_dir_or_files ~lang xs
-*)
-  | _ -> failwith "TODO: find_source__files_of_dir_or_files"
-
-let _find_source__files_of_root ~lang _root = 
-  match lang with
-(*
-  | "cmt"  -> 
-    Lib_parsing_ml.find_cmt_files_of_dir_or_files [root]
-  | _ -> Find_source.files_of_root ~lang root
-*)
-  | _ -> failwith "TODO: find_source__files_of_root"
+(*****************************************************************************)
+(* Helpers *)
+(*****************************************************************************)
 
 let verbose = ref false
 (*let output_dir = ref None *)
@@ -48,6 +32,9 @@ let hook_use_edge _src dst _g (loc : Loc.t) =
 
   
 
+(*****************************************************************************)
+(* Entry point *)
+(*****************************************************************************)
 
 (* copy paste of pfff/main_codegraph.ml *)
 let build_graph_code lang (root : Fpath.t) =
@@ -82,14 +69,13 @@ let build_graph_code lang (root : Fpath.t) =
       );
       Graph_code_cmt.build root ~cmt_files ~ml_files,
       empty
-    | "c" -> 
-      let files = failwith "TODO" in
-(*
-        Parse_cpp.init_defs !Flag_parsing_cpp.macros_h;
-        let local = Filename.concat root "pfff_macros.h" in
+    | "c" ->
+        let files =
+           Find_generic.files_of_root ~filter_file:(fun _file -> true)
+              Lang.C root in
+        let local = Filename.concat !!root "../../pfff_macros.h" in
         if Sys.file_exists local
-        then Parse_cpp.add_defs local;
-*)
+        then Parse_cpp.add_defs (Fpath.v local);
 
         Graph_code_c.hook_def_node := hook_def_node;
         Graph_code_c.hook_use_edge := (fun _ctx _in_assign (src, dst) g loc ->
