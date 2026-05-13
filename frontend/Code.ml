@@ -170,13 +170,28 @@ let parse ~lang (file : Fpath.t) : t =
   ) |> List.flatten |> readjust_start2_with_signatures file
   in
 
+  (* claude: a shebang line (#!...) must stay on line 1 of the tangled
+   * file, so it appears BEFORE the first Start2 mark. To keep the
+   * round-trip honest, fold it into the first chunk's body — that's
+   * where it lives in the .nw orig, and where its md5 was computed
+   * from. We just swap it past the Start2 here; readjust_mark2_remove_indent
+   * leaves it alone since the top chunk has indent 0.
+   *)
+  let xs' =
+    match xs' with
+    | (Regular2 (s, _) as r) :: (Start2 _ as start) :: rest
+      when String.length s >= 2 && s.[0] =$= '#' && s.[1] =$= '!' ->
+        start :: r :: rest
+    | _ -> xs'
+  in
+
   (* the view does not need to contain the key at the end mark; it's
    * redundant. But it is used for now to easily find the matching End2
    * of a Start2. If the key is not there, then have to find the
    * corresponding End2 by not stopping at the first one and by
    * counting.
    *)
-  let rec aux xs = 
+  let rec aux xs =
     match xs with
     | [] -> []
     | x::xs -> 
@@ -319,10 +334,26 @@ let unparse
       )
     in
 
+    (* claude: a shebang line (#!...) at the very top of the first chunk's
+     * body must be emitted BEFORE the chunk start mark so the tangled file
+     * is still an executable script. The md5 already covers the full body
+     * including the shebang. *)
+    let first_toplevel = ref true in
     views |> List.iter (function
-    | ChunkCode (chunkcode, body, i) -> 
+    | ChunkCode (chunkcode, body, i) ->
+        let body =
+          if !first_toplevel then begin
+            first_toplevel := false;
+            match body with
+            | RegularCode s :: rest
+              when String.length s >= 2 && s.[0] =$= '#' && s.[1] =$= '!' ->
+                pr s;
+                rest
+            | _ -> body
+          end else body
+        in
         aux (chunkcode, body, i)
-    | RegularCode _s -> 
+    | RegularCode _s ->
         failwith "no chunk at toplevel"
     );
     ()

@@ -158,6 +158,49 @@ let mark_shell =
     );
   }
 
+let mark_shell_short =
+  {
+    parse_mark_start = (fun s ->
+      if s =~ "\\([ \t]*\\)#s: \\(.*\\) #$"
+      then
+        let (a,b) = Common.matched2 s in
+        Some (a, b, None)
+      else
+        None
+    );
+    parse_mark_end = (fun s ->
+      if s =~ "\\([ \t]*\\)#e: \\(.*\\) #$"
+      then
+        let (a,b) = Common.matched2 s in
+        Some (a, Some b)
+      else None
+    );
+    unparse_mark_start = (fun ~key ~md5 ->
+      (match md5 with
+      | None -> spf "#s: %s #" key;
+      | Some _ -> failwith "this language works only with -md5sum_in_auxfile"
+      )
+    );
+    unparse_mark_end   = (fun ~key ->
+      spf "#e: %s #" key
+    );
+
+    parse_mark_startend = (fun s ->
+      if s =~ "\\([ \t]*\\)#x: \\(.*\\) #$"
+      then
+        let (a,b) = Common.matched2 s in
+        Some (a, b, None)
+      else
+        None
+    );
+    unparse_mark_startend = (fun ~key ~md5 ->
+      (match md5 with
+      | None -> spf "#x: %s #" key;
+      | Some _ -> failwith "this language works only with -md5sum_in_auxfile"
+      )
+    );
+  }
+
 let mark_ocamlyacc_short =
   {
     parse_mark_start = (fun s -> 
@@ -336,7 +379,7 @@ let mark_haskell_short =
 let lang_table auxfile = [
   "ocaml", if auxfile then mark_ocaml_short else mark_ocaml;
   "C",     if auxfile then mark_C_short else mark_C;
-  "shell", mark_shell;
+  "shell", if auxfile then mark_shell_short else mark_shell;
   "ocamlyacc", mark_ocamlyacc_short;
   "php", mark_C_short;
   "haskell", mark_haskell_short;

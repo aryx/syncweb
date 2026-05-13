@@ -1,0 +1,5 @@
+#!/bin/rc -e
+#s: script.rc #
+
+ls good
+#e: script.rc #

@@ -1,0 +1,9 @@
+
+% syncweb should now recognize toplevel chunks with the special #!
+% in the first line and not generate the syncweb comment before it
+% so the script is still working once lpized.
+<<script.rc>>=
+#!/bin/rc -e
+
+ls good
+@
