@@ -38,6 +38,7 @@ let version = "0.8"
 let lang = ref "ocaml"
 let md5sum_in_auxfile = ref false
 let less_marks = ref false
+let use_cache = ref true
 
 (* for -debug, -verbose, -quiet *)
 let logs_level = ref (Some Logs.Warning)
@@ -126,7 +127,7 @@ let parse_origs (origfs : Fpath.t list) : (Fpath.t * Web.t) list =
     if not (Sys.file_exists !!file)
     then failwith (spf "parse_origs: file %s does not exist" !!file)
   );
-  if Sys.file_exists cachefile && 
+  if !use_cache && Sys.file_exists cachefile && 
     origfs |> List.for_all (fun (file : Fpath.t) -> 
       UFile.filemtime (Fpath.v cachefile) >= UFile.filemtime file)
   then begin
@@ -135,7 +136,7 @@ let parse_origs (origfs : Fpath.t list) : (Fpath.t * Web.t) list =
     Common2.get_value cachefile
   end else begin
     let res = f () in
-    Common2.write_value res cachefile;
+    if !use_cache then Common2.write_value res cachefile;
     res
   end
 [@@profiling]
@@ -419,6 +420,9 @@ let options () = (
     " ";
     "-less_marks", Arg.Set less_marks, 
     " ";
+    "-no_cache", Arg.Clear use_cache, 
+    " disable the use of .xxx.nwcache files";
+
     (* TODO: move in a CLI_common.ml *)
     "-v", Arg.Unit (fun () -> logs_level := Some Logs.Info),
      " verbose mode";

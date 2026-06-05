@@ -1,4 +1,11 @@
 
+* 0.10 (Q2 2026) ()
+
+** features:
+- add a syncweb -no_cache to disable the use of .xxx.nwcache files
+  (which can cause pbs when syncing the same files but from different dirs
+   like for principia and goken)
+
 * 0.9 (Q1 2026) (syncweb -loc for LOC/LOE stats, configure --syncweb-only)
 # start to use Claude
 
