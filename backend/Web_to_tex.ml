@@ -90,6 +90,13 @@ let (parse_string: string -> tex_string) = fun s ->
   and aux_quote acc xs =
     match xs with
     | [] -> error "could not find end of ]]"
+    (* noweb rule: a [[ ]] quote ends at the first ]] not followed by another
+     * ']'. So in e.g. [[foo[2]]] the terminating ]] is the last one and the
+     * code is "foo[2]" (a ']' followed by ]] is part of the code). Without
+     * this case the leading ']' would close the quote too early, leaking a
+     * stray ']' into the .tex and causing bad typesetting. *)
+    | ']'::(']'::']'::_ as xs) ->
+      aux_quote (']'::acc) xs
     | ']'::']'::xs ->
       Q (Common2.string_of_chars (List.rev acc))::
       aux_string [] xs

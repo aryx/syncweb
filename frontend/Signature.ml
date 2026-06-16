@@ -19,10 +19,16 @@ let signaturefile_of_file (file : Fpath.t) : Fpath.t =
   let oldformat = Filename_.filename_of_db (d, ".md5sum_" ^ b) in
   if Sys.file_exists oldformat
   then Fpath.v oldformat
-  else 
-    let (d,b,e) = Filename_.dbe_of_filename !!file in
-    (* works better with codemap, and also mkmany in plan9 *)
-    Filename_.filename_of_dbe (d, spf ".md5sum_%s_%s" b e, "") |> Fpath.v
+  else
+    (* claude: dbe_of_filename raises Invalid_argument on extensionless
+     * files (e.g. a "mkfile" view), so use the _safe variant and fall
+     * back to the basename-only form when there is no extension. *)
+    (match Filename_.dbe_of_filename_safe !!file with
+    | Either.Left (d, b, e) ->
+        (* works better with codemap, and also mkmany in plan9 *)
+        Filename_.filename_of_dbe (d, spf ".md5sum_%s_%s" b e, "") |> Fpath.v
+    | Either.Right (d, b) ->
+        Filename_.filename_of_dbe (d, spf ".md5sum_%s" b, "") |> Fpath.v)
 
 let re_signature_in_signaturefile = Str.regexp
   "\\(.*\\) |\\(.*\\)$"
