@@ -22,8 +22,8 @@ let action = ref ""
 (* Main action *)
 (*****************************************************************************)
 
-let main_action (root : string) : Exit.t =
-  Index.build_graph_code !lang (Fpath.v root);
+let main_action (roots : string list) : Exit.t =
+  Index.build_graph_code !lang (List.map Fpath.v roots);
   Exit.OK
 
 (*****************************************************************************)
@@ -48,7 +48,7 @@ let main (argv : string array) : Exit.t =
 
   let usage_msg = 
     "Usage: " ^ Filename.basename argv.(0) ^ 
-      " [options] -lang <lang> <dir> " ^ "\n" ^ "Options are:"
+      " [options] -lang <lang> <dir> [<dir2> ...] " ^ "\n" ^ "Options are:"
   in
   (* does side effect on many global flags *)
   let args = Arg_.parse_options (options()) usage_msg argv in
@@ -68,16 +68,16 @@ let main (argv : string array) : Exit.t =
         failwith ("unrecognized action or wrong params: " ^ !action)
 
     (* --------------------------------------------------------- *)
-    (* main entry *)
-    (* --------------------------------------------------------- *)
-    | [x] -> 
-        main_action x
-
-    (* --------------------------------------------------------- *)
     (* empty entry *)
     (* --------------------------------------------------------- *)
-    | [] | _::_::_ -> 
-        Arg_.usage usage_msg (options()); 
-        failwith "too few or too many arguments"
+    | [] ->
+        Arg_.usage usage_msg (options());
+        failwith "too few arguments (expected at least one directory)"
+
+    (* --------------------------------------------------------- *)
+    (* main entry (one or more directories) *)
+    (* --------------------------------------------------------- *)
+    | dirs ->
+        main_action dirs
     )
   )

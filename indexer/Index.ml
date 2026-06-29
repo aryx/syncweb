@@ -10,8 +10,34 @@ module E = Entity_code
 let verbose = ref false
 (*let output_dir = ref None *)
 
-let _dep_file_of_dir dir = 
+let _dep_file_of_dir dir =
   Filename.concat dir !!(Graph_code.default_filename)
+
+(* Longest common path-component prefix of the given directories, kept in the
+ * same (relative or absolute) form as the arguments. For a single directory
+ * this is the directory itself. Used as the graph root when indexing several
+ * directories at once. *)
+let common_dir_prefix (roots : Fpath.t list) : Fpath.t =
+  (* drop a trailing empty segment coming from a trailing slash, e.g.
+   * "rio/" -> ["rio"] instead of ["rio"; ""] *)
+  let segs (r : Fpath.t) =
+    match List.rev (Fpath.segs r) with
+    | "" :: rest -> List.rev rest
+    | _ -> Fpath.segs r
+  in
+  let rec common_two acc a b =
+    match (a, b) with
+    | x :: xs, y :: ys when String.equal x y -> common_two (x :: acc) xs ys
+    | _ -> List.rev acc
+  in
+  match List.map segs roots with
+  | [] -> failwith "common_dir_prefix: no directory given"
+  | first :: rest ->
+      let prefix = List.fold_left (fun acc s -> common_two [] acc s) first rest in
+      (match prefix with
+       (* no shared prefix (e.g. disjoint relative dirs): fall back to cwd *)
+       | [] | [ "" ] -> Fpath.v "."
+       | _ -> Fpath.v (String.concat "/" prefix))
 
 (* special hooks *)
 let hook_def_node node g =
@@ -37,32 +63,35 @@ let hook_use_edge _src dst _g (loc : Loc.t) =
 (*****************************************************************************)
 
 (* copy paste of pfff/main_codegraph.ml *)
-let build_graph_code lang (root : Fpath.t) =
+let build_graph_code lang (roots : Fpath.t list) =
 
-  (* old:
-  let xs = List.map Unix.realpath xs in
-  let root, files = 
-    match xs with
-    | [root] -> 
-        root, find_source__files_of_root ~lang root
-    | _ ->
-        let root = Common2.common_prefix_of_files_or_dirs xs in
-        let files = 
-          find_source__files_of_dir_or_files ~lang xs in
-        root, files
-  in
-  *)
+  (* When given multiple directories, we use their common prefix as the
+   * graph root so that each directory keeps a distinct (readable) prefix in
+   * the graph, and we gather the source files from every directory.
+   * For a single directory the common prefix is the directory itself, so
+   * this preserves the original single-root behavior.
+   *
+   * We compute the prefix on the path components, preserving the (possibly
+   * relative) form of the arguments. This matters because the root and the
+   * source files found below must be in the same form for Filename_.readable
+   * to relate them, and because the file paths reported by the indexer should
+   * stay as the user typed them (e.g. "rio/snarf.c", not an absolute path)
+   * so the generated defs_and_uses.list still matches the literate document.
+   *)
+  let root = common_dir_prefix roots in
+  (* gather files from all the given roots *)
+  let files_of_all_roots find_one = roots |> List.concat_map find_one in
 
   let empty = Graph_code.empty_statistics () in
   let _g, _stats =
     try (
     match lang with
-    | "ml"  -> 
+    | "ml"  ->
       let files = failwith "TODO" in
       Graph_code_ml.build ~verbose:!verbose root files, empty
-    | "cmt"  -> 
-      let ml_files = Find_source.files_of_root ~lang:"ml" root in
-      let cmt_files = Find_source.files_of_root ~lang:"cmt" root in
+    | "cmt"  ->
+      let ml_files = files_of_all_roots (Find_source.files_of_root ~lang:"ml") in
+      let cmt_files = files_of_all_roots (Find_source.files_of_root ~lang:"cmt") in
       Graph_code_cmt.hook_def_node := hook_def_node;
       Graph_code_cmt.hook_use_edge := (fun (src, dst) g loc ->
           hook_use_edge src dst g loc;
@@ -71,8 +100,9 @@ let build_graph_code lang (root : Fpath.t) =
       empty
     | "c" ->
         let files =
-           Find_generic.files_of_root ~filter_file:(fun _file -> true)
-              Lang.C root in
+           files_of_all_roots
+             (Find_generic.files_of_root ~filter_file:(fun _file -> true)
+                Lang.C) in
         let local = Filename.concat !!root "../../pfff_macros.h" in
         if Sys.file_exists local
         then Parse_cpp.add_defs (Fpath.v local);
