@@ -180,7 +180,7 @@ let actions () = [
         (match exn with
         | Failure s | Sys_error s ->
            Logs.err (fun m -> m "syncweb -to_tex: %s" s);
-           ()
+           raise (Exit.ExitCode 2)
         | exn -> raise exn
         )
  );
