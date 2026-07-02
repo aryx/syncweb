@@ -174,15 +174,15 @@ let actions () = [
       Web_to_tex.web_to_tex orig (Fpath.v texfile) (defs, uses);
    (* coupling: with main() code *)
    with exn ->
-          if !backtrace
-          then raise exn
-          else
-            (match exn with
-            | Failure s | Sys_error s ->
-               Logs.err (fun m -> m "syncweb: %s" s);
-               ()
-            | exn -> raise exn
-            )
+      if !backtrace
+      then raise exn
+      else
+        (match exn with
+        | Failure s | Sys_error s ->
+           Logs.err (fun m -> m "syncweb -to_tex: %s" s);
+           ()
+        | exn -> raise exn
+        )
  );
 
   (* sync, superseded by Main.main_action now *)
@@ -470,7 +470,7 @@ let main (argv : string array) : Exit.t  =
     (* --------------------------------------------------------- *)
     | xs when List.mem !action (Arg_.action_list (all_actions())) -> 
         Arg_.do_action !action xs (all_actions());
-        raise (Exit.ExitCode 0)
+        Exit.OK
 
     | _ when not (String_.empty !action) -> 
         failwith ("unrecognized action or wrong params: " ^ !action)
