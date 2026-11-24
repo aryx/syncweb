@@ -1,1 +1,6 @@
-./bin/test.bc
+#!/bin/sh
+# claude: a script rather than a symlink to _build/install/default/bin/test.bc
+# because dune scans the files at the root of the project and fails with
+# "File unavailable: test" when the symlink is dangling (e.g., in a fresh
+# checkout, after 'make clean', or while the test binary is being relinked).
+exec "$(dirname "$0")/_build/install/default/bin/test.bc" "$@"
