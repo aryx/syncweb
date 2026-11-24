@@ -1,3 +1,3 @@
 
-val main: string array -> Exit.t
+val main: < Cap.readdir; .. > -> string array -> Exit.t
 

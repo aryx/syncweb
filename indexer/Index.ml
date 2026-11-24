@@ -63,7 +63,7 @@ let hook_use_edge _src dst _g (loc : Loc.t) =
 (*****************************************************************************)
 
 (* copy paste of pfff/main_codegraph.ml *)
-let build_graph_code lang (roots : Fpath.t list) =
+let build_graph_code (caps : < Cap.readdir; .. >) lang (roots : Fpath.t list) =
 
   (* When given multiple directories, we use their common prefix as the
    * graph root so that each directory keeps a distinct (readable) prefix in
@@ -90,8 +90,8 @@ let build_graph_code lang (roots : Fpath.t list) =
       let files = failwith "TODO" in
       Graph_code_ml.build ~verbose:!verbose root files, empty
     | "cmt"  ->
-      let ml_files = files_of_all_roots (Find_source.files_of_root ~lang:"ml") in
-      let cmt_files = files_of_all_roots (Find_source.files_of_root ~lang:"cmt") in
+      let ml_files = files_of_all_roots (Find_source.files_of_root caps ~lang:"ml") in
+      let cmt_files = files_of_all_roots (Find_source.files_of_root caps ~lang:"cmt") in
       Graph_code_cmt.hook_def_node := hook_def_node;
       Graph_code_cmt.hook_use_edge := (fun (src, dst) g loc ->
           hook_use_edge src dst g loc;
@@ -101,7 +101,7 @@ let build_graph_code lang (roots : Fpath.t list) =
     | "c" ->
         let files =
            files_of_all_roots
-             (Find_generic.files_of_root ~filter_file:(fun _file -> true)
+             (Find_generic.files_of_root caps ~filter_file:(fun _file -> true)
                 Lang.C) in
         let local = Filename.concat !!root "../../pfff_macros.h" in
         if Sys.file_exists local

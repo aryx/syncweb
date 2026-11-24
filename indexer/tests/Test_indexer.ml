@@ -11,7 +11,7 @@ let t = Testo.create
 (* Helpers *)
 (*****************************************************************************)
 
-let run_main (caps : <Cap.fork; ..>) (cmd : string) : (Exit.t, string) result =
+let run_main (caps : <Cap.fork; Cap.readdir; ..>) (cmd : string) : (Exit.t, string) result =
   let args = String.split_on_char ' ' cmd in
   (* we run the CLI below in a child process because it modifies many globals
    * and we don't want to write code to reset those globals between two
@@ -21,7 +21,7 @@ let run_main (caps : <Cap.fork; ..>) (cmd : string) : (Exit.t, string) result =
       print_string (spf "executing: indexer %s\n" cmd);
       try 
         Ok (Exit.catch (fun () ->
-              CLI_indexer.main (Array.of_list ("indexer" :: args))))
+              CLI_indexer.main caps (Array.of_list ("indexer" :: args))))
       with 
       | End_of_file -> Error "End_of_file"          
    )
@@ -30,7 +30,7 @@ let run_main (caps : <Cap.fork; ..>) (cmd : string) : (Exit.t, string) result =
 (*****************************************************************************)
 (* Tests *)
 (*****************************************************************************)
-let e2e_tests (caps : < Cap.fork; ..>) = 
+let e2e_tests (caps : < Cap.fork; Cap.readdir; ..>) = 
   Testo.categorize "e2e" ([
     t ~checked_output:(Testo.stdxxx ()) "--help" (fun () ->
         match run_main caps "--help" with
@@ -44,7 +44,7 @@ let e2e_tests (caps : < Cap.fork; ..>) =
 (* The suite *)
 (*****************************************************************************)
 
-let tests (caps : < Cap.fork; ..>) : Testo.t list =
+let tests (caps : < Cap.fork; Cap.readdir; ..>) : Testo.t list =
   Testo.categorize_suites "indexer" [
       e2e_tests caps;
   ]

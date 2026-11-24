@@ -1,5 +1,5 @@
 executing: indexer --help
-Usage: indexer [options] -lang <lang> <dir> 
+Usage: indexer [options] -lang <lang> <dir> [<dir2> ...] 
 Options are:
   -lang  <str> choose language (default = c)
   -help  Display this list of options

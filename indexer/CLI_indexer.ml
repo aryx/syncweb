@@ -22,8 +22,8 @@ let action = ref ""
 (* Main action *)
 (*****************************************************************************)
 
-let main_action (roots : string list) : Exit.t =
-  Index.build_graph_code !lang (List.map Fpath.v roots);
+let main_action (caps : < Cap.readdir; .. >) (roots : string list) : Exit.t =
+  Index.build_graph_code caps !lang (List.map Fpath.v roots);
   Exit.OK
 
 (*****************************************************************************)
@@ -44,7 +44,7 @@ let options () = [
 (* Main entry point *)
 (*****************************************************************************)
 
-let main (argv : string array) : Exit.t = 
+let main (caps : < Cap.readdir; .. >) (argv : string array) : Exit.t = 
 
   let usage_msg = 
     "Usage: " ^ Filename.basename argv.(0) ^ 
@@ -78,6 +78,6 @@ let main (argv : string array) : Exit.t =
     (* main entry (one or more directories) *)
     (* --------------------------------------------------------- *)
     | dirs ->
-        main_action dirs
+        main_action caps dirs
     )
   )
